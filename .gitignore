@@ -1,0 +1,14 @@
+# Build output
+firmware/.pio/
+firmware/src/web_gz.h
+__pycache__/
+
+# Personal data written at runtime
+pc/events.jsonl
+pc/room.json
+pc/detections.log
+pc/*.log
+
+# Machine-specific
+flash.local.ps1
+.claude/
