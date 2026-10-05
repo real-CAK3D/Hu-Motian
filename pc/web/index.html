@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Human Radar</title>
 <style>
 :root{color-scheme:dark;--bg:#0d0d0d;--panel:#1a1a19;--panel2:#222220;--grid:#2c2c2a;--axis:#383835;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;
---move:#d95926;--still:#3987e5;--sweep:#199e70;--heat:#9085e9;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--ring:rgba(255,255,255,.10);--zone:#2c2c2a}
+--move:#d95926;--still:#3987e5;--sweep:#199e70;--heat:#9085e9;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--ring:rgba(255,255,255,.10)}
 @media (prefers-color-scheme:light){:root:where(:not([data-theme=dark])){color-scheme:light;--bg:#f9f9f7;--panel:#fcfcfb;--panel2:#f1f0ec;--grid:#e1e0d9;--axis:#c3c2b7;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
---move:#eb6834;--still:#2a78d6;--sweep:#1baf7a;--heat:#4a3aa7;--ring:rgba(11,11,11,.10);--zone:#e1e0d9}}
-:root[data-theme=light]{color-scheme:light;--bg:#f9f9f7;--panel:#fcfcfb;--panel2:#f1f0ec;--grid:#e1e0d9;--axis:#c3c2b7;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--move:#eb6834;--still:#2a78d6;--sweep:#1baf7a;--heat:#4a3aa7;--ring:rgba(11,11,11,.10);--zone:#e1e0d9}
+--move:#eb6834;--still:#2a78d6;--sweep:#1baf7a;--heat:#4a3aa7;--ring:rgba(11,11,11,.10)}}
+:root[data-theme=light]{color-scheme:light;--bg:#f9f9f7;--panel:#fcfcfb;--panel2:#f1f0ec;--grid:#e1e0d9;--axis:#c3c2b7;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--move:#eb6834;--still:#2a78d6;--sweep:#1baf7a;--heat:#4a3aa7;--ring:rgba(11,11,11,.10)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--ring)}
-h1{font-size:17px;font-weight:600;margin:0 8px 0 0;letter-spacing:.02em}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--ring)}
+h1{font-size:17px;font-weight:600;margin:0 6px 0 0}
 h2{font-size:13px;font-weight:600;margin:0;color:var(--ink2)}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--ring);font-size:13px;color:var(--ink2)}
 .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
@@ -21,37 +21,48 @@ h2{font-size:13px;font-weight:600;margin:0;color:var(--ink2)}
 button,select,input{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--ring);border-radius:6px;padding:5px 10px}
 button{cursor:pointer}button:hover{border-color:var(--ink2)}button.on{border-color:var(--sweep);color:var(--sweep)}
 button.danger:hover{border-color:var(--crit);color:var(--crit)}
-input[type=number]{width:68px}input[type=range]{padding:0;accent-color:var(--sweep)}
+input[type=number]{width:70px}input[type=range]{padding:0;accent-color:var(--sweep)}
 main{display:grid;gap:12px;padding:12px 16px 24px;grid-template-columns:repeat(12,minmax(0,1fr))}
 .card{background:var(--panel);border:1px solid var(--ring);border-radius:10px;padding:12px;min-width:0}
 .card-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.c7{grid-column:span 7}.c5{grid-column:span 5}.c6{grid-column:span 6}.c4{grid-column:span 4}.c8{grid-column:span 8}.c12{grid-column:span 12}
-@media (max-width:1000px){.c7,.c5,.c6,.c4,.c8{grid-column:span 12}}
+.c6{grid-column:span 6}.c4{grid-column:span 4}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.side{grid-column:span 4;display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (max-width:1050px){.c6,.c4,.c8,.side{grid-column:span 12}}
 canvas{display:block;width:100%}
-#room{height:430px}
-.hero{position:relative;padding:0;overflow:hidden}
-#view3d{height:min(68vh,620px);min-height:380px;touch-action:none}#view3d canvas{outline:none}
-.hud{position:absolute;left:12px;top:12px;right:12px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;flex-wrap:wrap}
+.hero{position:relative;padding:0;overflow:hidden;min-height:420px}
+#view3d{height:min(72vh,680px);min-height:420px;touch-action:none;background:radial-gradient(ellipse at 50% 40%,var(--panel2),var(--panel))}#view3d canvas{outline:none}
+.hud{position:absolute;left:10px;right:10px;display:flex;gap:6px;align-items:flex-start;pointer-events:none;flex-wrap:wrap}
+.hud.top{top:10px}.hud.bottom{bottom:10px;align-items:flex-end}
 .hud>*{pointer-events:auto}
-.glass{background:color-mix(in srgb,var(--panel) 82%,transparent);border:1px solid var(--ring);border-radius:8px;padding:6px 10px;backdrop-filter:blur(6px)}
-#where3d{font-size:13px;max-width:440px}
-.hud-b{position:absolute;left:12px;bottom:12px;font-size:12px;color:var(--ink2)}
-.seg button{border-radius:0;margin-left:-1px}.seg button:first-child{border-radius:6px 0 0 6px}.seg button:last-child{border-radius:0 6px 6px 0}#gates{height:220px}#timeline{height:220px}#occ{height:70px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.tile{background:var(--panel);border:1px solid var(--ring);border-radius:10px;padding:10px 12px}
-.tile .k{font-size:12px;color:var(--muted)}.tile .v{font-size:22px;font-weight:600;margin-top:2px}.tile .s{font-size:12px;color:var(--ink2)}
+.glass{background:color-mix(in srgb,var(--panel) 80%,transparent);border:1px solid var(--ring);border-radius:8px;padding:6px 10px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+button.glass{padding:5px 10px}
+#hudSummary{font-size:13px;max-width:min(460px,70vw)}
+.seg{display:inline-flex}.seg button{border-radius:0;margin-left:-1px}.seg button:first-child{border-radius:6px 0 0 6px;margin-left:0}.seg button:last-child{border-radius:0 6px 6px 0}
+#loading3d{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:13px;color:var(--ink2);pointer-events:none}
+#room{height:440px}
+#gates{height:220px}#timeline{height:220px}#occ{height:70px}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--ink2)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
 .muted{color:var(--muted)}.small{font-size:12px}
-#log{max-height:260px;overflow:auto;margin:0;padding:0;list-style:none}
+.person{display:grid;grid-template-columns:44px 1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--ring)}
+.person:last-child{border-bottom:0}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--muted)}
+.avatar svg{width:26px;height:26px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.person .act{font-weight:600;font-size:15px}.person .sub{font-size:12px;color:var(--ink2)}
+.person .big{font-size:20px;font-weight:600;text-align:right}.person .big small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+.meter{grid-column:2/4;display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
+.meter .bar{flex:1}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat .k{font-size:12px;color:var(--muted)}.stat .v{font-size:20px;font-weight:600}.stat .s{font-size:12px;color:var(--ink2)}
+#log{max-height:280px;overflow:auto;margin:0;padding:0;list-style:none}
 #log li{display:flex;gap:10px;padding:6px 2px;border-bottom:1px solid var(--ring);font-size:13px}
-#log li .tm{color:var(--muted);font-variant-numeric:tabular-nums;min-width:62px}
+#log li .tm{color:var(--muted);font-variant-numeric:tabular-nums;min-width:66px}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
 .row label{color:var(--ink2);font-size:13px}
-.bar{height:6px;background:var(--grid);border-radius:3px;overflow:hidden;margin-top:6px}.bar>i{display:block;height:100%;background:var(--sweep);width:0}
+.bar{height:6px;background:var(--grid);border-radius:3px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--sweep);width:0;transition:width .2s}
+#calBarW{margin-top:6px}
 #tip{position:fixed;pointer-events:none;background:var(--panel2);border:1px solid var(--ring);border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.45;z-index:10;display:none;max-width:260px}
-#tip b{font-weight:600}
-#zones{margin-top:8px}#zones .row input[type=text]{flex:1;min-width:90px}
+#zones .row input[type=text]{flex:1;min-width:90px}
 details summary{cursor:pointer;color:var(--ink2);font-size:13px;margin:8px 0}
 table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2px 4px;text-align:center}table.g input{width:52px;padding:2px 4px}
 .note{font-size:12px;color:var(--muted);margin-top:6px}
@@ -59,62 +70,67 @@ table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2p
 <header>
   <h1>Human radar</h1>
   <span class="pill" id="state"><span class="dot" id="stateDot"></span><span id="stateTxt">Connecting…</span></span>
-  <span class="pill small" id="conn"><span class="dot" id="connDot"></span><span id="connTxt">–</span></span>
+  <span class="pill small"><span class="dot" id="connDot"></span><span id="connTxt">–</span></span>
   <span class="sp"></span>
   <button id="btnSound" title="Beep in this window when someone arrives">Sound off</button>
-  <button id="btnNotify" title="Desktop notification on arrival" hidden>Notifications off</button>
+  <button id="btnNotify" title="Notification on arrival" hidden>Notifications off</button>
   <button id="btnTheme" title="Switch light/dark">Theme</button>
 </header>
 <main>
-  <section class="card c12 hero" id="hero">
+  <section class="card c8 hero" id="hero">
     <div id="view3d"></div>
-    <div class="hud">
-      <div class="glass" id="where3d">–</div><span class="sp"></span>
-      <span class="seg glass" style="padding:0;border:0;background:none"><button data-view="orbit" class="on">3D</button><button data-view="top">Top</button><button data-view="sensor">Sensor view</button></span>
-      <button id="btnSpin" class="glass" title="Slowly orbit when idle">Auto-orbit</button>
-      <button id="btnHeat" class="glass" title="Show where people have spent time">Heatmap</button>
-      <button id="btnEdit" class="glass">Edit room</button>
+    <div id="loading3d" class="glass" hidden>Loading people…</div>
+    <div class="hud top">
+      <div class="glass" id="hudSummary">Connecting…</div><span class="sp"></span>
+      <span class="seg"><button class="glass" data-view="orbit">3D</button><button class="glass" data-view="top">Top</button><button class="glass" data-view="sensor">Sensor</button><button class="glass" data-view="follow">Follow</button></span>
     </div>
-    <div class="hud-b glass"><i class="sw" style="background:var(--move)"></i>Moving <i class="sw" style="background:var(--still);margin-left:10px"></i>Still · columns = energy per 0.75 m band (left half moving, right half still) · shells = target distance · drag to orbit, scroll or pinch to zoom</div>
+    <div class="hud bottom">
+      <div class="glass small legend" id="hudLegend"><span><i class="sw" style="background:var(--move)"></i>Moving</span><span><i class="sw" style="background:var(--still)"></i>Still</span><span class="muted">drag to orbit · pinch or scroll to zoom</span></div>
+      <span class="sp"></span>
+      <button class="glass" id="tRadar" title="Radar beam and target distance shells">Radar</button>
+      <button class="glass" id="tEnergy" title="Energy columns per 0.75 m band (left half moving, right half still)">Energy</button>
+      <button class="glass" id="tHeat" title="Where people have spent time">Heatmap</button>
+      <button class="glass" id="tSpin" title="Slowly orbit when idle">Auto-orbit</button>
+      <button class="glass" id="btnEdit">Edit room</button>
+    </div>
   </section>
+  <aside class="side">
+    <section class="card"><div class="card-h"><h2>People</h2><span class="sp"></span><span class="small muted" id="pplCount"></span></div><div id="people"></div></section>
+    <section class="card"><div class="card-h"><h2>Today</h2></div><div class="stats" id="today"></div></section>
+    <section class="card"><div class="card-h"><h2>Radar signal</h2></div><div class="stats" id="signal"></div></section>
+  </aside>
+
   <section class="card c12" id="planCard" hidden>
     <div class="card-h"><h2>Room plan</h2><span class="sp"></span><span class="small muted" id="planNote"></span></div>
     <canvas id="room"></canvas>
-    <div id="where" class="small muted" style="margin-top:6px">–</div>
+    <div id="where" class="small muted" style="margin-top:6px"></div>
     <div id="editor" hidden>
       <div class="row"><label>Width (m)</label><input type="number" id="rw" step="0.1" min="1" max="20">
         <label>Length (m)</label><input type="number" id="rh" step="0.1" min="1" max="20">
+        <label>Sensor height (m)</label><input type="number" id="rmh" step="0.1" min="0.2" max="2.4">
         <label>Field of view (°)</label><input type="number" id="rf" step="5" min="40" max="160"></div>
-      <div class="row"><button id="btnAddZone">Draw zone</button><button id="btnResetHeat" class="danger">Clear heatmap</button>
-        <span class="small muted">Drag the sensor to move it, drag its round handle to aim it. Drag zones to move, drag their corner to resize.</span></div>
+      <div class="row"><button id="btnAddZone">Draw zone</button>
+        <label>Floor plan image</label><input type="file" id="fpFile" accept="image/*" style="max-width:220px"><button id="fpClear" class="danger">Remove image</button>
+        <button id="btnResetHeat" class="danger">Clear heatmap</button></div>
+      <div class="note">Drag the sensor to move it and its round handle to aim it. Drag zones to move them and their corner to resize. A zone's type (or its name: bed, couch, desk, table, chair, counter, tv, door, window, plant) decides the furniture and where people sit or lie. Crop a floor plan image to the room's walls before importing.</div>
       <div id="zones"></div>
     </div>
   </section>
 
-  <section class="c12 tiles" id="tiles">
-    <div class="tile"><div class="k">Nearest target</div><div class="v" id="tDist">–</div><div class="s" id="tDistS">&nbsp;</div></div>
-    <div class="tile"><div class="k"><i class="sw" style="background:var(--move)"></i>Moving</div><div class="v" id="tMove">–</div><div class="s" id="tMoveS">&nbsp;</div></div>
-    <div class="tile"><div class="k"><i class="sw" style="background:var(--still)"></i>Still</div><div class="v" id="tStill">–</div><div class="s" id="tStillS">&nbsp;</div></div>
-    <div class="tile"><div class="k">Present for</div><div class="v" id="tFor">–</div><div class="s" id="tForS">&nbsp;</div></div>
-    <div class="tile"><div class="k">Arrivals today</div><div class="v" id="tArr">0</div><div class="s" id="tArrS">&nbsp;</div></div>
-    <div class="tile"><div class="k">Light level</div><div class="v" id="tLight">–</div><div class="s">sensor photodiode, 0–255</div></div>
-    <div class="tile"><div class="k">Link</div><div class="v" id="tFps">–</div><div class="s" id="tFpsS">&nbsp;</div></div>
-  </section>
-
   <section class="card c6">
     <div class="card-h"><h2>Energy by distance band</h2><span class="sp"></span>
-      <span class="legend"><span><i class="sw" style="background:var(--move)"></i>Moving</span><span><i class="sw" style="background:var(--still)"></i>Still</span><span>— threshold</span><span>┈ empty-room noise</span></span></div>
+      <span class="legend"><span><i class="sw" style="background:var(--move)"></i>Moving</span><span><i class="sw" style="background:var(--still)"></i>Still</span><span>— trigger</span><span>┈ empty-room noise</span></span></div>
     <canvas id="gates"></canvas>
   </section>
   <section class="card c6">
     <div class="card-h"><h2>Distance over time</h2><span class="sp"></span>
       <select id="tlRange"><option value="60">1 min</option><option value="120" selected>2 min</option><option value="300">5 min</option><option value="600">10 min</option></select>
-      <span class="legend"><span><i class="sw" style="background:var(--move)"></i>Moving</span><span><i class="sw" style="background:var(--still)"></i>Still</span><span><i class="sw" style="background:var(--crit);opacity:.5"></i>Present</span></span></div>
+      <span class="legend"><span><i class="sw" style="background:var(--ink)"></i>Tracked</span><span><i class="sw" style="background:var(--move)"></i>Moving</span><span><i class="sw" style="background:var(--still)"></i>Still</span></span></div>
     <canvas id="timeline"></canvas>
   </section>
 
   <section class="card c4">
-    <div class="card-h"><h2>Activity log</h2></div>
+    <div class="card-h"><h2>Activity</h2></div>
     <ul id="log"><li class="muted">No events yet.</li></ul>
   </section>
   <section class="card c4" id="occCard" hidden>
@@ -122,468 +138,582 @@ table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2p
     <canvas id="occ"></canvas>
     <div id="occTxt" class="small muted" style="margin-top:8px">–</div>
   </section>
-  <section class="card c4" id="setCard">
+  <section class="card c4">
     <div class="card-h"><h2>Sensor</h2></div>
     <div class="small" id="wiring">–</div>
     <div class="row" style="margin-top:10px"><button id="btnCal">Calibrate empty room</button>
       <label>for</label><select id="calSecs"><option>20</option><option selected>30</option><option>60</option></select><label>s, start in</label>
       <select id="calDelay"><option>5</option><option selected>15</option><option>30</option></select><label>s</label></div>
-    <div id="calTxt" class="small muted">Measures the background noise in each band while nobody is there, then sets each threshold just above it. Fewer false alarms, more sensitivity where it's quiet.</div>
-    <div class="bar"><i id="calBar"></i></div>
+    <div id="calTxt" class="small muted">Measures each band's background noise while nobody is there, then sets each trigger just above it.</div>
+    <div class="bar" id="calBarW"><i id="calBar"></i></div>
     <div class="row" style="margin-top:12px"><label>Sensitivity</label>
       <button data-sens="25">High</button><button data-sens="40">Normal</button><button data-sens="60">Low</button></div>
     <div class="row"><label>Max range</label><input type="range" id="rng" min="1" max="8" step="1"><span id="rngTxt" class="small"></span></div>
-    <div class="row"><label>Clear after</label><input type="number" id="idle" min="0" max="600"> <span class="small muted">s with nobody (sensor)</span></div>
+    <div class="row"><label>Clear after</label><input type="number" id="idle" min="0" max="600"> <span class="small muted">s with nobody</span></div>
     <div class="row"><label>Alert hold</label><input type="number" id="hold" min="0" max="60000" step="500"> <span class="small muted">ms</span></div>
-    <details><summary>Per-band thresholds</summary><table class="g" id="gtab"></table>
-      <div class="row"><button id="btnGates">Apply thresholds</button><button id="btnFactory" class="danger">Factory reset</button></div></details>
+    <details><summary>Per-band triggers</summary><table class="g" id="gtab"></table>
+      <div class="row"><button id="btnGates">Apply triggers</button><button id="btnFactory" class="danger">Factory reset</button></div></details>
     <div id="cmdMsg" class="small muted"></div>
   </section>
 </main>
 <div id="tip"></div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
 <script>
 "use strict";
 // Base path so the page works at /, /radar/ (Tailscale Serve) or /radar without a trailing slash
 const BASE=location.pathname.endsWith('/')?'':location.pathname.split('/').pop()+'/',api=p=>BASE+p;
-const $=s=>document.querySelector(s), D2R=Math.PI/180, GATE=0.75, NG=9, MAXR=NG*GATE;
+const $=s=>document.querySelector(s),D2R=Math.PI/180,GATE=0.75,NG=9,MAXR=NG*GATE;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),angDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const C={};
-function loadColors(){const cs=getComputedStyle(document.documentElement);for(const k of['bg','panel','panel2','grid','axis','ink','ink2','muted','move','still','sweep','heat','good','warn','crit','zone'])C[k]=cs.getPropertyValue('--'+k).trim();}
+function loadColors(){const cs=getComputedStyle(document.documentElement);for(const k of['bg','panel','panel2','grid','axis','ink','ink2','muted','move','still','sweep','heat','good','warn','crit'])C[k]=cs.getPropertyValue('--'+k).trim();}
 function rgba(hex,a){const n=parseInt(hex.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
-const fmtM=cm=>(cm/100).toFixed(2)+' m';
+const fmtM=cm=>(cm/100).toFixed(2)+' m',fmtMm=m=>m.toFixed(2)+' m';
 const fmtDur=s=>s<60?`${s|0} s`:s<3600?`${(s/60)|0} m ${(s%60)|0} s`:`${(s/3600)|0} h ${((s%3600)/60)|0} m`;
 const fmtT=t=>new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
-// ---------------------------------------------------------------- state
-const S={r:null,st:null,hub:null,ok:false,lastMs:-1,frameTimes:[],hist:[],trails:[],events:[],present:false,since:0,
-  room:null,edit:false,heat:null,showHeat:false,sound:false,notify:false,figs:[],tl:120,lastData:0};
-function defaultRoom(){return{w:4,h:4,sx:2,sy:0.05,sa:90,fov:120,zones:[]}}
-try{S.room=JSON.parse(localStorage.getItem('room'))||null}catch(e){}
-S.room=S.room||defaultRoom();
-try{S.showHeat=localStorage.getItem('heatOn')==='1';S.sound=localStorage.getItem('sound')==='1'}catch(e){}
+// ================================================================ state
+const S={r:null,st:null,hub:null,ok:false,lastMs:-1,frameTimes:[],hist:[],events:[],act:[],present:false,since:0,
+  room:null,edit:false,heat:null,showHeat:store.get('heatOn')==='1',radar:store.get('radar','1')==='1',energy:store.get('energy')==='1',
+  sound:false,notify:false,tl:120,figs:[],floorImg:null};
+function defaultRoom(){return{w:4,h:4,sx:2,sy:0.05,sa:90,fov:120,mh:1.2,zones:[]}}
+try{S.room=Object.assign(defaultRoom(),JSON.parse(store.get('room','null'))||{})}catch(e){S.room=defaultRoom()}
+const roomJSON=()=>JSON.stringify(S.room,(k,v)=>k.startsWith('_')?undefined:v);
 
-// ---------------------------------------------------------------- canvases
+// ================================================================ canvases
 const cv={};
 for(const id of['room','gates','timeline','occ']){const c=$('#'+id);cv[id]={c,x:c.getContext('2d'),w:0,h:0}}
 function fit(k){const o=cv[k],r=o.c.getBoundingClientRect(),d=devicePixelRatio||1;
   if(o.w!==r.width||o.h!==r.height){o.w=r.width;o.h=r.height;o.c.width=Math.round(r.width*d);o.c.height=Math.round(r.height*d)}
   o.x.setTransform(d,0,0,d,0,0);return o}
 
-// ---------------------------------------------------------------- data
+// ================================================================ data
 async function poll(){
-  try{const j=await(await fetch(api('data'),{cache:'no-store'})).json();S.ok=true;S.lastData=Date.now();onData(j)}
-  catch(e){S.ok=false}
+  try{const j=await(await fetch(api('data'),{cache:'no-store'})).json();S.ok=true;onData(j)}catch(e){S.ok=false}
   setTimeout(poll,110);
 }
 function onData(j){
-  if(j.st){S.st=j.st;updateStatus()}
   if('hub' in j)S.hub=j.hub;
-  const r=j.r;if(!r)return;
-  if(r.ms===S.lastMs)return;
+  if(j.st){S.st=j.st;updateStatus()}
+  const r=j.r;if(!r||r.ms===S.lastMs)return;
   S.lastMs=r.ms;S.r=r;
   const now=Date.now();
   S.frameTimes.push(now);while(S.frameTimes.length&&now-S.frameTimes[0]>3000)S.frameTimes.shift();
-  S.hist.push({t:now,s:r.s,md:r.md,sd:r.sd,me:r.me,se:r.se,p:r.p});
+  trackerUpdate(r);
+  const t0=TR.tracks[0];
+  S.hist.push({t:now,s:r.s,md:r.md,sd:r.sd,me:r.me,se:r.se,p:r.p,td:t0?t0.d:null});
   while(S.hist.length&&now-S.hist[0].t>600000)S.hist.shift();
-  S.trails.push({t:now,s:r.s,md:r.md,sd:r.sd});while(S.trails.length&&now-S.trails[0].t>2500)S.trails.shift();
   const p=!!r.p;
   if(p&&!S.present){S.since=now;onArrive(r)}
   if(!p&&S.present&&!S.hub)S.events.unshift({t:now,type:'leave',dur:(now-S.since)/1000});
   S.present=p;
-  accumulateHeat(r);
-  updateTiles();drawGates();drawTimeline();
+  accumulateHeat();
+  drawGates();drawTimeline();
 }
 function onArrive(r){
   const d=(r.s&1?r.md:r.sd)||r.dd;
-  if(!S.hub){S.events.unshift({t:Date.now(),type:'arrive',d,s:r.s});if(S.events.length>200)S.events.pop();renderLog()}
+  if(!S.hub){S.events.unshift({t:Date.now(),type:'arrive',d,s:r.s});if(S.events.length>300)S.events.pop()}
   if(S.sound)beep();
-  if(S.notify&&'Notification'in window&&Notification.permission==='granted'){
-    const z=zoneFor(d/100,r.s);new Notification('Human detected',{body:`${fmtM(d)} away${z?' · '+z.name:''}`,silent:true})}
+  if(S.notify&&'Notification'in window&&Notification.permission==='granted')new Notification('Human detected',{body:`${fmtM(d)} from the sensor`,silent:true});
 }
 let ac=null;
 function beep(){if(!ac)return;const t=ac.currentTime;for(const[f,dt]of[[1600,0],[2200,.16]]){const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.25,t+dt);g.gain.exponentialRampToValueAtTime(.001,t+dt+.14);o.start(t+dt);o.stop(t+dt+.15)}}
 async function pollHistory(){
-  if(S.hub){try{const j=await(await fetch(api('history'),{cache:'no-store'})).json();S.events=j.events.slice().reverse();renderLog();drawOcc()}catch(e){}}
+  if(S.hub){try{const j=await(await fetch(api('history'),{cache:'no-store'})).json();S.events=j.events.slice().reverse();drawOcc()}catch(e){}}
   setTimeout(pollHistory,4000);
 }
 async function cmd(c){
   $('#cmdMsg').textContent='Sending: '+c+' …';
   try{const j=await(await fetch(api('cmd?c=')+encodeURIComponent(c),{cache:'no-store'})).json();
-    $('#cmdMsg').textContent=j.ok?'Done: '+c+(j.msg?' — '+j.msg:''):'Failed: '+c+(j.msg?' — '+j.msg:'');return j}
+    $('#cmdMsg').textContent=(j.ok?'Done: ':'Failed: ')+c+(j.msg?' — '+j.msg:'');return j}
   catch(e){$('#cmdMsg').textContent='Could not reach the radar';return{ok:false}}
 }
 
-// ---------------------------------------------------------------- room model / location estimate
+// ================================================================ room model
+// Zone type: explicit (z.k) or guessed from the name. Drives furniture, poses and the location prior.
+const KINDS=['bed','couch','desk','table','chair','counter','tv','door','window','plant','rug'];
+function kindOf(z){if(z.k&&KINDS.includes(z.k))return z.k;const n=(z.n||'').toLowerCase();
+  return/bed/.test(n)?'bed':/couch|sofa/.test(n)?'couch':/desk/.test(n)?'desk':/table/.test(n)?'table':/counter|kitchen/.test(n)?'counter':/chair|seat/.test(n)?'chair':
+    /\btv\b|television/.test(n)?'tv':/door/.test(n)?'door':/window/.test(n)?'window':/plant/.test(n)?'plant':'rug'}
+// Prior: still people are usually on a bed/couch/chair; moving people on open floor or in doorways.
+const PRIOR={still:{bed:3,couch:3,desk:2.5,table:2,chair:3,counter:.8,tv:.4,door:.4,window:.6,plant:.2,rug:1.2,open:1},
+             move:{bed:.3,couch:.3,desk:.6,table:.6,chair:.4,counter:1,tv:.5,door:1.6,window:.8,plant:.2,rug:1,open:1.5}};
+const WALL_DIR={T:[0,-1],B:[0,1],L:[-1,0],R:[1,0]};
+// Per-zone geometry: nearest wall, orientation (front faces into the room) and the seat/bed/exit anchor.
+function roomGeom(){
+  const R=S.room,key=roomJSON();if(S._gk===key)return S._geo;
+  const geo=R.zones.map(z=>{
+    const kind=kindOf(z),cx=z.x+z.w/2,cy=z.y+z.h/2;
+    const d={T:z.y,B:R.h-(z.y+z.h),L:z.x,R:R.w-(z.x+z.w)};const side=Object.keys(d).reduce((a,b)=>d[a]<=d[b]?a:b);
+    const back=WALL_DIR[side],fx=-back[0],fy=-back[1],theta=Math.atan2(fx,fy);
+    const W=side==='T'||side==='B'?z.w:z.h,D=side==='T'||side==='B'?z.h:z.w;
+    const toW=(lx,lz)=>({x:cx+lx*Math.cos(theta)+lz*Math.sin(theta),y:cy-lx*Math.sin(theta)+lz*Math.cos(theta)});
+    const dd=Math.min(D,.8);let anchor=null,exit=null;
+    if(kind==='desk'||kind==='table'){const p=toW(0,-D/2+dd+.32);anchor={...p,heading:theta+Math.PI,pose:'sit',seat:.47}}
+    else if(kind==='couch'){const p=toW(0,.08);anchor={...p,heading:theta,pose:'sit',seat:.5}}
+    else if(kind==='chair'){const p=toW(0,0);anchor={...p,heading:theta,pose:'sit',seat:.47}}
+    else if(kind==='bed'){const p=toW(0,.05);anchor={...p,heading:theta,pose:'lie',seat:.56,len:D}}
+    else if(kind==='door'){exit=toW(0,Math.max(D/2,.1)+.45)}
+    return{z,kind,side,theta,W,D,dd,cx,cy,toW,anchor,exit};
+  });
+  S._gk=key;S._geo=geo;return geo;
+}
 function samples(dm){
   const R=S.room,pts=[];if(!(dm>0))return pts;
   for(let i=0;i<=48;i++){const off=(i/48-.5)*R.fov*D2R,a=R.sa*D2R+off,w=Math.cos(off*.9)**2;
     for(let k=-2;k<=2;k++){const r=dm+k*.1;if(r<=0)continue;const x=R.sx+r*Math.cos(a),y=R.sy+r*Math.sin(a);
-      if(x<0||y<0||x>R.w||y>R.h)continue;pts.push({x,y,w})}}
+      if(x<0||y<0||x>R.w||y>R.h)continue;pts.push({x,y,w,a})}}
   return pts;
 }
 function inZone(z,p){return p.x>=z.x&&p.x<=z.x+z.w&&p.y>=z.y&&p.y<=z.y+z.h}
-// What a zone is, from its name. Drives both the 3D furniture and the location prior below.
-function kindOf(name){const n=name.toLowerCase();return/bed/.test(n)?'bed':/couch|sofa/.test(n)?'couch':/desk|table|counter|bench/.test(n)?'desk':/door/.test(n)?'door':/chair|seat/.test(n)?'chair':'rug'}
-// Prior: people who are still are usually on a bed/couch/desk chair; people moving are usually on open floor or in a doorway.
-const PRIOR={still:{bed:3,couch:3,desk:2.5,chair:3,rug:1.2,door:.4,open:1},move:{bed:.3,couch:.3,desk:.6,chair:.4,rug:1,door:1.5,open:1.5}};
+// Possible positions along the distance arc, grouped by zone, weighted by beam shape and the prior.
 function locate(dm,still){
-  const R=S.room,pts=samples(dm),P=PRIOR[still?'still':'move'];let tot=0;const zs=R.zones.map(()=>0);
-  for(const p of pts){const zi=R.zones.findIndex(z=>inZone(z,p));p.w*=zi>=0?P[kindOf(R.zones[zi].n)]:P.open;tot+=p.w;if(zi>=0)zs[zi]+=p.w}
-  if(!tot)return{pts,tot:0};
-  let bi=-1,bv=0;zs.forEach((v,i)=>{if(v>bv){bv=v;bi=i}});
-  const open=tot-zs.reduce((a,b)=>a+b,0);
-  let best=bi>=0&&bv>=open?{name:R.zones[bi].n,pct:bv/tot,zi:bi}:{name:'Open floor',pct:open/tot,zi:-1};
-  // most likely point: weighted centroid of samples inside the winning area
-  let sx=0,sy=0,sw=0;for(const p of pts){const inside=best.zi>=0?inZone(R.zones[best.zi],p):!R.zones.some(z=>inZone(z,p));if(inside){sx+=p.x*p.w;sy+=p.y*p.w;sw+=p.w}}
-  // snap the centroid back onto the distance arc
-  let cx=sx/sw,cy=sy/sw;const a=Math.atan2(cy-R.sy,cx-R.sx);cx=R.sx+dm*Math.cos(a);cy=R.sy+dm*Math.sin(a);
-  cx=Math.min(R.w-.15,Math.max(.15,cx));cy=Math.min(R.h-.15,Math.max(.15,cy));
-  return{pts,tot,zones:zs,best,x:cx,y:cy};
+  const R=S.room,pts=samples(dm),P=PRIOR[still?'still':'move'],n=R.zones.length,acc=[];
+  for(let i=0;i<=n;i++)acc.push({w:0,s:0,c:0});
+  let tot=0;
+  for(const p of pts){const zi=R.zones.findIndex(z=>inZone(z,p)),k=zi>=0?zi:n,w=p.w*(zi>=0?P[kindOf(R.zones[zi])]:P.open);
+    const a=acc[k];a.w+=w;a.s+=Math.sin(p.a)*w;a.c+=Math.cos(p.a)*w;tot+=w}
+  if(!tot)return{tot:0};
+  const opts=acc.map((a,i)=>({zi:i<n?i:-1,name:i<n?R.zones[i].n:'Open floor',pct:a.w/tot,ang:a.w?Math.atan2(a.s,a.c):null}));
+  return{tot,opts,best:opts.reduce((b,o)=>o.pct>b.pct?o:b)};
 }
-function zoneFor(dm,s){const L=locate(dm,!(s&1));return L.tot?L.best:null}
-function saveRoom(){try{localStorage.setItem('room',JSON.stringify(S.room))}catch(e){}
-  clearTimeout(saveRoom.t);saveRoom.t=setTimeout(()=>fetch(api('room'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S.room)}).catch(()=>{}),600)}
-async function loadRoom(){try{const j=await(await fetch(api('room'),{cache:'no-store'})).json();if(j&&j.w){S.room=Object.assign(defaultRoom(),j);try{localStorage.setItem('room',JSON.stringify(S.room))}catch(e){}syncEditor()}}catch(e){}}
+function saveRoom(){store.set('room',roomJSON());
+  clearTimeout(saveRoom.t);saveRoom.t=setTimeout(()=>fetch(api('room'),{method:'POST',headers:{'Content-Type':'application/json'},body:roomJSON()}).catch(()=>{}),600)}
+async function loadRoom(){try{const j=await(await fetch(api('room'),{cache:'no-store'})).json();if(j&&j.w){S.room=Object.assign(defaultRoom(),j);store.set('room',roomJSON());syncEditor()}}catch(e){}}
 
-// ---------------------------------------------------------------- heatmap (time spent, per 10 cm cell)
+// ================================================================ tracker (filters the raw radar into stable people)
+// Median-of-5 -> alpha-beta filter on distance with outlier gating; walking/still decided with hysteresis
+// from real distance change, not from the raw "moving" flag (fidgeting in a chair is not walking).
+const TR={tracks:[],n:0,last:0,pair:0};
+const med=a=>{const b=a.slice().sort((x,y)=>x-y);return b[b.length>>1]};
+function newTrack(d,now){return{id:++TR.n,d,v:0,raw:[d],jump:0,mot:0,spd:0,win:[],seen:now,born:now,state:'still',stateSince:now,wc:0,sc:0,zi:undefined,zc:null,zcSince:0,ang:null,tAng:null,zoneName:'',zonePct:0,lastZ:0,merge:0}}
+function trackStep(t,z,mot,dt,now){
+  t.raw.push(z);if(t.raw.length>5)t.raw.shift();
+  const zm=med(t.raw),pred=t.d+t.v*dt,res=zm-pred;
+  if(Math.abs(res)>1.0&&t.jump<3){t.jump++;t.d=pred}
+  else{if(Math.abs(res)>1.0){t.d=zm;t.v=0;t.raw=[zm]}else{t.d=pred+.3*res;t.v=clamp(t.v+.06*res/dt,-2.5,2.5)}t.jump=0}
+  t.v*=.96;t.mot+=(mot-t.mot)*.15;t.spd+=(Math.abs(t.v)-t.spd)*.2;
+  t.win.push({t:now,d:t.d});while(t.win.length&&now-t.win[0].t>2000)t.win.shift();
+  t.seen=now;
+}
+function spread(t){let lo=1e9,hi=-1e9;for(const w of t.win){lo=Math.min(lo,w.d);hi=Math.max(hi,w.d)}return t.win.length?hi-lo:0}
+function trackerUpdate(r){
+  const now=Date.now(),dt=clamp((now-(TR.last||now))/1000||.1,.05,.5);TR.last=now;
+  const meas=[];
+  if(r.ok&&r.s){const m=r.s&1&&r.md?r.md/100:null,s=r.s&2&&r.sd?r.sd/100:null;
+    if(m!=null&&s!=null&&Math.abs(m-s)>1.2)meas.push({d:m,mot:r.me/100},{d:s,mot:0});
+    else if(m!=null&&s!=null){const w=(r.me+r.se)||1;meas.push({d:(m*r.me+s*r.se)/w,mot:r.me/100})}
+    else if(m!=null)meas.push({d:m,mot:r.me/100});else if(s!=null)meas.push({d:s,mot:0})}
+  TR.pair=meas.length===2?TR.pair+1:Math.max(0,TR.pair-2);
+  const used=new Set();
+  for(const ms of meas){
+    let best=null,bd=1.3;for(const t of TR.tracks){if(used.has(t))continue;const d=Math.abs(t.d-ms.d);if(d<bd){bd=d;best=t}}
+    if(!best){
+      if(!TR.tracks.length||(TR.tracks.length===1&&TR.pair>=20&&!used.size)){best=newTrack(ms.d,now);TR.tracks.push(best)}
+      else if(meas.length===1&&!used.has(TR.tracks[0]))best=TR.tracks[0];
+      else continue}
+    used.add(best);trackStep(best,ms.d,ms.mot,dt,now)}
+  for(const t of TR.tracks){
+    if(!used.has(t))t.v*=.8;
+    const sp=spread(t),walkish=t.spd>.2||(t.mot>.5&&sp>.3),stillish=t.spd<.08&&sp<.18;
+    if(t.state!=='walk'){t.wc=walkish?t.wc+dt:0;if(t.wc>.5){t.state='walk';t.stateSince=now;t.wc=0}}
+    else{t.sc=stillish?t.sc+dt:0;if(t.sc>1.2){t.state='still';t.stateSince=now;t.sc=0}}
+  }
+  if(TR.tracks.length===2){const[a,b]=TR.tracks;a.merge=b.merge=Math.abs(a.d-b.d)<.5?a.merge+dt:0;if(a.merge>1.5)b.dead=true}
+  for(const t of TR.tracks)if(now-t.seen>(r.p?4000:700))t.dead=true;
+  TR.tracks=TR.tracks.filter(t=>!t.dead);
+}
+// Which zone a track is in, with hysteresis so the estimate doesn't flip back and forth.
+function chooseZone(t,now){
+  const L=locate(t.d,t.state!=='walk');t.L=L;if(!L.tot){t.out=true;return}t.out=false;
+  const cur=L.opts.find(o=>o.zi===t.zi),best=L.best;
+  if(t.zi===undefined||!cur||cur.pct<.05){t.zi=best.zi;t.zc=null}
+  else if(best.zi!==t.zi&&best.pct>cur.pct*1.25){if(t.zc!==best.zi){t.zc=best.zi;t.zcSince=now}else if(now-t.zcSince>1500){t.zi=best.zi;t.zc=null}}
+  else t.zc=null;
+  const o=L.opts.find(o=>o.zi===t.zi);t.zoneName=o.name;t.zonePct=o.pct;t.tAng=o.ang;
+}
+function arcPoint(t){if(t.ang==null)return null;const R=S.room;
+  return{x:clamp(R.sx+t.d*Math.cos(t.ang),.25,R.w-.25),y:clamp(R.sy+t.d*Math.sin(t.ang),.25,R.h-.25)}}
+
+// ================================================================ figures (what the 3D people do)
+// A figure follows its track at human walking speed; when still it walks to the matching seat/bed and sits or lies down.
+function figuresStep(dt,now){
+  const geo=roomGeom();
+  for(const t of TR.tracks){
+    if(now-(t.lastZ||0)>200){t.lastZ=now;chooseZone(t,now)}
+    if(t.tAng!=null)t.ang=t.ang==null?t.tAng:t.ang+angDiff(t.tAng,t.ang)*Math.min(1,dt*2.5);
+    let f=S.figs.find(f=>f.t===t);
+    if(!f){const p=arcPoint(t);if(!p)continue;f={t,x:p.x,y:p.y,a:0,head:Math.atan2(S.room.sx-p.x,S.room.sy-p.y),spd:0,vis:'stand',visSince:now,logged:'',id:t.id};S.figs.push(f)}
+  }
+  for(const f of S.figs){
+    const alive=TR.tracks.includes(f.t);
+    if(!alive&&!f.gone){f.gone=true;const ex=geo.find(g=>g.exit);f.exit=ex&&dist(f,ex.exit)<5?ex.exit:null;f.anchor=null}
+    let tgt,want;
+    if(f.gone){tgt=f.exit||f;want='stand';if(!f.exit||dist(f,f.exit)<.25)f.fading=true}
+    else{const t=f.t,g=t.zi>=0?geo[t.zi]:null;
+      if(t.state!=='walk'&&g&&g.anchor){tgt=g.anchor;want=g.anchor.pose;f.anchor=g.anchor}
+      else{tgt=arcPoint(t)||f;want='stand';f.anchor=null}}
+    const dx=tgt.x-f.x,dy=tgt.y-f.y,dd=Math.hypot(dx,dy),speed=Math.min(1.4,dd*2.2),step=Math.min(dd,speed*dt);
+    if(dd>.001){f.x+=dx/dd*step;f.y+=dy/dd*step}
+    f.spd+=((step/dt)-f.spd)*Math.min(1,dt*6);
+    let vis=f.spd>.18?'walk':(dd<.12&&want!=='stand'?want:'stand');
+    if(vis==='walk'&&dd>.05){const h=Math.atan2(dx,dy);f.head+=angDiff(h,f.head)*Math.min(1,dt*6)}
+    else if((vis==='sit'||vis==='lie')&&f.anchor)f.head+=angDiff(f.anchor.heading,f.head)*Math.min(1,dt*4);
+    if(vis!==f.vis){f.vis=vis;f.visSince=now}
+    f.a=clamp(f.a+(f.fading?-dt/.8:dt/.6),0,1);
+    logActivity(f,now);
+  }
+  S.figs=S.figs.filter(f=>!(f.gone&&f.fading&&f.a<=0));
+}
+function logActivity(f,now){
+  if(f.gone||now-f.visSince<1500)return;
+  const z=f.t.zoneName,key=f.vis+'|'+(f.vis==='walk'?'':z);if(key===f.logged)return;
+  const first=!f.logged;f.logged=key;if(first&&f.vis==='stand')return;
+  const txt=f.vis==='sit'?`Sat down${z&&z!=='Open floor'?' at '+z:''}`:f.vis==='lie'?`Lay down${z&&z!=='Open floor'?' on '+z:''}`:f.vis==='walk'?'Started walking':`Standing${z?' · '+z:''}`;
+  S.act.unshift({t:now,type:'act',txt,pid:f.id});if(S.act.length>200)S.act.pop();
+}
+function activity(f){
+  if(!f)return'';const z=f.t.zoneName;
+  return f.vis==='walk'?'Walking':f.vis==='sit'?(f.anchor&&kindOfAnchor(f)==='couch'?'Sitting on the couch':'Sitting'):f.vis==='lie'?'Lying down':f.t.state==='walk'?'Moving':'Standing';
+}
+function kindOfAnchor(f){const g=roomGeom().find(g=>g.anchor===f.anchor);return g?g.kind:''}
+
+// ================================================================ heatmap (time spent, per 10 cm cell)
 const HC=0.1;
 function heatKey(){return`heat_${S.room.w}x${S.room.h}`}
 function initHeat(){const n=Math.ceil(S.room.w/HC)*Math.ceil(S.room.h/HC);S.heat=new Float32Array(n);
-  try{const a=JSON.parse(localStorage.getItem(heatKey())||'null');if(a&&a.length===n)S.heat.set(a)}catch(e){}}
-function accumulateHeat(r){
-  if(!r.p||!r.s||!S.heat)return;
-  const d=(r.s&1?r.md:r.sd)/100,pts=samples(d),cols=Math.ceil(S.room.w/HC);
-  let tot=0;for(const p of pts)tot+=p.w;if(!tot)return;
-  for(const p of pts){const i=Math.min(cols-1,(p.x/HC)|0)+cols*((p.y/HC)|0);if(i<S.heat.length)S.heat[i]+=p.w/tot}
+  try{const a=JSON.parse(store.get(heatKey(),'null'));if(a&&a.length===n)S.heat.set(a)}catch(e){}}
+function accumulateHeat(){
+  if(!S.heat)return;const cols=Math.ceil(S.room.w/HC);
+  for(const f of S.figs){if(f.gone)continue;const i=Math.min(cols-1,(f.x/HC)|0)+cols*((f.y/HC)|0);if(i>=0&&i<S.heat.length)S.heat[i]+=.1}
 }
-setInterval(()=>{if(S.heat)try{localStorage.setItem(heatKey(),JSON.stringify(Array.from(S.heat,v=>Math.round(v*100)/100)))}catch(e){}},15000);
+setInterval(()=>{if(S.heat)store.set(heatKey(),JSON.stringify(Array.from(S.heat,v=>Math.round(v*100)/100)))},15000);
 
-// ---------------------------------------------------------------- room view + human figures
-let drag=null,hoverZone=-1;
-function roomXf(o){const R=S.room,p=22,s=Math.min((o.w-2*p)/R.w,(o.h-2*p)/R.h),ox=(o.w-R.w*s)/2,oy=(o.h-R.h*s)/2;
-  return{s,ox,oy,X:v=>ox+v*s,Y:v=>oy+v*s,inv:(px,py)=>({x:(px-ox)/s,y:(py-oy)/s})}}
-function drawRoom(ts){
-  const o=fit('room'),x=o.x,W=o.w,H=o.h,R=S.room,T=roomXf(o);x.clearRect(0,0,W,H);
-  const r=S.r,fresh=S.ok&&r&&r.ok;
-  // floor + grid
-  x.fillStyle=C.panel2;x.fillRect(T.X(0),T.Y(0),R.w*T.s,R.h*T.s);
-  x.strokeStyle=C.grid;x.lineWidth=1;
-  for(let v=.5;v<R.w;v+=.5){x.beginPath();x.moveTo(T.X(v),T.Y(0));x.lineTo(T.X(v),T.Y(R.h));x.stroke()}
-  for(let v=.5;v<R.h;v+=.5){x.beginPath();x.moveTo(T.X(0),T.Y(v));x.lineTo(T.X(R.w),T.Y(v));x.stroke()}
-  // heatmap
-  if(S.showHeat&&S.heat){let mx=0;for(const v of S.heat)mx=Math.max(mx,v);const cols=Math.ceil(R.w/HC);
-    if(mx>0)for(let i=0;i<S.heat.length;i++){const v=S.heat[i];if(v<mx*.02)continue;x.fillStyle=rgba(C.heat,.08+.6*v/mx);x.fillRect(T.X((i%cols)*HC),T.Y(((i/cols)|0)*HC),HC*T.s+.5,HC*T.s+.5)}}
-  x.save();x.beginPath();x.rect(T.X(0),T.Y(0),R.w*T.s,R.h*T.s);x.clip();
-  // FOV cone + range rings
-  const a0=(R.sa-R.fov/2)*D2R,a1=(R.sa+R.fov/2)*D2R,SX=T.X(R.sx),SY=T.Y(R.sy);
-  x.beginPath();x.moveTo(SX,SY);x.arc(SX,SY,MAXR*T.s,a0,a1);x.closePath();x.fillStyle=rgba(C.sweep,.05);x.fill();x.strokeStyle=rgba(C.sweep,.35);x.stroke();
-  for(let m=1;m<=6;m++){x.beginPath();x.arc(SX,SY,m*T.s,a0,a1);x.strokeStyle=rgba(C.sweep,.15);x.stroke()}
-  // per-band energy, projected into the room
-  if(fresh&&r.mg){for(let g=0;g<NG;g++){const e=Math.max(r.mg[g],r.sg[g]);if(e<8)continue;const col=r.mg[g]>=r.sg[g]?C.move:C.still;
-    x.beginPath();x.arc(SX,SY,(g+1)*GATE*T.s,a0,a1);x.arc(SX,SY,g*GATE*T.s,a1,a0,true);x.closePath();x.fillStyle=rgba(col,.02+.09*e/100);x.fill()}}
-  // target arcs
-  const L=S.L||{};
-  if(fresh){for(const[bit,key,col]of[[2,'sd',C.still],[1,'md',C.move]]){if(!(r.s&bit)||!r[key])continue;
-    x.beginPath();x.arc(SX,SY,r[key]/100*T.s,a0,a1);x.strokeStyle=rgba(col,.75);x.lineWidth=3;x.stroke()}}
-  x.restore();
-  // zones
-  R.zones.forEach((z,i)=>{const best=(L.md&&L.md.best&&L.md.best.zi===i)||(L.sd&&L.sd.best&&L.sd.best.zi===i);
-    x.fillStyle=rgba(C.ink,best?.10:.04);x.strokeStyle=best?C.ink:C.axis;x.lineWidth=best?2:1;
-    x.beginPath();x.roundRect(T.X(z.x),T.Y(z.y),z.w*T.s,z.h*T.s,4);x.fill();x.stroke();
-    x.fillStyle=best?C.ink:C.ink2;x.font=(best?'600 ':'')+'12px system-ui,sans-serif';x.textAlign='left';x.textBaseline='top';x.fillText(z.n,T.X(z.x)+5,T.Y(z.y)+4);
-    if(S.edit){x.fillStyle=C.ink2;x.fillRect(T.X(z.x+z.w)-6,T.Y(z.y+z.h)-6,6,6)}});
-  // walls
-  x.strokeStyle=C.ink2;x.lineWidth=3;x.strokeRect(T.X(0),T.Y(0),R.w*T.s,R.h*T.s);
-  // human figures
-  for(const f of S.figs)drawFigure(x,T.X(f.x),T.Y(f.y),Math.max(26,Math.min(58,T.s*.55)),f,ts);
-  // sensor
-  x.save();x.translate(SX,SY);x.rotate(R.sa*D2R);x.fillStyle=C.sweep;x.beginPath();x.roundRect(-5,-9,10,18,3);x.fill();x.restore();
-  if(S.edit){const hx=SX+.7*T.s*Math.cos(R.sa*D2R),hy=SY+.7*T.s*Math.sin(R.sa*D2R);x.beginPath();x.moveTo(SX,SY);x.lineTo(hx,hy);x.strokeStyle=C.sweep;x.lineWidth=1.5;x.stroke();
-    x.beginPath();x.arc(hx,hy,7,0,7);x.fillStyle=C.panel;x.fill();x.stroke()}
-  // scale + dims
-  x.fillStyle=C.muted;x.font='11px system-ui,sans-serif';x.textAlign='center';x.textBaseline='bottom';
-  x.fillText(R.w.toFixed(1)+' m',T.X(R.w/2),T.Y(0)-4);x.save();x.translate(T.X(0)-6,T.Y(R.h/2));x.rotate(-Math.PI/2);x.fillText(R.h.toFixed(1)+' m',0,0);x.restore();
-}
-// Once per animation frame: locate targets in the room, move the figures, update the 'where' text.
-function tick(){
-  const r=S.r,fresh=S.ok&&r&&r.ok,L={};
-  if(fresh)for(const[bit,key]of[[2,'sd'],[1,'md']])if(r.s&bit&&r[key])L[key]=locate(r[key]/100,key==='sd');
-  S.L=L;updateFigures(L,fresh);
-  const parts=[];
-  for(const[key,lbl]of[['md','Moving'],['sd','Still']]){const l=L[key];if(!l)continue;
-    parts.push(l.tot?`${lbl} ${fmtM(r[key])} — most likely <b>${esc(l.best.name)}</b> (${Math.round(l.best.pct*100)}%)`:`${lbl} ${fmtM(r[key])} — outside the room outline`)}
-  const html=fresh?(parts.join('<br>')||'Nobody detected'):S.ok?'Sensor not detected':'Waiting for radar…';
-  for(const id of['#where','#where3d']){const w=$(id);if(w.innerHTML!==html)w.innerHTML=html}
-}
-// Figures: merge moving+still into one person when their distances are close, otherwise two people.
-function updateFigures(L,fresh){
-  const want=[];
-  if(fresh&&S.r.p){const r=S.r,m=L.md&&L.md.tot?L.md:null,s=L.sd&&L.sd.tot?L.sd:null;
-    if(m&&s&&Math.abs(r.md-r.sd)<60)want.push({x:m.x,y:m.y,walk:r.me>=r.se*.6,e:Math.max(r.me,r.se)});
-    else{if(m)want.push({x:m.x,y:m.y,walk:true,e:r.me});if(s)want.push({x:s.x,y:s.y,walk:false,e:r.se})}}
-  // match to existing figures, ease toward targets, fade out the rest
-  const used=new Set();
-  for(const w of want){let best=null,bd=1e9;for(const f of S.figs){if(used.has(f))continue;const d=Math.hypot(f.tx-w.x,f.ty-w.y);if(d<bd){bd=d;best=f}}
-    if(!best||bd>1.5){best={x:w.x,y:w.y,tx:w.x,ty:w.y,a:0,phase:Math.random()*6,face:1};S.figs.push(best)}
-    used.add(best);const dx=w.x-best.tx;if(Math.abs(dx)>.01)best.face=dx>0?1:-1;best.tx=w.x;best.ty=w.y;best.walk=w.walk;best.e=w.e;best.live=true}
-  for(const f of S.figs){if(!used.has(f))f.live=false;f.x+=(f.tx-f.x)*.08;f.y+=(f.ty-f.y)*.08;f.a=Math.max(0,Math.min(1,f.a+(f.live?.06:-.04)))}
-  S.figs=S.figs.filter(f=>f.a>0||f.live);
-}
-// Simple articulated figure: walking cycle when moving, seated with breathing when still.
-function drawFigure(x,px,py,h,f,ts){
-  const t=ts/1000+f.phase,col=f.walk?C.move:C.still,u=h/10;
-  x.save();x.translate(px,py);x.scale(f.face,1);x.globalAlpha=f.a;
-  // floor shadow + accuracy ring
-  x.beginPath();x.ellipse(0,0,u*2.6,u*.8,0,0,7);x.fillStyle=rgba(col,.18);x.fill();
-  x.lineCap='round';x.lineJoin='round';x.strokeStyle=C.ink;x.fillStyle=C.ink;
-  const limb=(pts,w)=>{x.lineWidth=w;x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)x.lineTo(pts[i][0],pts[i][1]);x.stroke()};
-  if(f.walk){
-    const s=Math.sin(t*6.5),c=Math.cos(t*6.5),bob=Math.abs(c)*u*.25;
-    const hip=[0,-u*4.6-bob],sh=[u*.25,-u*7.6-bob];
-    const leg=(ph)=>{const a=ph*.55,k=Math.max(0,-ph)*.7;const knee=[hip[0]+Math.sin(a)*u*2.3,hip[1]+Math.cos(a)*u*2.3];
-      return[hip,knee,[knee[0]+Math.sin(a-k)*u*2.3,knee[1]+Math.cos(a-k)*u*2.3]]};
-    const arm=(ph)=>{const a=ph*.6;const el=[sh[0]+Math.sin(a)*u*1.6,sh[1]+Math.cos(a)*u*1.6];return[sh,el,[el[0]+Math.sin(a+.5)*u*1.5,el[1]+Math.cos(a+.5)*u*1.5]]};
-    x.globalAlpha=f.a*.55;limb(leg(-s),u*.9);limb(arm(s),u*.7);x.globalAlpha=f.a;
-    limb([hip,sh],u*1.25);limb(leg(s),u*.95);limb(arm(-s),u*.75);
-    x.beginPath();x.arc(sh[0]+u*.35,sh[1]-u*1.25,u*.95,0,7);x.fill();
-  }else{
-    const br=Math.sin(t*1.7)*u*.08;
-    // chair
-    x.strokeStyle=C.muted;limb([[-u*1.6,0],[-u*1.6,-u*2.6],[u*1.6,-u*2.6],[u*1.6,0]],u*.35);limb([[-u*1.6,-u*2.6],[-u*1.9,-u*6.2]],u*.35);
-    x.strokeStyle=C.ink;
-    const hip=[-u*.6,-u*3.2],sh=[-u*.9,-u*6.4-br],knee=[u*1.7,-u*3.2];
-    limb([hip,knee,[u*1.9,0]],u*.95);limb([hip,sh],u*1.3+br*.5);limb([sh,[u*.4,-u*4.6],[u*1.5,-u*4.1]],u*.75);
-    x.beginPath();x.arc(sh[0]+u*.2,sh[1]-u*1.3,u*.95,0,7);x.fill();
-  }
-  // energy tag
-  x.scale(f.face,1);x.globalAlpha=f.a;x.font='600 11px system-ui,sans-serif';x.textAlign='center';x.textBaseline='top';x.fillStyle=col;
-  x.fillText(f.walk?'walking':'still',0,u*.9);
-  x.restore();
-}
-
-// ---------------------------------------------------------------- 3D view (three.js)
-// World axes: x = room width, z = room length (the 2D plan's y), y = up. Units are metres.
-const V={ok:!!(window.THREE&&THREE.OrbitControls),key:'',people:new Map(),view:'orbit',lastInput:0,spin:false};
-const WALL_H=2.4,MOUNT_H=1.2,MAX_COL=0.45;
-function mat(color,opts={}){return new THREE.MeshStandardMaterial(Object.assign({color,roughness:.8,metalness:0},opts))}
-function glow(color,opacity){return new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.6,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide,clippingPlanes:V.clip})}
-function textSprite(text,color,size=.22){
-  const c=document.createElement('canvas'),x=c.getContext('2d'),f=48;x.font=`600 ${f}px system-ui,sans-serif`;
-  const w=Math.ceil(x.measureText(text).width)+28;c.width=w;c.height=f+20;
-  x.font=`600 ${f}px system-ui,sans-serif`;x.fillStyle=rgba(C.panel,.78);x.beginPath();x.roundRect(0,0,w,c.height,14);x.fill();
-  x.fillStyle=color;x.textBaseline='middle';x.fillText(text,14,c.height/2+2);
-  const t=new THREE.CanvasTexture(c);t.anisotropy=4;
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));s.scale.set(size*w/c.height,size,1);s.renderOrder=10;return s}
-function disposeTree(o){o.traverse(n=>{if(n.geometry)n.geometry.dispose();if(n.material){for(const m of[].concat(n.material)){if(m.map)m.map.dispose();m.dispose()}}})}
-// Annular sector on the floor (angles are plan angles in radians), extruded upward by 1 m.
+// ================================================================ 3D view (three.js)
+// World: x = room width, z = room length (plan y), y = up, metres.
+const V={ok:!!(window.THREE&&THREE.OrbitControls),key:'',people:new Map(),view:store.get('view','orbit'),lastInput:0,spin:store.get('spin')==='1',avatar:null};
+if(V.ok&&THREE.ColorManagement)THREE.ColorManagement.legacyMode=false;
+const WALL_H=2.5,WALL_T=.1;
+function M(color,o={}){return new THREE.MeshStandardMaterial(Object.assign({color,roughness:.85,metalness:0},o))}
+function box(w,h,d,m,r=.02){const g=THREE.RoundedBoxGeometry&&r>0?new THREE.RoundedBoxGeometry(w,h,d,3,Math.min(r,w/2-.001,h/2-.001,d/2-.001)):new THREE.BoxGeometry(w,h,d);
+  const o=new THREE.Mesh(g,m);o.castShadow=o.receiveShadow=true;return o}
+function at(o,x,y,z){o.position.set(x,y,z);return o}
+function textSprite(text,color,size=.2){
+  const c=document.createElement('canvas'),x=c.getContext('2d'),f=44;x.font=`600 ${f}px system-ui,sans-serif`;
+  const w=Math.ceil(x.measureText(text).width)+30;c.width=w;c.height=f+22;
+  x.font=`600 ${f}px system-ui,sans-serif`;x.fillStyle='rgba(20,20,20,.72)';x.beginPath();x.roundRect(0,0,w,c.height,16);x.fill();
+  x.fillStyle=color;x.textBaseline='middle';x.fillText(text,15,c.height/2+2);
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));s.scale.set(size*w/c.height,size,1);s.renderOrder=20;return s}
+function disposeTree(o){o.traverse(n=>{if(n.geometry)n.geometry.dispose();if(n.material)for(const m of[].concat(n.material)){if(m.map&&!m.map.userData.keep)m.map.dispose();m.dispose()}})}
 function sectorShape(r0,r1,a0,a1){const s=new THREE.Shape();s.absarc(0,0,r1,-a0,-a1,true);s.absarc(0,0,Math.max(r0,.001),-a1,-a0,false);return s}
-function flatSector(r0,r1,a0,a1,m){const g=new THREE.RingGeometry(Math.max(r0,.001),r1,64,1,-a1,a1-a0);const o=new THREE.Mesh(g,m);o.rotation.x=-Math.PI/2;return o}
+function flatSector(r0,r1,a0,a1,m){const o=new THREE.Mesh(new THREE.RingGeometry(Math.max(r0,.001),r1,64,1,-a1,a1-a0),m);o.rotation.x=-Math.PI/2;return o}
+// Procedural wood-plank floor texture
+function woodTexture(){
+  if(V.wood)return V.wood;
+  const c=document.createElement('canvas');c.width=c.height=1024;const x=c.getContext('2d'),rows=8,h=1024/rows;
+  for(let r=0;r<rows;r++){let off=(r%2)*300+Math.random()*200;
+    for(let s=-1;s<4;s++){const x0=off+s*620,l=36+Math.random()*10,base=`hsl(${28+Math.random()*6},${38+Math.random()*10}%,${l}%)`;
+      x.fillStyle=base;x.fillRect(x0,r*h,620,h);
+      for(let g=0;g<18;g++){x.strokeStyle=`rgba(40,22,10,${.05+Math.random()*.08})`;x.lineWidth=1+Math.random()*2;const y=r*h+Math.random()*h;x.beginPath();x.moveTo(x0,y);x.bezierCurveTo(x0+200,y+Math.random()*8-4,x0+400,y+Math.random()*8-4,x0+620,y);x.stroke()}
+      x.fillStyle='rgba(20,10,5,.55)';x.fillRect(x0,r*h,3,h)}
+    x.fillStyle='rgba(20,10,5,.5)';x.fillRect(0,r*h,1024,3)}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;t.userData.keep=true;V.wood=t;return t}
+function fabricTexture(color){
+  const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.fillStyle=color;x.fillRect(0,0,128,128);
+  for(let i=0;i<1400;i++){x.fillStyle=`rgba(${Math.random()<.5?0:255},${Math.random()<.5?0:255},${Math.random()<.5?0:255},.035)`;x.fillRect(Math.random()*128,Math.random()*128,2,2)}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(3,3);t.encoding=THREE.sRGBEncoding;return t}
 
 function init3D(){
   const host=$('#view3d');
-  V.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  V.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
   V.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   V.renderer.shadowMap.enabled=true;V.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  V.renderer.localClippingEnabled=true;
+  V.renderer.localClippingEnabled=true;V.renderer.outputEncoding=THREE.sRGBEncoding;
+  V.renderer.toneMapping=THREE.ACESFilmicToneMapping;V.renderer.toneMappingExposure=1.05;
   host.appendChild(V.renderer.domElement);
   V.scene=new THREE.Scene();
-  V.cam=new THREE.PerspectiveCamera(42,1,.05,120);
+  if(THREE.RoomEnvironment){const pm=new THREE.PMREMGenerator(V.renderer);V.scene.environment=pm.fromScene(new THREE.RoomEnvironment(),.04).texture;pm.dispose()}
+  V.cam=new THREE.PerspectiveCamera(40,1,.05,150);
   V.ctl=new THREE.OrbitControls(V.cam,V.renderer.domElement);
-  V.ctl.enableDamping=true;V.ctl.dampingFactor=.08;V.ctl.maxPolarAngle=Math.PI*.49;V.ctl.minDistance=1;V.ctl.maxDistance=30;V.ctl.autoRotateSpeed=.6;
+  Object.assign(V.ctl,{enableDamping:true,dampingFactor:.08,maxPolarAngle:Math.PI*.49,minDistance:.8,maxDistance:30,autoRotateSpeed:.5});
   V.ctl.addEventListener('start',()=>{V.lastInput=Date.now();V.tween=null});
-  V.hemi=new THREE.HemisphereLight(0xffffff,0x202020,.75);V.scene.add(V.hemi);
-  V.sun=new THREE.DirectionalLight(0xffffff,.9);V.sun.castShadow=true;V.sun.shadow.mapSize.set(1024,1024);V.sun.shadow.bias=-.0005;V.scene.add(V.sun,V.sun.target);
+  V.scene.add(new THREE.HemisphereLight(0xfff4e6,0x2a2622,.45));
+  V.sun=new THREE.DirectionalLight(0xfff0dc,1.6);V.sun.castShadow=true;V.sun.shadow.mapSize.set(2048,2048);V.sun.shadow.bias=-.0004;V.sun.shadow.normalBias=.02;V.scene.add(V.sun,V.sun.target);
   V.clip=[new THREE.Plane(new THREE.Vector3(1,0,0),0),new THREE.Plane(new THREE.Vector3(-1,0,0),4),new THREE.Plane(new THREE.Vector3(0,0,1),0),new THREE.Plane(new THREE.Vector3(0,0,-1),4)];
+  V.clock=new THREE.Clock();
   new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;V.renderer.setSize(w,h,false);V.renderer.domElement.style.width='100%';V.renderer.domElement.style.height=h+'px';V.cam.aspect=w/h;V.cam.updateProjectionMatrix()}).observe(host);
-  build3D();setView('orbit',true);
+  build3D();setView(V.view,true);loadAvatar();
 }
 
-// Rebuild the static scene (room, furniture, sensor, beam, energy columns) when the layout or theme changes.
+// ---- furniture (built facing local +z, back against the wall at local -z)
+const WOOD_D='#5b3f2b',WOOD_L='#b48a5e',METAL='#2b2b2e',WHITE='#eceae6';
+function buildFurniture(g){
+  const grp=new THREE.Group();grp.position.set(g.cx,0,g.cy);grp.rotation.y=g.theta;
+  const W=g.W,D=g.D,add=o=>(grp.add(o),o);
+  const chair=(x,z,rot)=>{const c=new THREE.Group();c.position.set(x,0,z);c.rotation.y=rot;grp.add(c);const m=M(METAL,{roughness:.5,metalness:.3}),f=M('#34363c',{roughness:.95});
+    c.add(at(box(.48,.08,.46,f,.03),0,.45,0));c.add(at(box(.46,.5,.07,f,.03),0,.78,-.22));c.add(at(new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.36),m),0,.24,0));
+    for(let i=0;i<5;i++){const a=i/5*Math.PI*2,l=box(.3,.025,.035,m,0);l.position.set(Math.cos(a)*.14,.04,Math.sin(a)*.14);l.rotation.y=-a;c.add(l)}return c};
+  switch(g.kind){
+    case'bed':{const duvet=M('#7f93ad',{map:fabricTexture('#7f93ad')});
+      add(at(box(W,.28,D,M(WOOD_D,{roughness:.6}),.03),0,.18,0));
+      add(at(box(W-.06,.22,D-.08,M(WHITE,{roughness:.95}),.06),0,.42,.02));
+      add(at(box(W-.02,.07,D*.66,duvet,.04),0,.55,D*.17));
+      const np=W>1.2?2:1;for(let i=0;i<np;i++)add(at(box(W/np-.14,.13,.36,M('#f6f4ef',{roughness:1}),.06),(i-(np-1)/2)*(W/np),.6,-D/2+.32));
+      add(at(box(W+.04,1.0,.07,M(WOOD_D,{roughness:.6}),.03),0,.6,-D/2+.035));break}
+    case'couch':{const fab=M('#56606b',{map:fabricTexture('#56606b'),roughness:1});
+      add(at(box(W,.38,D,fab,.05),0,.21,0));const n=Math.max(1,Math.round((W-.36)/.7));
+      for(let i=0;i<n;i++){const cw=(W-.36)/n;add(at(box(cw-.03,.14,D-.32,fab,.06),-(W-.36)/2+cw*(i+.5),.47,.1));add(at(box(cw-.03,.42,.2,fab,.08),-(W-.36)/2+cw*(i+.5),.66,-D/2+.16))}
+      for(const s of[-1,1])add(at(box(.18,.6,D,fab,.06),s*(W/2-.09),.32,0));break}
+    case'desk':case'table':{const top=M(WOOD_L,{roughness:.55}),leg=M(METAL,{roughness:.4,metalness:.4}),dd=g.dd;
+      add(at(box(W,.04,dd,top,.01),0,.74,-D/2+dd/2));
+      for(const[sx,sz]of[[-1,-1],[1,-1],[-1,1],[1,1]])add(at(box(.04,.72,.04,leg,0),sx*(W/2-.05),.36,-D/2+dd/2+sz*(dd/2-.05)));
+      if(g.kind==='desk'){const sw=Math.min(.62,W*.5),scr=M('#0d1117',{roughness:.3,emissive:'#20406a',emissiveIntensity:.55});
+        add(at(box(sw,.36,.03,scr,.01),0,1.0,-D/2+.14));add(at(box(.05,.2,.05,leg,0),0,.85,-D/2+.16));
+        add(at(box(.42,.02,.14,M('#22252a',{roughness:.6}),.005),0,.77,-D/2+dd*.62));}
+      chair(0,-D/2+dd+.32,Math.PI);break}
+    case'chair':chair(0,0,0);break;
+    case'counter':{add(at(box(W,.88,Math.min(D,.65),M('#d8d4cc',{roughness:.7}),.01),0,.44,-D/2+Math.min(D,.65)/2));add(at(box(W+.02,.04,Math.min(D,.65)+.02,M('#3a3a3c',{roughness:.3}),.005),0,.9,-D/2+Math.min(D,.65)/2));break}
+    case'tv':{add(at(box(W,.45,Math.min(D,.4),M(WOOD_D,{roughness:.6}),.02),0,.225,-D/2+.2));const tw=Math.min(W*.9,1.4);add(at(box(tw,tw*.56,.05,M('#0a0a0a',{roughness:.25,emissive:'#14243a',emissiveIntensity:.4}),.01),0,1.25,-D/2+.04));break}
+    case'plant':{add(at(new THREE.Mesh(new THREE.CylinderGeometry(.17,.13,.32,20),M('#b5694a',{roughness:.8})),0,.16,0));
+      const leaf=M('#3f7d3a',{roughness:.8});for(let i=0;i<7;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.16+Math.random()*.08,12,10),leaf);s.position.set((Math.random()-.5)*.25,.5+Math.random()*.35,(Math.random()-.5)*.25);s.castShadow=true;add(s)}break}
+    case'door':{const dw=Math.min(W,.92),frame=M(WHITE,{roughness:.6}),leaf=M('#9a7353',{roughness:.6});
+      const z0=-D/2;add(at(box(.06,2.1,.12,frame,0),-dw/2-.03,1.05,z0));add(at(box(.06,2.1,.12,frame,0),dw/2+.03,1.05,z0));add(at(box(dw+.12,.06,.12,frame,0),0,2.13,z0));
+      const hinge=new THREE.Group();hinge.position.set(-dw/2,0,z0+.03);hinge.rotation.y=-.5;grp.add(hinge);hinge.add(at(box(dw,2.04,.04,leaf,.01),dw/2,1.02,0));
+      const knob=new THREE.Mesh(new THREE.SphereGeometry(.03,10,8),M('#c9b27c',{metalness:.8,roughness:.3}));knob.position.set(dw-.08,1.0,.04);hinge.add(knob);g.onWall=true;break}
+    case'window':{const ww=Math.min(W,2.2),frame=M(WHITE,{roughness:.5}),glass=new THREE.MeshStandardMaterial({color:'#a9c9e6',emissive:'#6d8fb0',emissiveIntensity:.35,transparent:true,opacity:.45,roughness:.05});
+      const z0=-D/2+.02;add(at(box(ww,1.1,.02,glass,0),0,1.5,z0));for(const y of[.93,2.07])add(at(box(ww+.08,.06,.08,frame,0),0,y,z0));for(const x of[-1,0,1])add(at(box(.05,1.2,.08,frame,0),x*ww/2,1.5,z0));g.onWall=true;break}
+    default:{const rug=M('#8a6a5c',{map:fabricTexture('#8a6a5c'),roughness:1});const m=new THREE.Mesh(new THREE.PlaneGeometry(W,D),rug);m.rotation.x=-Math.PI/2;m.position.y=.006;m.receiveShadow=true;add(m);
+      const b=new THREE.Mesh(new THREE.PlaneGeometry(W-.16,D-.16),M('#a4836f',{map:fabricTexture('#a4836f'),roughness:1}));b.rotation.x=-Math.PI/2;b.position.y=.008;b.receiveShadow=true;add(b)}
+  }
+  const lbl=textSprite(g.z.n,'#e9e5dc',.14);lbl.position.y=g.kind==='door'?2.35:g.kind==='window'?2.3:g.kind==='tv'?1.75:g.kind==='plant'?1.1:g.kind==='rug'?.15:1.05;lbl.visible=false;grp.add(lbl);g.label=lbl;
+  return grp;
+}
+
+// Rebuild the static scene when the layout, floor image or theme changes.
 function build3D(){
   const R=S.room;
   if(V.root){V.scene.remove(V.root);disposeTree(V.root)}
   V.root=new THREE.Group();V.scene.add(V.root);
   V.clip[1].constant=R.w;V.clip[3].constant=R.h;
   const cx=R.w/2,cz=R.h/2,span=Math.max(R.w,R.h);
-  V.sun.position.set(cx+span*.6,6,cz+span*.9);V.sun.target.position.set(cx,0,cz);
+  V.sun.position.set(cx-span*.5,7,cz+span*.6);V.sun.target.position.set(cx,0,cz);
   Object.assign(V.sun.shadow.camera,{left:-span,right:span,top:span,bottom:-span,near:.5,far:30});V.sun.shadow.camera.updateProjectionMatrix();
-  // floor, grid, walls
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(R.w,R.h),mat(C.panel2,{roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.set(cx,0,cz);floor.receiveShadow=true;V.root.add(floor);
-  const gp=[];for(let v=.5;v<R.w-1e-6;v+=.5)gp.push(v,.002,0,v,.002,R.h);for(let v=.5;v<R.h-1e-6;v+=.5)gp.push(0,.002,v,R.w,.002,v);
-  const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(gp,3));V.root.add(new THREE.LineSegments(gg,new THREE.LineBasicMaterial({color:C.grid})));
-  const wallM=new THREE.MeshStandardMaterial({color:C.ink2,transparent:true,opacity:.05,side:THREE.DoubleSide,depthWrite:false});
-  for(const[w,x,z,ry]of[[R.w,cx,0,0],[R.w,cx,R.h,0],[R.h,0,cz,Math.PI/2],[R.h,R.w,cz,Math.PI/2]]){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,WALL_H),wallM);m.position.set(x,WALL_H/2,z);m.rotation.y=ry;V.root.add(m)}
-  const box=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(R.w,WALL_H,R.h)),new THREE.LineBasicMaterial({color:C.axis}));box.position.set(cx,WALL_H/2,cz);V.root.add(box);
-  const base=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(R.w,.06,R.h)),new THREE.LineBasicMaterial({color:C.ink2}));base.position.set(cx,.03,cz);V.root.add(base);
-  // furniture from zones: the name decides the shape
-  for(const z of R.zones){
-    const kind=kindOf(z.n);
-    const g=new THREE.Group();g.position.set(z.x+z.w/2,0,z.y+z.h/2);V.root.add(g);
-    const blk=(w,h,d,y,col,o={})=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(col,o));m.position.y=y;m.castShadow=m.receiveShadow=true;g.add(m);return m};
-    let top=.02;
-    if(kind==='bed'){blk(z.w,.32,z.h,.16,C.axis);blk(z.w*.96,.14,z.h*.96,.39,C.ink2,{roughness:1});top=.5}
-    else if(kind==='couch'){blk(z.w,.42,z.h,.21,C.axis);const back=blk(z.w,.4,Math.min(.22,z.h*.3),.62,C.axis);back.position.z=-z.h/2+Math.min(.11,z.h*.15);top=.45}
-    else if(kind==='desk'){blk(z.w,.04,z.h,.74,C.ink2,{roughness:.6});for(const[sx,sz]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const l=blk(.04,.72,.04,.36,C.axis);l.position.x=sx*(z.w/2-.04);l.position.z=sz*(z.h/2-.04)}top=.78}
-    else if(kind==='chair'){blk(Math.min(z.w,.5),.04,Math.min(z.h,.5),.45,C.axis);top=.5}
-    else if(kind==='door'){const m=new THREE.Mesh(new THREE.PlaneGeometry(z.w,z.h),new THREE.MeshBasicMaterial({color:C.warn,transparent:true,opacity:.18,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=.004;g.add(m)}
-    else{const m=new THREE.Mesh(new THREE.PlaneGeometry(z.w,z.h),new THREE.MeshStandardMaterial({color:C.ink2,transparent:true,opacity:.10,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=.004;g.add(m)}
-    const e=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(z.w,Math.max(top,.01),z.h)),new THREE.LineBasicMaterial({color:C.ink2,transparent:true,opacity:.35}));e.position.y=Math.max(top,.01)/2;g.add(e);
-    const lbl=textSprite(z.n,C.ink2,.16);lbl.position.y=top+.2;g.add(lbl);
-    z._g=g;z._kind=kind;z._top=top;
-  }
-  // sensor + beam (everything below is positioned relative to the sensor)
-  const a=R.sa*D2R,half=R.fov/2*D2R,a0=a-half,a1=a+half;
-  const sg=new THREE.Group();sg.position.set(R.sx,0,R.sy);V.root.add(sg);V.sensorG=sg;
-  const dev=new THREE.Group();dev.position.y=MOUNT_H;dev.rotation.y=-a;sg.add(dev);
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.04,.035,.09),mat(C.sweep,{emissive:C.sweep,emissiveIntensity:.5,roughness:.4}));dev.add(body);
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,MOUNT_H),mat(C.axis));pole.position.y=MOUNT_H/2;sg.add(pole);
-  const beamM=new THREE.MeshBasicMaterial({color:C.sweep,transparent:true,opacity:.06,depthWrite:false,side:THREE.DoubleSide,clippingPlanes:V.clip});
-  const fan=flatSector(.05,MAXR,a0,a1,beamM);fan.position.y=.003;sg.add(fan);
-  const ringM=new THREE.MeshBasicMaterial({color:C.sweep,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide,clippingPlanes:V.clip});
-  for(let m=1;m<=6;m++){const r=flatSector(m-.006,m+.006,a0,a1,ringM);r.position.y=.004;sg.add(r)}
-  const edgeM=new THREE.LineBasicMaterial({color:C.sweep,transparent:true,opacity:.45,clippingPlanes:V.clip});
-  for(const ang of[a0,a1]){const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,MOUNT_H,0),new THREE.Vector3(MAXR*Math.cos(ang),0,MAXR*Math.sin(ang))]);sg.add(new THREE.Line(g,edgeM))}
-  // sweep wedge (decorative scan)
-  V.sweep=new THREE.Group();sg.add(V.sweep);
-  for(let i=0;i<6;i++){const w=flatSector(.05,MAXR,a-.012-i*.03,a+.012-i*.03,new THREE.MeshBasicMaterial({color:C.sweep,transparent:true,opacity:.16*(1-i/6),depthWrite:false,side:THREE.DoubleSide,clippingPlanes:V.clip}));w.position.y=.006;V.sweep.add(w)}
-  V.sweepHalf=half;
-  // energy columns: per band, left half of the beam = moving, right half = still
-  V.cols=[];
-  for(let g=0;g<NG;g++)for(const side of[0,1]){
-    const col=side?C.still:C.move,t0=side?a+.01:a0,t1=side?a1:a-.01;
-    const geo=new THREE.ExtrudeGeometry(sectorShape(g*GATE+.04,(g+1)*GATE-.04,t0,t1),{depth:1,bevelEnabled:false,curveSegments:20});
-    const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.15,transparent:true,opacity:.5,depthWrite:false,clippingPlanes:V.clip}));
-    m.rotation.x=-Math.PI/2;m.scale.z=.001;m.visible=false;sg.add(m);V.cols.push({m,g,side,h:0});
-  }
-  // range shells for the two targets
-  V.shells={};
-  for(const[key,col]of[['md',C.move],['sd',C.still]]){
-    const sh=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1.8,72,1,true,Math.PI/2-a1,a1-a0),glow(col,.16));sh.position.y=.9;sh.visible=false;sg.add(sh);
-    const ring=flatSector(.985,1.015,a0,a1,glow(col,.9));ring.position.y=.008;ring.visible=false;sg.add(ring);
-    V.shells[key]={sh,ring,d:0};
-  }
+  // floor
+  let fm;if(S.floorImg){const t=new THREE.Texture(S.floorImg);t.encoding=THREE.sRGBEncoding;t.needsUpdate=true;fm=M('#ffffff',{map:t,roughness:.9})}
+  else{const t=woodTexture();t.repeat.set(R.w/1.6,R.h/1.6);fm=M('#ffffff',{map:t,roughness:.62})}
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(R.w,R.h),fm);floor.rotation.x=-Math.PI/2;floor.position.set(cx,0,cz);floor.receiveShadow=true;V.root.add(floor);
+  const under=new THREE.Mesh(new THREE.BoxGeometry(R.w+2*WALL_T,.12,R.h+2*WALL_T),M('#2a2826'));under.position.set(cx,-.061,cz);V.root.add(under);
+  // walls: full height + a low stub; the full wall hides when the camera is outside it (dollhouse cutaway)
+  const wallM=M('#e3ddd3',{roughness:.92}),baseM=M('#f4f1ea',{roughness:.6});V.walls=[];
+  for(const s of['T','B','L','R']){const hz=s==='T'||s==='B',len=(hz?R.w:R.h)+2*WALL_T,n=WALL_DIR[s];
+    const g=new THREE.Group(),p=s==='T'?[cx,-WALL_T/2]:s==='B'?[cx,R.h+WALL_T/2]:s==='L'?[-WALL_T/2,cz]:[R.w+WALL_T/2,cz];g.position.set(p[0],0,p[1]);
+    const full=box(hz?len:WALL_T,WALL_H,hz?WALL_T:len,wallM,0);full.position.y=WALL_H/2;
+    const stub=box(hz?len:WALL_T,.14,hz?WALL_T:len,wallM,0);stub.position.y=.07;
+    const bb=box(hz?len-2*WALL_T:.02,.09,hz?.02:len-2*WALL_T,baseM,0);bb.position.set(-n[0]*(WALL_T/2+.01),.045,-n[1]*(WALL_T/2+.01));
+    g.add(full,stub,bb);V.root.add(g);V.walls.push({s,g,full,n,c:p,items:[]})}
+  // furniture
+  for(const g of roomGeom()){const f=buildFurniture(g);V.root.add(f);g._grp=f;if(g.onWall){const w=V.walls.find(w=>w.s===g.side);if(w)w.items.push(f)}}
+  // sensor: small PCB on a wall bracket
+  const a=R.sa*D2R,half=R.fov/2*D2R,a0=a-half,a1=a+half,MH=R.mh||1.2;
+  const sg=new THREE.Group();sg.position.set(R.sx,0,R.sy);V.root.add(sg);
+  const dev=new THREE.Group();dev.position.y=MH;dev.rotation.y=-a;sg.add(dev);
+  dev.add(box(.012,.035,.075,M('#1d4fd8',{roughness:.4,emissive:'#1d4fd8',emissiveIntensity:.25}),.003));
+  dev.add(at(box(.03,.02,.02,M('#d9d9d9'),.003),-.02,0,0));
+  // radar overlay (toggle): beam fan, range rings, sweep, distance shells
+  const RG=new THREE.Group();sg.add(RG);V.radarG=RG;
+  const ov=(o)=>new THREE.MeshBasicMaterial(Object.assign({color:C.sweep,transparent:true,depthWrite:false,side:THREE.DoubleSide,clippingPlanes:V.clip},o));
+  const fan=flatSector(.05,MAXR,a0,a1,ov({opacity:.07}));fan.position.y=.01;RG.add(fan);
+  for(let m=1;m<=6;m++){const r=flatSector(m-.006,m+.006,a0,a1,ov({opacity:.35}));r.position.y=.011;RG.add(r)}
+  const edgeM=new THREE.LineBasicMaterial({color:C.sweep,transparent:true,opacity:.4,clippingPlanes:V.clip});
+  for(const ang of[a0,a1])RG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,MH,0),new THREE.Vector3(MAXR*Math.cos(ang),0,MAXR*Math.sin(ang))]),edgeM));
+  V.sweep=new THREE.Group();RG.add(V.sweep);
+  for(let i=0;i<6;i++){const w=flatSector(.05,MAXR,a-.012-i*.03,a+.012-i*.03,ov({opacity:.14*(1-i/6)}));w.position.y=.012;V.sweep.add(w)}
+  V.sweepHalf=half;V.shells={};
+  for(const k of[0,1]){const col=k?C.still:C.move;
+    const sh=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1.9,72,1,true,Math.PI/2-a1,a1-a0),ov({color:col,opacity:.1}));sh.position.y=.95;sh.visible=false;RG.add(sh);
+    const ring=flatSector(.99,1.01,a0,a1,ov({color:col,opacity:.85}));ring.position.y=.014;ring.visible=false;RG.add(ring);V.shells[k]={sh,ring}}
+  // energy columns (toggle): per band, left half of the beam = moving, right half = still
+  V.colG=new THREE.Group();sg.add(V.colG);V.cols=[];
+  for(let g=0;g<NG;g++)for(const side of[0,1]){const col=side?C.still:C.move,t0=side?a+.01:a0,t1=side?a1:a-.01;
+    const m=new THREE.Mesh(new THREE.ExtrudeGeometry(sectorShape(g*GATE+.04,(g+1)*GATE-.04,t0,t1),{depth:1,bevelEnabled:false,curveSegments:20}),
+      new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.2,depthWrite:false,clippingPlanes:V.clip}));
+    m.rotation.x=-Math.PI/2;m.scale.z=.001;m.visible=false;V.colG.add(m);V.cols.push({m,g,side,h:0})}
   // heatmap overlay
   const cols=Math.ceil(R.w/HC),rows=Math.ceil(R.h/HC);
   V.heatData=new Uint8Array(cols*rows*4);V.heatTex=new THREE.DataTexture(V.heatData,cols,rows);V.heatTex.magFilter=THREE.LinearFilter;V.heatTex.needsUpdate=true;
   V.heatMesh=new THREE.Mesh(new THREE.PlaneGeometry(R.w,R.h),new THREE.MeshBasicMaterial({map:V.heatTex,transparent:true,depthWrite:false}));
-  V.heatMesh.rotation.x=-Math.PI/2;V.heatMesh.position.set(cx,.005,cz);V.root.add(V.heatMesh);V.heatAt=0;
-  // people are rebuilt with the theme
-  for(const p of V.people.values()){V.scene.remove(p.g);disposeTree(p.g)}V.people.clear();
+  V.heatMesh.rotation.x=-Math.PI/2;V.heatMesh.position.set(cx,.009,cz);V.root.add(V.heatMesh);V.heatAt=0;
 }
 
 function setView(v,instant){
-  V.view=v;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
+  V.view=v;store.set('view',v);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
   const R=S.room,cx=R.w/2,cz=R.h/2,span=Math.max(R.w,R.h);let pos,tgt;
-  if(v==='top'){pos=new THREE.Vector3(cx,span*1.9+1,cz+.01);tgt=new THREE.Vector3(cx,0,cz)}
-  else if(v==='sensor'){const a=R.sa*D2R;pos=new THREE.Vector3(R.sx-Math.cos(a)*.6,MOUNT_H+.55,R.sy-Math.sin(a)*.6);tgt=new THREE.Vector3(R.sx+Math.cos(a)*3,.5,R.sy+Math.sin(a)*3)}
-  else{pos=new THREE.Vector3(cx+span*1.05,span*.95+1,cz+span*1.25);tgt=new THREE.Vector3(cx,.5,cz)}
+  if(v==='top'){pos=new THREE.Vector3(cx,span*1.7+1.5,cz+.01);tgt=new THREE.Vector3(cx,0,cz)}
+  else if(v==='sensor'){const a=R.sa*D2R,MH=R.mh||1.2;pos=new THREE.Vector3(R.sx-Math.cos(a)*.35,MH+.45,R.sy-Math.sin(a)*.35);tgt=new THREE.Vector3(R.sx+Math.cos(a)*3,.6,R.sy+Math.sin(a)*3)}
+  else if(v==='follow'){const f=S.figs[0];const p=f?new THREE.Vector3(f.x,.9,f.y):new THREE.Vector3(cx,.9,cz);tgt=p;pos=p.clone().add(new THREE.Vector3(1.8,1.6,2.4))}
+  else{pos=new THREE.Vector3(cx+span*.95,span*.9+1.4,cz+span*1.15);tgt=new THREE.Vector3(cx,.6,cz)}
   if(instant){V.cam.position.copy(pos);V.ctl.target.copy(tgt);V.ctl.update();V.tween=null}
   else V.tween={p0:V.cam.position.clone(),t0:V.ctl.target.clone(),p1:pos,t1:tgt,s:performance.now()};
 }
 
-// ---- jointed figure: hips -> spine -> neck/head, two arms and two legs with knee/elbow joints
+// ---- people: a rigged, animated human (three.js "Soldier" sample, loaded at runtime) with a procedural fallback
+const AVATAR_URLS=['https://threejs.org/examples/models/gltf/Soldier.glb','https://raw.githubusercontent.com/mrdoob/three.js/r147/examples/models/gltf/Soldier.glb'];
+function loadAvatar(){
+  if(!THREE.GLTFLoader||!THREE.SkeletonUtils){V.avatarFailed=true;return}
+  $('#loading3d').hidden=false;
+  const tryUrl=i=>{if(i>=AVATAR_URLS.length){V.avatarFailed=true;$('#loading3d').hidden=true;return}
+    new THREE.GLTFLoader().load(AVATAR_URLS[i],gltf=>{
+      const sc=gltf.scene;sc.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(sc),h=bb.max.y-bb.min.y;
+      V.avatar={gltf,scale:1.76/h};$('#loading3d').hidden=true;
+      for(const[f,p]of V.people){V.scene.remove(p.root);disposeTree(p.root)}V.people.clear();
+    },undefined,()=>tryUrl(i+1))};
+  tryUrl(0);
+}
 function makePerson(){
-  const g=new THREE.Group(),m=mat(C.still,{roughness:.45,emissive:C.still,emissiveIntensity:.12,transparent:true});
-  const cap=(r,l)=>{const o=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,4,12),m);o.castShadow=true;return o};
-  const body=new THREE.Group();g.add(body);
-  const hips=new THREE.Group();hips.position.y=.93;body.add(hips);
-  const pelvis=cap(.1,.14);pelvis.rotation.z=Math.PI/2;hips.add(pelvis);
-  const spine=new THREE.Group();hips.add(spine);
-  const torso=cap(.135,.34);torso.position.y=.29;spine.add(torso);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.105,24,18),m);head.position.y=.72;head.castShadow=true;spine.add(head);
-  const nose=new THREE.Mesh(new THREE.SphereGeometry(.025,8,6),m);nose.position.set(0,.72,.1);spine.add(nose);
-  const limb=(parent,x,y,l1,l2,r)=>{const j1=new THREE.Group();j1.position.set(x,y,0);parent.add(j1);const u=cap(r,l1-2*r);u.position.y=-l1/2;j1.add(u);
-    const j2=new THREE.Group();j2.position.y=-l1;j1.add(j2);const lo=cap(r*.85,l2-2*r*.85);lo.position.y=-l2/2;j2.add(lo);return{j1,j2}};
-  const legL=limb(hips,-.095,-.02,.44,.45,.062),legR=limb(hips,.095,-.02,.44,.45,.062);
-  const armL=limb(spine,-.2,.52,.29,.27,.042),armR=limb(spine,.2,.52,.29,.27,.042);
-  for(const L of[legL,legR]){const foot=cap(.04,.1);foot.rotation.x=Math.PI/2;foot.position.set(0,-.45,.05);L.j2.add(foot)}
-  // chair shown when seated off-furniture
-  const chair=new THREE.Group(),cm=mat(C.axis,{transparent:true});
-  const cb=(w,h,d,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),cm);o.position.set(x,y,z);o.castShadow=true;chair.add(o)};
-  cb(.46,.04,.44,0,.44,-.02);cb(.46,.48,.04,0,.7,-.24);for(const[x,z]of[[-.2,-.2],[.2,-.2],[-.2,.18],[.2,.18]])cb(.03,.44,.03,x,.22,z);
-  g.add(chair);
-  const label=textSprite('—',C.ink,.17);g.add(label);
-  V.scene.add(g);
-  return{g,body,hips,spine,legL,legR,armL,armR,m,chair,cm,label,labelText:'',pose:{},heading:0,phase:Math.random()*6,blend:0};
+  const root=new THREE.Group(),pose=new THREE.Group();root.add(pose);V.scene.add(root);
+  const p={root,pose,sit:0,lie:0,walkW:0,mats:[],labelText:'',kind:'dummy'};
+  if(V.avatar){
+    const model=THREE.SkeletonUtils.clone(V.avatar.gltf.scene);model.scale.setScalar(V.avatar.scale);model.rotation.y=Math.PI;
+    model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false;o.frustumCulled=false;o.material=o.material.clone();o.material.transparent=true;p.mats.push(o.material)}});
+    pose.add(model);p.model=model;p.kind='gltf';
+    p.mixer=new THREE.AnimationMixer(model);const clip=n=>V.avatar.gltf.animations.find(a=>a.name===n);
+    p.idle=p.mixer.clipAction(clip('Idle'));p.walk=p.mixer.clipAction(clip('Walk'));p.idle.play();p.walk.play();p.walk.setEffectiveWeight(0);
+    p.mixer.update(Math.random()*2);
+    const b=n=>model.getObjectByName('mixamorig'+n);
+    p.bones={hips:b('Hips'),ul:b('LeftUpLeg'),ur:b('RightUpLeg'),ll:b('LeftLeg'),lr:b('RightLeg'),sp:b('Spine'),la:b('LeftArm'),ra:b('RightArm'),lf:b('LeftForeArm'),rf:b('RightForeArm')};
+    model.updateMatrixWorld(true);const hp=new THREE.Vector3();p.bones.hips.getWorldPosition(hp);p.hipY=hp.y;
+  }else buildDummy(p);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.28,.34,40),new THREE.MeshBasicMaterial({color:C.still,transparent:true,opacity:.8,depthWrite:false}));
+  ring.rotation.x=-Math.PI/2;ring.position.y=.012;root.add(ring);p.ring=ring;
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.32,32),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.25,depthWrite:false}));
+  shadow.rotation.x=-Math.PI/2;shadow.position.y=.011;root.add(shadow);p.blob=shadow;
+  return p;
 }
-const POSE_KEYS=['hy','hz','sx','lL1','lL2','lR1','lR2','aL1','aL2','aR1','aR2','lie','chair'];
-function targetPose(p,mode,t){
-  if(mode==='walk'){const s=Math.sin(p.phase),c=Math.cos(p.phase);
-    return{hy:.93+.025*Math.abs(c),hz:0,sx:.06,lL1:-.5*s,lL2:.15+.65*Math.max(0,Math.sin(p.phase+1.3)),lR1:.5*s,lR2:.15+.65*Math.max(0,Math.sin(p.phase+1.3+Math.PI)),
-      aL1:.45*s,aL2:-.35,aR1:-.45*s,aR2:-.35,lie:0,chair:0}}
-  if(mode==='lie')return{hy:.93,hz:0,sx:0,lL1:0,lL2:.08,lR1:0,lR2:.08,aL1:.1,aL2:-.2,aR1:.1,aR2:-.2,lie:1,chair:0};
-  const b=Math.sin(t*1.6)*.02;
-  return{hy:mode==='couch'?.5:.5,hz:-.04,sx:-.08+b,lL1:-1.5,lL2:1.45,lR1:-1.45,lR2:1.5,aL1:-.55,aL2:-.75,aR1:-.6,aR2:-.7,lie:0,chair:mode==='sit'?1:0};
+// Fallback figure when the human model can't load (offline): smooth solid shapes, same joints and poses.
+function buildDummy(p){
+  const m=M('#c9b8a6',{roughness:.6}),cloth=M('#3d4a5c',{roughness:.9}),pants=M('#2b2f36',{roughness:.9});p.mats.push(m,cloth,pants);for(const x of p.mats)x.transparent=true;
+  const cap=(r,l,mt)=>{const o=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,16),mt);o.castShadow=true;return o};
+  const body=new THREE.Group();p.pose.add(body);const hips=new THREE.Group();hips.position.y=.93;body.add(hips);
+  const pel=cap(.12,.12,pants);pel.rotation.z=Math.PI/2;hips.add(pel);const spine=new THREE.Group();hips.add(spine);
+  const torso=cap(.15,.32,cloth);torso.position.y=.3;torso.scale.set(1,1,.75);spine.add(torso);
+  const neck=cap(.05,.06,m);neck.position.y=.6;spine.add(neck);const head=new THREE.Mesh(new THREE.SphereGeometry(.11,24,18),m);head.position.y=.74;head.scale.set(.9,1.05,.95);head.castShadow=true;spine.add(head);
+  const limb=(par,x,y,l1,l2,r,mt,mt2)=>{const j1=new THREE.Group();j1.position.set(x,y,0);par.add(j1);const u=cap(r,l1-2*r,mt);u.position.y=-l1/2;j1.add(u);const j2=new THREE.Group();j2.position.y=-l1;j1.add(j2);const lo=cap(r*.85,l2-2*r*.85,mt2||mt);lo.position.y=-l2/2;j2.add(lo);return{j1,j2}};
+  p.d={body,hips,spine,ll:limb(hips,-.1,-.03,.44,.45,.07,pants),lr:limb(hips,.1,-.03,.44,.45,.07,pants),al:limb(spine,-.21,.52,.29,.27,.045,cloth,m),ar:limb(spine,.21,.52,.29,.27,.045,cloth,m)};
+  for(const L of[p.d.ll,p.d.lr]){const f=cap(.045,.12,pants);f.rotation.x=Math.PI/2;f.position.set(0,-.45,.06);L.j2.add(f)}
+  p.phase=Math.random()*6;
 }
-function applyPose(p){const q=p.pose;
-  p.hips.position.y=q.hy;p.hips.position.z=q.hz;p.spine.rotation.x=q.sx;
-  p.legL.j1.rotation.x=q.lL1;p.legL.j2.rotation.x=q.lL2;p.legR.j1.rotation.x=q.lR1;p.legR.j2.rotation.x=q.lR2;
-  p.armL.j1.rotation.x=q.aL1;p.armL.j2.rotation.x=q.aL2;p.armR.j1.rotation.x=q.aR1;p.armR.j2.rotation.x=q.aR2;
-  p.armL.j1.rotation.z=-.08;p.armR.j1.rotation.z=.08;
-  p.body.rotation.x=-q.lie*Math.PI/2;p.body.position.y=q.lie*.14;p.body.position.z=q.lie*.85;
-  p.chair.visible=q.chair>.05;p.cm.opacity=q.chair*p.m.opacity;
+function poseDummy(p,dt,f){
+  const d=p.d,w=p.walkW,s=p.sit;p.phase+=dt*Math.max(f.spd,.6)*5.5;const sn=Math.sin(p.phase);
+  d.hips.position.y=.93-s*.45+w*.02*Math.abs(Math.cos(p.phase));
+  const leg=(L,ph)=>{L.j1.rotation.x=w*(-.5*Math.sin(p.phase+ph))+s*-1.5;L.j2.rotation.x=w*(.15+.6*Math.max(0,Math.sin(p.phase+ph+1.3)))+s*1.5};
+  leg(d.ll,0);leg(d.lr,Math.PI);
+  d.al.j1.rotation.x=w*.45*sn+s*-.5;d.ar.j1.rotation.x=-w*.45*sn+s*-.5;d.al.j2.rotation.x=d.ar.j2.rotation.x=-.25-s*.6;
+  d.spine.rotation.x=.04*w+Math.sin(performance.now()/600)*.01;
 }
-function zoneAt(x,y){const zs=S.room.zones;for(let i=zs.length-1;i>=0;i--)if(inZone(zs[i],{x,y}))return zs[i];return null}
+const SIT=1;  // sign of the hip/knee bend for the rigged model
+function updatePerson(p,f,dt){
+  const vis=f.vis,anc=f.anchor;
+  p.root.position.set(f.x,0,f.y);p.root.rotation.y=f.head;
+  const k=Math.min(1,dt*3.5);p.sit+=(((vis==='sit')?1:0)-p.sit)*k;p.lie+=(((vis==='lie')?1:0)-p.lie)*k;p.walkW+=(((vis==='walk')?1:0)-p.walkW)*Math.min(1,dt*5);
+  const seat=anc&&anc.pose==='sit'?anc.seat:.47;
+  if(p.kind==='gltf'){
+    p.idle.setEffectiveWeight(1-p.walkW);p.walk.setEffectiveWeight(p.walkW);p.walk.timeScale=clamp(f.spd/1.1,.6,1.5);
+    p.mixer.update(dt);
+    const B=p.bones,s=p.sit;
+    if(s>.001){B.ul.rotation.x+=SIT*-1.55*s;B.ur.rotation.x+=SIT*-1.55*s;B.ll.rotation.x+=SIT*1.6*s;B.lr.rotation.x+=SIT*1.6*s;
+      if(B.la){B.la.rotation.x+=-.35*s;B.ra.rotation.x+=-.35*s}if(B.lf){B.lf.rotation.x+=-.5*s;B.rf.rotation.x+=-.5*s}}
+    p.model.position.y=(seat+.06-p.hipY)*s;p.model.position.z=-.12*s;
+  }else{poseDummy(p,dt,f);p.d.body.position.y=0}
+  // lying: rotate onto the back along the bed, head toward the headboard (local -z)
+  const L=p.lie,bedTop=anc&&anc.pose==='lie'?anc.seat:.56;
+  p.pose.rotation.x=-Math.PI/2*L;p.pose.position.y=(bedTop+.1)*L;p.pose.position.z=.88*L;
+  for(const m of p.mats)m.opacity=f.a;
+  const col=f.vis==='walk'||f.t.state==='walk'?C.move:C.still;p.ring.material.color.set(col);p.ring.material.opacity=.85*f.a*(1-L);p.blob.material.opacity=.25*f.a*(1-L);
+  const d=f.t.d,txt=`${activity(f)} · ${fmtMm(d)}`;
+  if(txt!==p.labelText){p.labelText=txt;if(p.label){p.root.remove(p.label);disposeTree(p.label)}p.label=textSprite(txt,col,.15);p.root.add(p.label)}
+  p.label.position.set(0,L>.5?bedTop+.7:p.sit>.5?1.5:2.05,0);p.label.material.opacity=f.a;
+}
 
 function draw3D(ts){
   if(!V.renderer)return;
-  const R=S.room,key=JSON.stringify([R.w,R.h,R.sx,R.sy,R.sa,R.fov,R.zones.map(z=>[z.n,z.x,z.y,z.w,z.h]),document.documentElement.dataset.theme||'']);
+  const R=S.room,key=roomJSON()+(S.floorImg?'img':'')+(document.documentElement.dataset.theme||'');
   if(key!==V.key){V.key=key;build3D()}
-  const r=S.r,fresh=S.ok&&r&&r.ok,cfg=S.st&&S.st.cfg,t=ts/1000;
-  // camera tween + idle auto-orbit
+  const dt=Math.min(.1,V.clock.getDelta()),r=S.r,fresh=S.ok&&r&&r.ok,cfg=S.st&&S.st.cfg,t=ts/1000;
   if(V.tween){const k=Math.min(1,(performance.now()-V.tween.s)/900),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
     V.cam.position.lerpVectors(V.tween.p0,V.tween.p1,e);V.ctl.target.lerpVectors(V.tween.t0,V.tween.t1,e);if(k>=1)V.tween=null}
+  if(V.view==='follow'&&S.figs[0]&&!V.tween){const f=S.figs[0],d=new THREE.Vector3(f.x-V.ctl.target.x,.9-V.ctl.target.y,f.y-V.ctl.target.z).multiplyScalar(Math.min(1,dt*2.5));V.ctl.target.add(d);V.cam.position.add(d)}
   V.ctl.autoRotate=V.spin&&V.view==='orbit'&&!V.tween&&Date.now()-V.lastInput>8000;
   V.ctl.update();
-  // sweep
-  V.sweep.rotation.y=-Math.sin(t*1.4)*V.sweepHalf;
-  // energy columns
-  const lim=cfg?(Math.max(cfg.mmg,cfg.msg)+1)*GATE:MAXR;
-  for(const c of V.cols){
-    const arr=fresh&&r&&(c.side?r.sg:r.mg),e=arr?arr[c.g]:0,thr=cfg?(c.side?cfg.ss:cfg.ms)[c.g]:101;
-    c.h+=((e/100)*MAX_COL-c.h)*.25;c.m.visible=c.h>.004&&c.g*GATE<lim;c.m.scale.z=Math.max(.001,c.h);
-    const over=e>=thr&&!(c.side&&c.g<2);c.m.material.emissiveIntensity=over?.45:.05;c.m.material.opacity=over?.42:.16;
-  }
-  // target shells
-  for(const k of['md','sd']){const s=V.shells[k],bit=k==='md'?1:2,on=fresh&&r.s&bit&&r[k]>0;
-    if(on){const d=r[k]/100;s.d=s.d?s.d+(d-s.d)*.2:d;const en=(k==='md'?r.me:r.se)/100;
-      s.sh.scale.set(s.d,1,s.d);s.ring.scale.set(s.d,s.d,1);s.sh.material.opacity=.06+.16*en}
-    s.sh.visible=s.ring.visible=!!on;if(!on)s.d=0}
-  // heatmap texture (refresh once a second)
+  // dollhouse cutaway: hide walls between the camera and the room
+  for(const w of V.walls){const out=(V.cam.position.x-w.c[0])*w.n[0]+(V.cam.position.z-w.c[1])*w.n[1]>0&&V.cam.position.y<WALL_H*4;w.full.visible=!out;for(const it of w.items)it.visible=!out}
+  // labels: show furniture names only in edit mode
+  for(const g of roomGeom())if(g.label)g.label.visible=S.edit;
+  // radar overlay
+  V.radarG.visible=S.radar;V.sweep.rotation.y=-Math.sin(t*1.3)*V.sweepHalf;
+  TR.tracks.slice(0,2).forEach((tk,i)=>{const s=V.shells[i];s.sh.scale.set(tk.d,1,tk.d);s.ring.scale.set(tk.d,tk.d,1);s.sh.material.color.set(tk.state==='walk'?C.move:C.still);s.ring.material.color.set(tk.state==='walk'?C.move:C.still)});
+  for(let i=0;i<2;i++){const on=!!TR.tracks[i];V.shells[i].sh.visible=V.shells[i].ring.visible=on}
+  V.colG.visible=S.energy;
+  if(S.energy){const lim=cfg?(Math.max(cfg.mmg,cfg.msg)+1)*GATE:MAXR;
+    for(const c of V.cols){const arr=fresh&&(c.side?r.sg:r.mg),e=arr?arr[c.g]:0,thr=cfg?(c.side?cfg.ss:cfg.ms)[c.g]:101;
+      c.h+=((e/100)*.5-c.h)*.25;c.m.visible=c.h>.004&&c.g*GATE<lim;c.m.scale.z=Math.max(.001,c.h);c.m.material.opacity=e>=thr&&!(c.side&&c.g<2)?.45:.15}}
+  // heatmap texture
   V.heatMesh.visible=S.showHeat;
   if(S.showHeat&&S.heat&&ts-V.heatAt>1000){V.heatAt=ts;const cols=Math.ceil(R.w/HC),rows=Math.ceil(R.h/HC);let mx=0;for(const v of S.heat)mx=Math.max(mx,v);
     const n=parseInt(C.heat.slice(1),16),hr=n>>16&255,hg=n>>8&255,hb=n&255;
     for(let i=0;i<cols*rows&&i<S.heat.length;i++){const row=(i/cols)|0,col=i%cols,o=((rows-1-row)*cols+col)*4,v=mx?S.heat[i]/mx:0;
-      V.heatData[o]=hr;V.heatData[o+1]=hg;V.heatData[o+2]=hb;V.heatData[o+3]=v<.02?0:Math.round(40+190*v)}
+      V.heatData[o]=hr;V.heatData[o+1]=hg;V.heatData[o+2]=hb;V.heatData[o+3]=v<.02?0:Math.round(50+180*v)}
     V.heatTex.needsUpdate=true}
   // people
   const alive=new Set();
-  for(const f of S.figs){
-    let p=V.people.get(f);if(!p){p=makePerson();V.people.set(f,p);for(const k of POSE_KEYS)p.pose[k]=0;p.heading=Math.atan2(R.sx-f.x,R.sy-f.y)}
-    alive.add(f);
-    const z=zoneAt(f.x,f.y),mode=f.walk?'walk':z&&z._kind==='bed'?'lie':z&&z._kind==='couch'?'couch':'sit';
-    // heading: walk along the direction of travel; otherwise keep the last heading
-    const vx=f.tx-f.x,vz=f.ty-f.y;if(f.walk&&Math.hypot(vx,vz)>.03){const h=Math.atan2(vx,vz);let d=h-p.heading;d=Math.atan2(Math.sin(d),Math.cos(d));p.heading+=d*.12}
-    p.phase+=f.walk?.16:0;
-    const tp=targetPose(p,mode,t);for(const k of POSE_KEYS)p.pose[k]+=(tp[k]-p.pose[k])*(k==='lie'||k==='chair'?.06:.2);
-    applyPose(p);
-    const baseY=mode==='lie'?(z&&z._top||0):mode==='couch'?Math.max(0,(z&&z._top||0)-.45):0;
-    p.g.position.set(f.x,baseY,f.y);p.g.rotation.y=p.heading;
-    const col=f.walk?C.move:C.still;p.m.color.lerp(new THREE.Color(col),.1);p.m.emissive.lerp(new THREE.Color(col),.1);
-    p.m.opacity=f.a;
-    const d=f.walk?(S.r&&S.r.md):(S.r&&S.r.sd),txt=(mode==='walk'?'Walking':mode==='lie'?'Lying down':'Sitting')+(d?` · ${fmtM(d)}`:'');
-    if(txt!==p.labelText){p.labelText=txt;p.g.remove(p.label);disposeTree(p.label);p.label=textSprite(txt,col,.16);p.g.add(p.label)}
-    p.label.position.set(0,mode==='lie'?1.0:mode==='walk'?2.05:1.65,0);p.label.material.opacity=f.a;
-  }
-  for(const[f,p]of V.people)if(!alive.has(f)){V.scene.remove(p.g);disposeTree(p.g);V.people.delete(f)}
+  for(const f of S.figs){let p=V.people.get(f);if(!p&&(V.avatar||V.avatarFailed)){p=makePerson();V.people.set(f,p)}if(!p)continue;alive.add(f);updatePerson(p,f,dt)}
+  for(const[f,p]of V.people)if(!alive.has(f)){V.scene.remove(p.root);disposeTree(p.root);V.people.delete(f)}
   V.renderer.render(V.scene,V.cam);
 }
 
-// ---------------------------------------------------------------- room editor (pointer)
+// ================================================================ 2D room plan + editor
+let drag=null;
+function roomXf(o){const R=S.room,p=24,s=Math.min((o.w-2*p)/R.w,(o.h-2*p)/R.h),ox=(o.w-R.w*s)/2,oy=(o.h-R.h*s)/2;
+  return{s,ox,oy,X:v=>ox+v*s,Y:v=>oy+v*s,inv:(px,py)=>({x:(px-ox)/s,y:(py-oy)/s})}}
+function drawRoom(){
+  const o=fit('room'),x=o.x,W=o.w,H=o.h,R=S.room,T=roomXf(o);x.clearRect(0,0,W,H);
+  x.fillStyle=C.panel2;x.fillRect(T.X(0),T.Y(0),R.w*T.s,R.h*T.s);
+  if(S.floorImg){x.globalAlpha=.85;x.drawImage(S.floorImg,T.X(0),T.Y(0),R.w*T.s,R.h*T.s);x.globalAlpha=1}
+  x.strokeStyle=C.grid;x.lineWidth=1;
+  for(let v=.5;v<R.w;v+=.5){x.beginPath();x.moveTo(T.X(v),T.Y(0));x.lineTo(T.X(v),T.Y(R.h));x.stroke()}
+  for(let v=.5;v<R.h;v+=.5){x.beginPath();x.moveTo(T.X(0),T.Y(v));x.lineTo(T.X(R.w),T.Y(v));x.stroke()}
+  if(S.showHeat&&S.heat){let mx=0;for(const v of S.heat)mx=Math.max(mx,v);const cols=Math.ceil(R.w/HC);
+    if(mx>0)for(let i=0;i<S.heat.length;i++){const v=S.heat[i];if(v<mx*.02)continue;x.fillStyle=rgba(C.heat,.08+.6*v/mx);x.fillRect(T.X((i%cols)*HC),T.Y(((i/cols)|0)*HC),HC*T.s+.5,HC*T.s+.5)}}
+  const a0=(R.sa-R.fov/2)*D2R,a1=(R.sa+R.fov/2)*D2R,SX=T.X(R.sx),SY=T.Y(R.sy);
+  x.save();x.beginPath();x.rect(T.X(0),T.Y(0),R.w*T.s,R.h*T.s);x.clip();
+  x.beginPath();x.moveTo(SX,SY);x.arc(SX,SY,MAXR*T.s,a0,a1);x.closePath();x.fillStyle=rgba(C.sweep,.06);x.fill();x.strokeStyle=rgba(C.sweep,.35);x.stroke();
+  for(let m=1;m<=6;m++){x.beginPath();x.arc(SX,SY,m*T.s,a0,a1);x.strokeStyle=rgba(C.sweep,.15);x.stroke()}
+  for(const t of TR.tracks){x.beginPath();x.arc(SX,SY,t.d*T.s,a0,a1);x.strokeStyle=rgba(t.state==='walk'?C.move:C.still,.7);x.lineWidth=3;x.stroke();x.lineWidth=1}
+  x.restore();
+  const geo=roomGeom();
+  R.zones.forEach((z,i)=>{const g=geo[i];x.fillStyle=rgba(C.ink,.06);x.strokeStyle=C.axis;x.lineWidth=1;
+    x.beginPath();x.roundRect(T.X(z.x),T.Y(z.y),z.w*T.s,z.h*T.s,4);x.fill();x.stroke();
+    x.fillStyle=C.ink2;x.font='12px system-ui,sans-serif';x.textAlign='left';x.textBaseline='top';x.fillText(`${z.n} · ${g.kind}`,T.X(z.x)+5,T.Y(z.y)+4);
+    if(g.anchor){x.beginPath();x.arc(T.X(g.anchor.x),T.Y(g.anchor.y),4,0,7);x.fillStyle=C.muted;x.fill()}
+    if(S.edit){x.fillStyle=C.ink2;x.fillRect(T.X(z.x+z.w)-6,T.Y(z.y+z.h)-6,6,6)}});
+  x.strokeStyle=C.ink2;x.lineWidth=3;x.strokeRect(T.X(0),T.Y(0),R.w*T.s,R.h*T.s);
+  for(const f of S.figs){const px=T.X(f.x),py=T.Y(f.y),col=f.vis==='walk'?C.move:C.still;x.globalAlpha=f.a;
+    x.beginPath();x.arc(px,py,9,0,7);x.fillStyle=col;x.fill();x.beginPath();x.moveTo(px,py);x.lineTo(px+16*Math.sin(f.head),py+16*Math.cos(f.head));x.strokeStyle=col;x.lineWidth=3;x.stroke();
+    x.fillStyle=C.ink;x.font='600 11px system-ui,sans-serif';x.textAlign='center';x.textBaseline='bottom';x.fillText(activity(f),px,py-12);x.globalAlpha=1}
+  x.save();x.translate(SX,SY);x.rotate(R.sa*D2R);x.fillStyle=C.sweep;x.beginPath();x.roundRect(-5,-9,10,18,3);x.fill();x.restore();
+  if(S.edit){const hx=SX+.7*T.s*Math.cos(R.sa*D2R),hy=SY+.7*T.s*Math.sin(R.sa*D2R);x.beginPath();x.moveTo(SX,SY);x.lineTo(hx,hy);x.strokeStyle=C.sweep;x.lineWidth=1.5;x.stroke();
+    x.beginPath();x.arc(hx,hy,7,0,7);x.fillStyle=C.panel;x.fill();x.stroke()}
+  x.fillStyle=C.muted;x.font='11px system-ui,sans-serif';x.textAlign='center';x.textBaseline='bottom';
+  x.fillText(R.w.toFixed(1)+' m',T.X(R.w/2),T.Y(0)-4);x.save();x.translate(T.X(0)-6,T.Y(R.h/2));x.rotate(-Math.PI/2);x.fillText(R.h.toFixed(1)+' m',0,0);x.restore();
+}
 function roomHit(px,py){
-  const o=cv.room,T=roomXf(o),R=S.room,SX=T.X(R.sx),SY=T.Y(R.sy);
-  const hx=SX+.7*T.s*Math.cos(R.sa*D2R),hy=SY+.7*T.s*Math.sin(R.sa*D2R);
+  const T=roomXf(cv.room),R=S.room,SX=T.X(R.sx),SY=T.Y(R.sy),hx=SX+.7*T.s*Math.cos(R.sa*D2R),hy=SY+.7*T.s*Math.sin(R.sa*D2R);
   if(Math.hypot(px-hx,py-hy)<11)return{k:'aim'};
   if(Math.hypot(px-SX,py-SY)<13)return{k:'sensor'};
   for(let i=R.zones.length-1;i>=0;i--){const z=R.zones[i],cx=T.X(z.x+z.w),cy=T.Y(z.y+z.h);
@@ -591,38 +721,49 @@ function roomHit(px,py){
     if(px>=T.X(z.x)&&px<=cx&&py>=T.Y(z.y)&&py<=cy)return{k:'zone',i}}
   return null;
 }
-const rc=cv.room.c;
-rc.addEventListener('pointerdown',e=>{if(!S.edit)return;const b=rc.getBoundingClientRect(),px=e.clientX-b.left,py=e.clientY-b.top,T=roomXf(cv.room),p=T.inv(px,py);
-  if(addingZone){const z={n:'Zone '+(S.room.zones.length+1),x:p.x,y:p.y,w:.01,h:.01};S.room.zones.push(z);drag={k:'resize',i:S.room.zones.length-1,new:true}}
+const rc=cv.room.c;let addingZone=false;
+rc.addEventListener('pointerdown',e=>{if(!S.edit)return;const b=rc.getBoundingClientRect(),px=e.clientX-b.left,py=e.clientY-b.top,p=roomXf(cv.room).inv(px,py);
+  if(addingZone){S.room.zones.push({n:'Zone '+(S.room.zones.length+1),x:p.x,y:p.y,w:.01,h:.01});drag={k:'resize',i:S.room.zones.length-1,new:true}}
   else{drag=roomHit(px,py);if(drag&&drag.k==='zone'){const z=S.room.zones[drag.i];drag.dx=p.x-z.x;drag.dy=p.y-z.y}}
   if(drag)rc.setPointerCapture(e.pointerId)});
 rc.addEventListener('pointermove',e=>{const b=rc.getBoundingClientRect(),px=e.clientX-b.left,py=e.clientY-b.top;
   if(!drag){if(S.edit){const h=roomHit(px,py);rc.style.cursor=addingZone?'crosshair':h?(h.k==='resize'?'nwse-resize':'move'):'default'}return}
-  const T=roomXf(cv.room),p=T.inv(px,py),R=S.room,cl=(v,a,b)=>Math.min(b,Math.max(a,v)),snap=v=>Math.round(v*20)/20;
-  if(drag.k==='sensor'){R.sx=snap(cl(p.x,0,R.w));R.sy=snap(cl(p.y,0,R.h))}
-  if(drag.k==='aim'){R.sa=Math.round(Math.atan2(p.y-R.sy,p.x-R.sx)/D2R/5)*5}
-  if(drag.k==='zone'){const z=R.zones[drag.i];z.x=snap(cl(p.x-drag.dx,0,R.w-z.w));z.y=snap(cl(p.y-drag.dy,0,R.h-z.h))}
-  if(drag.k==='resize'){const z=R.zones[drag.i];z.w=snap(cl(p.x-z.x,.2,R.w-z.x));z.h=snap(cl(p.y-z.y,.2,R.h-z.y))}});
+  const p=roomXf(cv.room).inv(px,py),R=S.room,snap=v=>Math.round(v*20)/20;
+  if(drag.k==='sensor'){R.sx=snap(clamp(p.x,0,R.w));R.sy=snap(clamp(p.y,0,R.h))}
+  if(drag.k==='aim')R.sa=Math.round(Math.atan2(p.y-R.sy,p.x-R.sx)/D2R/5)*5;
+  if(drag.k==='zone'){const z=R.zones[drag.i];z.x=snap(clamp(p.x-drag.dx,0,R.w-z.w));z.y=snap(clamp(p.y-drag.dy,0,R.h-z.h))}
+  if(drag.k==='resize'){const z=R.zones[drag.i];z.w=snap(clamp(p.x-z.x,.2,R.w-z.x));z.h=snap(clamp(p.y-z.y,.2,R.h-z.y))}});
 rc.addEventListener('pointerup',()=>{if(!drag)return;if(drag.new){addingZone=false;$('#btnAddZone').classList.remove('on')}drag=null;saveRoom();renderZones()});
-let addingZone=false;
-function syncEditor(){$('#rw').value=S.room.w;$('#rh').value=S.room.h;$('#rf').value=S.room.fov;renderZones();initHeat()}
+function syncEditor(){$('#rw').value=S.room.w;$('#rh').value=S.room.h;$('#rf').value=S.room.fov;$('#rmh').value=S.room.mh||1.2;renderZones();initHeat()}
 function renderZones(){const el=$('#zones');el.innerHTML='';
   S.room.zones.forEach((z,i)=>{const row=document.createElement('div');row.className='row';
-    row.innerHTML=`<input type="text" value="" maxlength="24" aria-label="Zone name"><span class="small muted">${z.w.toFixed(2)} × ${z.h.toFixed(2)} m</span><button class="danger">Delete</button>`;
-    const inp=row.querySelector('input');inp.value=z.n;inp.oninput=()=>{z.n=inp.value||'Zone';saveRoom()};
+    row.innerHTML=`<input type="text" maxlength="24" aria-label="Zone name"><select aria-label="Zone type"><option value="">auto (${kindOf({n:z.n})})</option>${KINDS.map(k=>`<option>${k}</option>`).join('')}</select><span class="small muted">${z.w.toFixed(2)} × ${z.h.toFixed(2)} m</span><button class="danger">Delete</button>`;
+    const inp=row.querySelector('input'),sel=row.querySelector('select');inp.value=z.n;sel.value=z.k||'';
+    inp.oninput=()=>{z.n=inp.value||'Zone';saveRoom()};sel.onchange=()=>{z.k=sel.value||undefined;saveRoom()};
     row.querySelector('button').onclick=()=>{S.room.zones.splice(i,1);saveRoom();renderZones()};el.appendChild(row)});
-  if(!S.room.zones.length)el.innerHTML='<div class="small muted">No zones yet. Use "Draw zone" and drag a rectangle over a bed, desk, couch or doorway.</div>'}
-for(const[id,key,min,max]of[['#rw','w',1,20],['#rh','h',1,20],['#rf','fov',40,160]])
-  $(id).addEventListener('change',e=>{const v=Math.min(max,Math.max(min,parseFloat(e.target.value)||0));S.room[key]=v;e.target.value=v;
-    S.room.sx=Math.min(S.room.sx,S.room.w);S.room.sy=Math.min(S.room.sy,S.room.h);saveRoom();if(key!=='fov')initHeat()});
+  if(!S.room.zones.length)el.innerHTML='<div class="small muted">No zones yet. Use "Draw zone" and drag a rectangle over each bed, desk, couch, door or window.</div>'}
+for(const[id,key,min,max]of[['#rw','w',1,20],['#rh','h',1,20],['#rf','fov',40,160],['#rmh','mh',.2,2.4]])
+  $(id).addEventListener('change',e=>{const v=clamp(parseFloat(e.target.value)||0,min,max);S.room[key]=v;e.target.value=v;
+    S.room.sx=Math.min(S.room.sx,S.room.w);S.room.sy=Math.min(S.room.sy,S.room.h);saveRoom();if(key==='w'||key==='h')initHeat()});
 $('#btnEdit').onclick=()=>{S.edit=!S.edit;$('#editor').hidden=!S.edit;$('#btnEdit').textContent=S.edit?'Done':'Edit room';$('#btnEdit').classList.toggle('on',S.edit);
   $('#planCard').hidden=V.ok&&!S.edit;if(S.edit&&V.ok)$('#planCard').scrollIntoView({behavior:'smooth',block:'nearest'});
   if(!S.edit){addingZone=false;$('#btnAddZone').classList.remove('on');rc.style.cursor='default'}};
 $('#btnAddZone').onclick=()=>{addingZone=!addingZone;$('#btnAddZone').classList.toggle('on',addingZone)};
-$('#btnHeat').onclick=()=>{S.showHeat=!S.showHeat;$('#btnHeat').classList.toggle('on',S.showHeat);try{localStorage.setItem('heatOn',S.showHeat?'1':'0')}catch(e){}};
-$('#btnResetHeat').onclick=()=>{if(confirm('Clear the time-spent heatmap?')){S.heat.fill(0);try{localStorage.removeItem(heatKey())}catch(e){}}};
+$('#btnResetHeat').onclick=()=>{if(confirm('Clear the time-spent heatmap?')){S.heat.fill(0);store.set(heatKey(),'null')}};
+// floor plan image: stored by the PC hub (shared with your phone); kept in this browser when talking to the ESP32 directly
+async function loadFloorplan(){
+  let blob=null;try{const r=await fetch(api('floorplan'),{cache:'no-store'});if(r.ok&&(r.headers.get('content-type')||'').startsWith('image/'))blob=await r.blob()}catch(e){}
+  const src=blob?URL.createObjectURL(blob):store.get('floorplan',null);if(!src){S.floorImg=null;return}
+  const img=new Image();img.onload=()=>{S.floorImg=img;V.key=''};img.src=src;
+}
+$('#fpFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;
+  const img=await createImageBitmap(file),sc=Math.min(1,2048/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));
+  let ok=false;if(S.hub){try{ok=(await fetch(api('floorplan'),{method:'POST',headers:{'Content-Type':'image/jpeg'},body:blob})).ok}catch(e){}}
+  if(!ok)store.set('floorplan',c.toDataURL('image/jpeg',.8));loadFloorplan()};
+$('#fpClear').onclick=async()=>{if(S.hub)try{await fetch(api('floorplan'),{method:'POST',body:''})}catch(e){}store.set('floorplan','');S.floorImg=null;V.key=''};
 
-// ---------------------------------------------------------------- energy-by-gate chart
+// ================================================================ charts
 let gateHover=-1;
 function drawGates(){
   const o=fit('gates'),x=o.x,W=o.w,H=o.h;x.clearRect(0,0,W,H);
@@ -639,99 +780,108 @@ function drawGates(){
       const bx=gx+gw/2+(sd<0?-bw-1:1),e=r&&r[k]?r[k][g]:0;
       if(e>0){const top=Y(e),h=Y(0)-top;x.fillStyle=col;x.beginPath();x.roundRect(bx,top,bw,h,[Math.min(4,h),Math.min(4,h),0,0]);x.fill()}
       if(cfg&&!(k==='sg'&&g<2)){const ty=Y(cfg[tk][g]);x.strokeStyle=C.ink;x.lineWidth=2;x.beginPath();x.moveTo(bx-3,ty);x.lineTo(bx+bw+3,ty);x.stroke()}
-      if(cal&&cal[nk]){const ny=Y(cal[nk][g]);x.strokeStyle=C.ink2;x.lineWidth=1;x.setLineDash([2,3]);x.beginPath();x.moveTo(bx-3,ny);x.lineTo(bx+bw+3,ny);x.stroke();x.setLineDash([])}
-    });
+      if(cal&&cal[nk]){const ny=Y(cal[nk][g]);x.strokeStyle=C.ink2;x.lineWidth=1;x.setLineDash([2,3]);x.beginPath();x.moveTo(bx-3,ny);x.lineTo(bx+bw+3,ny);x.stroke();x.setLineDash([])}});
   }
-  x.fillStyle=C.muted;x.textAlign='right';x.fillText('distance band ends at (m)',W-m.r,H-12);
-  if(!r||!r.mg){x.textAlign='center';x.fillStyle=C.muted;x.fillText('Per-band energy needs engineering mode (turned on automatically)',W/2,H/2-20)}
+  x.fillStyle=C.muted;x.textAlign='right';x.fillText('band ends at (m)',W-m.r,H-12);
 }
-cv.gates.c.addEventListener('pointermove',e=>{const b=cv.gates.c.getBoundingClientRect(),gx=e.clientX-b.left-30,gw=(b.width-36)/NG,g=Math.floor(gx/gw);
-  gateHover=g>=0&&g<NG?g:-1;drawGates();const r=S.r,cfg=S.st&&S.st.cfg;
-  if(gateHover<0||!r||!r.mg)return hideTip();
+cv.gates.c.addEventListener('pointermove',e=>{const b=cv.gates.c.getBoundingClientRect(),gw=(b.width-36)/NG,g=Math.floor((e.clientX-b.left-30)/gw);
+  gateHover=g>=0&&g<NG?g:-1;drawGates();const r=S.r,cfg=S.st&&S.st.cfg;if(gateHover<0||!r||!r.mg)return hideTip();
   const thr=(a,i)=>cfg?` <span class="muted">/ trigger ${cfg[a][i]}</span>`:'';
   showTip(e,`<b>${(g*GATE).toFixed(2)}–${((g+1)*GATE).toFixed(2)} m</b><br><i class="sw" style="background:var(--move)"></i>Moving ${r.mg[g]}${thr('ms',g)}<br><i class="sw" style="background:var(--still)"></i>Still ${r.sg[g]}${g<2?' <span class="muted">(no still trigger here)</span>':thr('ss',g)}`)});
 cv.gates.c.addEventListener('pointerleave',()=>{gateHover=-1;hideTip();drawGates()});
-
-// ---------------------------------------------------------------- distance timeline
 let tlHover=null;
 function drawTimeline(){
   const o=fit('timeline'),x=o.x,W=o.w,H=o.h;x.clearRect(0,0,W,H);
-  const m={l:38,r:8,t:8,b:24},pw=W-m.l-m.r,ph=H-m.t-m.b,now=Date.now(),span=S.tl*1000,t0=now-span;
-  const X=t=>m.l+pw*(t-t0)/span,Y=d=>m.t+ph*(1-d/MAXR);
+  const m={l:38,r:8,t:8,b:24},pw=W-m.l-m.r,ph=H-m.t-m.b,now=Date.now(),span=S.tl*1000,t0=now-span,X=t=>m.l+pw*(t-t0)/span,Y=d=>m.t+ph*(1-d/MAXR);
   x.font='11px system-ui,sans-serif';x.textBaseline='middle';x.textAlign='right';
   for(let d=0;d<=6;d+=1.5){x.strokeStyle=d?C.grid:C.axis;x.lineWidth=1;x.beginPath();x.moveTo(m.l,Y(d));x.lineTo(W-m.r,Y(d));x.stroke();x.fillStyle=C.muted;x.fillText(d+' m',m.l-6,Y(d))}
   x.textAlign='center';x.textBaseline='top';const step=S.tl<=120?30:S.tl<=300?60:120;
-  for(let s=0;s<=S.tl;s+=step){const px=X(now-s*1000);x.fillStyle=C.muted;x.fillText(s?`-${s>=60?(s/60)+' min':s+' s'}`:'now',px,H-m.b+6)}
+  for(let s=0;s<=S.tl;s+=step)x.fillStyle=C.muted,x.fillText(s?`-${s>=60?(s/60)+' min':s+' s'}`:'now',X(now-s*1000),H-m.b+6);
   const pts=S.hist.filter(h=>h.t>=t0);
-  // presence band
   x.fillStyle=rgba(C.crit,.35);let start=null;
   for(let i=0;i<=pts.length;i++){const h=pts[i];if(h&&h.p&&start===null)start=h.t;if((!h||!h.p)&&start!==null){x.fillRect(X(start),Y(0)-5,Math.max(1,X(h?h.t:now)-X(start)),5);start=null}}
-  for(const[bit,key,col]of[[2,'sd',C.still],[1,'md',C.move]]){x.fillStyle=col;
-    for(const h of pts){if(h.s&bit&&h[key]){x.beginPath();x.arc(X(h.t),Y(h[key]/100),2,0,7);x.fill()}}}
+  for(const[bit,key,col]of[[2,'sd',C.still],[1,'md',C.move]]){x.fillStyle=rgba(col,.55);for(const h of pts)if(h.s&bit&&h[key]){x.beginPath();x.arc(X(h.t),Y(h[key]/100),1.8,0,7);x.fill()}}
+  x.strokeStyle=C.ink;x.lineWidth=2;x.beginPath();let pen=false;for(const h of pts){if(h.td==null){pen=false;continue}const px=X(h.t),py=Y(h.td);pen?x.lineTo(px,py):x.moveTo(px,py);pen=true}x.stroke();
   if(tlHover){const px=X(tlHover.t);x.strokeStyle=C.ink2;x.lineWidth=1;x.beginPath();x.moveTo(px,m.t);x.lineTo(px,Y(0));x.stroke()}
 }
-cv.timeline.c.addEventListener('pointermove',e=>{const b=cv.timeline.c.getBoundingClientRect(),pw=b.width-46,span=S.tl*1000,t=Date.now()-span+span*(e.clientX-b.left-38)/pw;
+cv.timeline.c.addEventListener('pointermove',e=>{const b=cv.timeline.c.getBoundingClientRect(),span=S.tl*1000,t=Date.now()-span+span*(e.clientX-b.left-38)/(b.width-46);
   let best=null,bd=1e12;for(const h of S.hist){const d=Math.abs(h.t-t);if(d<bd){bd=d;best=h}}
   if(!best||bd>span/60){tlHover=null;hideTip();return}tlHover=best;drawTimeline();
-  showTip(e,`<b>${fmtT(best.t)}</b><br><i class="sw" style="background:var(--move)"></i>Moving ${best.s&1?fmtM(best.md)+' · energy '+best.me:'–'}<br><i class="sw" style="background:var(--still)"></i>Still ${best.s&2?fmtM(best.sd)+' · energy '+best.se:'–'}<br>${best.p?'Present':'Clear'}`)});
+  showTip(e,`<b>${fmtT(best.t)}</b><br>Tracked ${best.td!=null?fmtMm(best.td):'–'}<br><i class="sw" style="background:var(--move)"></i>Moving ${best.s&1?fmtM(best.md)+' · '+best.me:'–'}<br><i class="sw" style="background:var(--still)"></i>Still ${best.s&2?fmtM(best.sd)+' · '+best.se:'–'}`)});
 cv.timeline.c.addEventListener('pointerleave',()=>{tlHover=null;hideTip()});
 $('#tlRange').onchange=e=>{S.tl=+e.target.value;drawTimeline()};
-
-// ---------------------------------------------------------------- 24 h occupancy (hub only)
 function periods(){const ev=S.events.slice().reverse(),out=[];let a=null;
   for(const e of ev){if(e.type==='arrive')a=e;else if(e.type==='leave'&&a){out.push({a:a.t,b:e.t,d:a.d});a=null}}
   if(a)out.push({a:a.t,b:Date.now(),d:a.d,open:true});return out}
 function drawOcc(){
   if(!S.hub)return;const o=fit('occ'),x=o.x,W=o.w,H=o.h;x.clearRect(0,0,W,H);
   const now=Date.now(),t0=now-864e5,X=t=>8+(W-16)*(t-t0)/864e5,ps=periods().filter(p=>p.b>t0);
-  x.fillStyle=C.panel2;x.fillRect(8,6,W-16,30);
-  x.fillStyle=C.crit;for(const p of ps){const a=X(Math.max(p.a,t0));x.fillRect(a,6,Math.max(1.5,X(p.b)-a),30)}
+  x.fillStyle=C.panel2;x.fillRect(8,6,W-16,30);x.fillStyle=C.crit;for(const p of ps){const a=X(Math.max(p.a,t0));x.fillRect(a,6,Math.max(1.5,X(p.b)-a),30)}
   x.font='11px system-ui,sans-serif';x.fillStyle=C.muted;x.textAlign='center';x.textBaseline='top';
-  for(let h=0;h<=24;h+=6){const t=t0+h*36e5;x.fillText(h===24?'now':new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),Math.min(W-20,Math.max(20,X(t))),42)}
+  for(let h=0;h<=24;h+=6){const t=t0+h*36e5;x.fillText(h===24?'now':new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),clamp(X(t),20,W-20),42)}
   const tot=ps.reduce((s,p)=>s+(Math.min(p.b,now)-Math.max(p.a,t0)),0)/1000;
   $('#occTxt').textContent=`Someone was present for ${fmtDur(tot)} across ${ps.length} visit${ps.length===1?'':'s'}.`;
 }
 cv.occ.c.addEventListener('pointermove',e=>{const b=cv.occ.c.getBoundingClientRect(),t=Date.now()-864e5+864e5*(e.clientX-b.left-8)/(b.width-16);
-  const p=periods().find(p=>t>=p.a&&t<=p.b);if(!p)return hideTip();
-  showTip(e,`<b>${fmtT(p.a)} – ${p.open?'now':fmtT(p.b)}</b><br>${fmtDur((p.b-p.a)/1000)}${p.d?' · first seen at '+fmtM(p.d):''}`)});
+  const p=periods().find(p=>t>=p.a&&t<=p.b);if(!p)return hideTip();showTip(e,`<b>${fmtT(p.a)} – ${p.open?'now':fmtT(p.b)}</b><br>${fmtDur((p.b-p.a)/1000)}`)});
 cv.occ.c.addEventListener('pointerleave',hideTip);
 
-// ---------------------------------------------------------------- tiles, log, status
-function updateTiles(){
-  const r=S.r,fresh=S.ok&&r&&r.ok,set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v};
-  const near=fresh&&r.s?(r.dd||Math.min(r.s&1?r.md:1e9,r.s&2?r.sd:1e9)):0;set('#tDist',near&&near<1e9?fmtM(near):'–');set('#tDistS',fresh&&r.s?'closest reported target':'nobody in range');
-  set('#tMove',fresh&&r.s&1?fmtM(r.md):'–');set('#tMoveS',fresh&&r.s&1?'energy '+r.me+' / 100':'no motion');
-  set('#tStill',fresh&&r.s&2?fmtM(r.sd):'–');set('#tStillS',fresh&&r.s&2?'energy '+r.se+' / 100':'no stationary target');
-  set('#tFor',fresh&&r.p?fmtDur(r.for):'–');set('#tForS',fresh&&r.p&&S.since?'since '+fmtT(S.since):' ');
-  set('#tLight',r&&r.lt!=null?String(r.lt):'–');
-  const fps=S.frameTimes.length/3;set('#tFps',S.ok?fps.toFixed(1)+' /s':'offline');set('#tFpsS',S.hub?'via PC hub (USB)':'direct over WiFi');
-  const today=new Date().setHours(0,0,0,0),n=S.events.filter(e=>e.type==='arrive'&&e.t>=today).length;set('#tArr',String(n));
-  const last=S.events.find(e=>e.type==='arrive');set('#tArrS',last?'last at '+fmtT(last.t):' ');
-  // header state pill (icon + label, never color alone)
-  let txt,col,alert=false;
+// ================================================================ side panel, header, log
+const ICON={walk:'<svg viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M9 21l2-6 3 3v3M7 12l3-3 3 1 3 3M11 15l1-5"/></svg>',
+  sit:'<svg viewBox="0 0 24 24"><circle cx="9" cy="4" r="2"/><path d="M9 7v6h6l2 7M9 13l-2 7M5 11v3h3"/></svg>',
+  lie:'<svg viewBox="0 0 24 24"><circle cx="5" cy="11" r="2"/><path d="M8 12h12M3 16h18M20 16v3M3 16v3"/></svg>',
+  stand:'<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 7v7M12 14l-2 7M12 14l2 7M8 10l4-2 4 2"/></svg>'};
+function renderSide(){
+  const now=Date.now(),figs=S.figs.filter(f=>!f.gone),el=$('#people');
+  $('#pplCount').textContent=figs.length?`${figs.length} in view`:'';
+  if(!figs.length){const last=S.act[0]||S.events.find(e=>e.type==='leave');el.innerHTML=`<div class="muted small" style="padding:8px 0">No one detected.${last?' Last activity '+fmtT(last.t)+'.':''}</div>`}
+  else el.innerHTML=figs.map((f,i)=>{const t=f.t,col=f.vis==='walk'||t.state==='walk'?'var(--move)':'var(--still)',v=t.v;
+    const dir=Math.abs(v)<.08?'Holding distance':v<0?`Approaching ${(-v).toFixed(1)} m/s`:`Moving away ${v.toFixed(1)} m/s`;
+    const where=t.out?'outside the room outline':`${esc(t.zoneName)} <span class="muted">(${Math.round(t.zonePct*100)}% likely)</span>`;
+    return`<div class="person"><div class="avatar" style="border-color:${col}">${ICON[f.vis]||ICON.stand}</div>
+      <div><div class="act">${activity(f)}</div><div class="sub">${where}</div><div class="sub">${dir} · here ${fmtDur((now-t.born)/1000)}</div></div>
+      <div class="big">${fmtMm(t.d)}<small>from sensor</small></div>
+      <div class="meter"><span>Motion</span><span class="bar"><i style="width:${Math.round(t.mot*100)}%;background:${col}"></i></span><span>${Math.round(t.mot*100)}%</span></div></div>`}).join('');
+  // today
+  const today=new Date().setHours(0,0,0,0),ps=periods().filter(p=>p.b>=today),tot=ps.reduce((s,p)=>s+Math.min(p.b,now)-Math.max(p.a,today),0)/1000;
+  const longest=ps.reduce((m,p)=>Math.max(m,(Math.min(p.b,now)-Math.max(p.a,today))/1000),0),arr=S.events.filter(e=>e.type==='arrive'&&e.t>=today).length;
+  const cur=S.present&&S.since?(now-S.since)/1000:0;
+  setHTML('#today',stat('Arrivals',arr,S.hub?'since midnight':'since this page opened')+stat('Time present',fmtDur(tot),ps.length?`${ps.length} visit${ps.length>1?'s':''}`:'—')+
+    stat('Longest visit',longest?fmtDur(longest):'–','')+stat('Current visit',cur?fmtDur(cur):'–',cur?'since '+fmtT(S.since):'nobody here'));
+  const r=S.r,fresh=S.ok&&r&&r.ok,fps=S.frameTimes.length/3;
+  setHTML('#signal',stat('Moving target',fresh&&r.s&1?fmtM(r.md):'–',fresh&&r.s&1?`energy ${r.me}`:'none')+stat('Still target',fresh&&r.s&2?fmtM(r.sd):'–',fresh&&r.s&2?`energy ${r.se}`:'none')+
+    stat('Update rate',S.ok?fps.toFixed(1)+'/s':'offline',S.hub?'PC hub over USB':'direct over WiFi')+stat('Light level',r&&r.lt!=null?r.lt:'–','sensor photodiode'));
+}
+const stat=(k,v,s)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s||'&nbsp;'}</div></div>`;
+function setHTML(sel,h){const e=$(sel);if(e.innerHTML!==h)e.innerHTML=h}
+function renderHeader(){
+  const r=S.r,fresh=S.ok&&r&&r.ok,figs=S.figs.filter(f=>!f.gone);let txt,col,alert=false;
   if(!S.ok){txt='Offline';col=C.muted}else if(!fresh){txt='Sensor not detected';col=C.warn}
-  else if(r.p){alert=true;col=C.crit;txt=r.s&1?'Person moving':r.s&2?'Person still':'Person (holding)'}else{txt='Clear';col=C.good}
-  set('#stateTxt',txt);$('#stateDot').style.background=col;$('#state').classList.toggle('alert',alert);
-  document.title=(alert?'● ':'')+'Human Radar';
+  else if(r.p){alert=true;col=C.crit;txt=figs.length>1?`${figs.length} people`:figs[0]?activity(figs[0]):'Person detected'}else{txt='Clear';col=C.good}
+  setHTML('#stateTxt',esc(txt));$('#stateDot').style.background=col;$('#state').classList.toggle('alert',alert);document.title=(alert?'● ':'')+'Human Radar';
+  const sum=!S.ok?'Waiting for radar…':!fresh?'Sensor not detected':!figs.length?'Nobody detected':
+    figs.map(f=>`<b>${activity(f)}</b> · ${fmtMm(f.t.d)} · ${f.t.out?'outside outline':esc(f.t.zoneName)}`).join('<br>');
+  setHTML('#hudSummary',sum);setHTML('#where',sum);
 }
 function renderLog(){
-  const el=$('#log');if(!S.events.length){el.innerHTML='<li class="muted">No events yet.</li>';return}
-  el.innerHTML=S.events.slice(0,60).map(e=>{
-    if(e.type==='arrive'){const z=e.d?zoneFor(e.d/100,e.s):null;
-      return`<li><span class="tm">${fmtT(e.t)}</span><span><b>Arrived</b> ${e.d?'at '+fmtM(e.d):''}${z?' · likely '+esc(z.name):''}</span></li>`}
-    return`<li><span class="tm">${fmtT(e.t)}</span><span class="muted">Left${e.dur?' after '+fmtDur(e.dur):''}</span></li>`}).join('')}
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const all=S.events.concat(S.act).sort((a,b)=>b.t-a.t).slice(0,80),el=$('#log');
+  const h=all.length?all.map(e=>e.type==='arrive'?`<li><span class="tm">${fmtT(e.t)}</span><span><b>Arrived</b>${e.d?' at '+fmtM(e.d):''}</span></li>`:
+    e.type==='leave'?`<li><span class="tm">${fmtT(e.t)}</span><span class="muted">Left${e.dur?' after '+fmtDur(e.dur):''}</span></li>`:
+    `<li><span class="tm">${fmtT(e.t)}</span><span>${esc(e.txt)}</span></li>`).join(''):'<li class="muted">No events yet.</li>';
+  if(el.dataset.h!==h){el.dataset.h=h;el.innerHTML=h}
+}
 let syncedCfg=false;
 function updateStatus(){
   const st=S.st;
   $('#connTxt').textContent=S.hub?'PC hub':st.ip?'WiFi '+st.ip:'Direct';$('#connDot').style.background=S.ok?C.good:C.muted;
-  $('#occCard').hidden=!S.hub;$('#btnNotify').hidden=!(S.hub&&'Notification'in window&&isSecureContext);
-  $('#wiring').innerHTML=`Wiring: <b>${esc(st.wiring)}</b>${st.baud?' · '+st.baud+' baud':''}${st.fw?' · firmware '+esc(st.fw):''}${st.ssid?'<br>WiFi: '+esc(st.ssid)+' ('+st.rssi+' dBm) · http://humanradar.local/':st.portal?'<br>WiFi not set up: join "HumanRadar-Setup" from your phone':''}`;
-  const cal=st.cal||{};
-  const busy=cal.state==='wait'||cal.state==='run';$('#btnCal').textContent=busy?'Cancel calibration':'Calibrate empty room';
-  const tot=(+$('#calSecs').value)+(+$('#calDelay').value);
-  $('#calTxt').textContent=cal.state==='wait'?`Leave the area now — measuring starts in ${cal.left} s`:cal.state==='run'?`Measuring empty-room noise… ${cal.left} s left. Stay out of range.`:
-    cal.state==='done'?'Calibrated: '+(cal.msg||''):cal.state==='fail'?'Calibration failed: '+(cal.msg||''):$('#calTxt').textContent;
+  $('#occCard').hidden=!S.hub;$('#btnNotify').hidden=!('Notification'in window&&isSecureContext);
+  setHTML('#wiring',`Wiring: <b>${esc(st.wiring||'–')}</b>${st.baud?' · '+st.baud+' baud':''}${st.fw?' · firmware '+esc(st.fw):''}${st.ssid?'<br>WiFi: '+esc(st.ssid)+' ('+st.rssi+' dBm) · http://humanradar.local/':st.portal?'<br>WiFi not set up: join "HumanRadar-Setup" from your phone':''}`);
+  const cal=st.cal||{},busy=cal.state==='wait'||cal.state==='run',tot=(+$('#calSecs').value)+(+$('#calDelay').value);
+  $('#btnCal').textContent=busy?'Cancel calibration':'Calibrate empty room';
+  if(cal.state==='wait')$('#calTxt').textContent=`Leave the area now — measuring starts in ${cal.left} s`;
+  else if(cal.state==='run')$('#calTxt').textContent=`Measuring empty-room noise… ${cal.left} s left. Stay out of range.`;
+  else if(cal.state==='done')$('#calTxt').textContent='Calibrated: '+(cal.msg||'');
+  else if(cal.state==='fail')$('#calTxt').textContent='Calibration failed: '+(cal.msg||'');
   $('#calBar').style.width=busy&&cal.left!=null?Math.max(0,100-100*cal.left/tot)+'%':cal.state==='done'?'100%':'0';
   if(st.cfg&&!syncedCfg){syncedCfg=true;const c=st.cfg;$('#rng').value=Math.max(c.mmg,c.msg);$('#idle').value=c.idle;$('#hold').value=st.hold;rngTxt();buildGateTable()}
 }
@@ -740,47 +890,50 @@ function buildGateTable(){const c=S.st.cfg;let h='<tr><th></th>';for(let g=0;g<N
   for(const[k,l]of[['ms','Moving'],['ss','Still']]){h+=`<tr><td style="text-align:left">${l}</td>`;for(let g=0;g<NG;g++)h+=`<td><input type="number" min="0" max="100" data-k="${k}" data-g="${g}" value="${c[k][g]}" ${k==='ss'&&g<2?'disabled':''}></td>`;h+='</tr>'}
   $('#gtab').innerHTML=h}
 
-// ---------------------------------------------------------------- controls
+// ================================================================ controls
 $('#btnCal').onclick=()=>{const c=S.st&&S.st.cal;if(c&&(c.state==='wait'||c.state==='run'))cmd('cal stop');else cmd(`cal ${$('#calSecs').value} ${$('#calDelay').value}`)};
 document.querySelectorAll('[data-sens]').forEach(b=>b.onclick=async()=>{const v=+b.dataset.sens;await cmd(`sens all ${v} ${v}`);syncedCfg=false});
 $('#rng').oninput=rngTxt;
-$('#rng').onchange=async()=>{const g=+$('#rng').value;await cmd(`range ${g} ${g} ${$('#idle').value||5}`);syncedCfg=false};
-$('#idle').onchange=async()=>{const g=+$('#rng').value;await cmd(`range ${g} ${g} ${$('#idle').value||5}`);syncedCfg=false};
+$('#rng').onchange=$('#idle').onchange=async()=>{const g=+$('#rng').value;await cmd(`range ${g} ${g} ${$('#idle').value||5}`);syncedCfg=false};
 $('#hold').onchange=()=>cmd('hold '+($('#hold').value||0));
 $('#btnGates').onclick=async()=>{const c=S.st.cfg;for(let g=0;g<NG;g++){const m=+document.querySelector(`[data-k=ms][data-g="${g}"]`).value,s=+document.querySelector(`[data-k=ss][data-g="${g}"]`).value;
   if(m!==c.ms[g]||s!==c.ss[g])await cmd(`sens ${g} ${m} ${s}`)}syncedCfg=false};
-$('#btnFactory').onclick=async()=>{if(confirm('Restore the radar\'s factory settings? This undoes calibration and range changes.')){await cmd('factory');syncedCfg=false}};
-$('#btnSound').onclick=()=>{S.sound=!S.sound;if(S.sound&&!ac)ac=new AudioContext();if(S.sound)beep();sb()};
-function sb(){$('#btnSound').textContent=S.sound?'Sound on':'Sound off';$('#btnSound').classList.toggle('on',S.sound);try{localStorage.setItem('sound',S.sound?'1':'0')}catch(e){}}
+$('#btnFactory').onclick=async()=>{if(confirm("Restore the radar's factory settings? This undoes calibration and range changes.")){await cmd('factory');syncedCfg=false}};
+$('#btnSound').onclick=()=>{S.sound=!S.sound;if(S.sound&&!ac)ac=new AudioContext();if(S.sound)beep();$('#btnSound').textContent=S.sound?'Sound on':'Sound off';$('#btnSound').classList.toggle('on',S.sound)};
 $('#btnNotify').onclick=async()=>{if(!S.notify&&Notification.permission!=='granted')await Notification.requestPermission();S.notify=!S.notify&&Notification.permission==='granted';
   $('#btnNotify').textContent=S.notify?'Notifications on':'Notifications off';$('#btnNotify').classList.toggle('on',S.notify)};
 $('#btnTheme').onclick=()=>{const d=document.documentElement,cur=d.dataset.theme||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
-  d.dataset.theme=cur==='light'?'dark':'light';try{localStorage.setItem('theme',d.dataset.theme)}catch(e){}loadColors();V.key='';drawGates();drawTimeline();drawOcc()};
-function showTip(e,html){const t=$('#tip');t.innerHTML=html;t.style.display='block';const w=t.offsetWidth,h=t.offsetHeight;
-  t.style.left=Math.min(innerWidth-w-8,e.clientX+14)+'px';t.style.top=Math.max(8,e.clientY-h-10)+'px'}
+  d.dataset.theme=cur==='light'?'dark':'light';store.set('theme',d.dataset.theme);loadColors();V.key='';drawGates();drawTimeline();drawOcc()};
+function toggle(id,key,storeKey){const b=$(id),set=()=>b.classList.toggle('on',!!S[key]);set();b.onclick=()=>{S[key]=!S[key];store.set(storeKey,S[key]?'1':'0');set()}}
+toggle('#tRadar','radar','radar');toggle('#tEnergy','energy','energy');toggle('#tHeat','showHeat','heatOn');
+function showTip(e,html){const t=$('#tip');t.innerHTML=html;t.style.display='block';const w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.min(innerWidth-w-8,e.clientX+14)+'px';t.style.top=Math.max(8,e.clientY-h-10)+'px'}
 function hideTip(){$('#tip').style.display='none'}
 
-// ---------------------------------------------------------------- boot
-try{const th=localStorage.getItem('theme');if(th)document.documentElement.dataset.theme=th}catch(e){}
-loadColors();matchMedia('(prefers-color-scheme: light)').addEventListener('change',loadColors);
-if(S.sound){S.sound=false;sb();$('#btnSound').title='Click to re-enable sound (browsers need a click first)'}else sb();
-$('#btnHeat').classList.toggle('on',S.showHeat);
-syncEditor();loadRoom();poll();pollHistory();
-if(V.ok){
-  try{init3D()}catch(e){console.error(e);V.ok=false}
-}
+// ================================================================ boot
+{const th=store.get('theme',null);if(th)document.documentElement.dataset.theme=th}
+loadColors();matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{loadColors();V.key=''});
+syncEditor();loadRoom();loadFloorplan();poll();pollHistory();
+if(V.ok){try{init3D()}catch(e){console.error(e);V.ok=false}}
 if(V.ok){
   $('#planNote').textContent='Changes show up in the 3D view as you edit.';
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
-  $('#btnSpin').onclick=()=>{V.spin=!V.spin;$('#btnSpin').classList.toggle('on',V.spin);try{localStorage.setItem('spin',V.spin?'1':'0')}catch(e){}};
-  try{V.spin=localStorage.getItem('spin')==='1'}catch(e){}$('#btnSpin').classList.toggle('on',V.spin);
+  const sb=$('#tSpin');sb.classList.toggle('on',V.spin);sb.onclick=()=>{V.spin=!V.spin;store.set('spin',V.spin?'1':'0');sb.classList.toggle('on',V.spin)};
 }else{
-  // No WebGL or three.js could not load (e.g. ESP32 page without internet): fall back to the 2D plan.
-  $('#hero').hidden=true;$('#planCard').hidden=false;
-  const h=$('#planCard .card-h');h.append($('#btnHeat'),$('#btnEdit'));$('#planCard').insertBefore($('#where'),$('#editor'));
-  $('#planNote').textContent='3D view unavailable (needs internet for three.js) — showing the floor plan.';
+  // No WebGL / three.js could not load (e.g. ESP32 page without internet): fall back to the 2D plan.
+  $('#hero').hidden=true;$('#planCard').hidden=false;$('#planCard').classList.replace('c12','c8');
+  $('#planCard .card-h').append($('#tHeat'),$('#btnEdit'));
+  $('#planNote').textContent='3D view unavailable (it needs internet to load three.js), showing the floor plan.';
 }
-function frame(ts){tick();if(V.ok)draw3D(ts);if(!$('#planCard').hidden)drawRoom(ts);requestAnimationFrame(frame)}requestAnimationFrame(frame);
+let lastFrame=performance.now(),lastSide=0;
+function frame(ts){
+  const dt=Math.min(.1,(ts-lastFrame)/1000);lastFrame=ts;
+  figuresStep(dt,Date.now());
+  if(V.ok)draw3D(ts);
+  if(!$('#planCard').hidden)drawRoom();
+  if(ts-lastSide>250){lastSide=ts;renderSide();renderHeader();renderLog()}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
 setInterval(()=>{drawTimeline();drawOcc()},1000);
 addEventListener('resize',()=>{drawGates();drawTimeline();drawOcc()});
 </script></body></html>

@@ -6,6 +6,7 @@ __pycache__/
 # Personal data written at runtime
 pc/events.jsonl
 pc/room.json
+pc/floorplan.jpg
 pc/detections.log
 pc/*.log
 

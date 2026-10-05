@@ -29,6 +29,7 @@ HERE = Path(__file__).parent
 WEB = HERE / "web" / "index.html"
 EVENTS = HERE / "events.jsonl"
 ROOM = HERE / "room.json"
+FLOORPLAN = HERE / "floorplan.jpg"
 DAY_MS = 86_400_000
 
 
@@ -159,6 +160,9 @@ def _beep():
 
 def make_handler(hub):
     class H(BaseHTTPRequestHandler):
+        # Keep-alive: the dashboard polls ~9x/s; a new TCP connection per request exhausts Windows sockets.
+        protocol_version = "HTTP/1.1"
+
         def log_message(self, *a):
             pass
 
@@ -190,9 +194,25 @@ def make_handler(hub):
                     return self._send(200, json.dumps({"events": hub.events}))
             if path == "room":
                 return self._send(200, ROOM.read_text(encoding="utf-8") if ROOM.exists() else "null")
+            if path == "floorplan":
+                if not FLOORPLAN.exists():
+                    return self._send(404, '{"error":"no floor plan"}')
+                return self._send(200, FLOORPLAN.read_bytes(), "image/jpeg")
             self._send(404, '{"error":"not found"}')
 
         def do_POST(self):
+            if urlparse(self.path).path.rstrip("/").endswith("floorplan"):
+                n = int(self.headers.get("Content-Length", 0))
+                if n > 6_000_000:
+                    return self._send(413, '{"ok":false}')
+                body = self.rfile.read(n)
+                if not body:
+                    FLOORPLAN.unlink(missing_ok=True)
+                elif body[:3] == b"\xff\xd8\xff":  # JPEG (the page re-encodes uploads as JPEG)
+                    FLOORPLAN.write_bytes(body)
+                else:
+                    return self._send(400, '{"ok":false}')
+                return self._send(200, '{"ok":true}')
             if urlparse(self.path).path.rstrip("/").endswith("room"):
                 n = int(self.headers.get("Content-Length", 0))
                 if n > 20000:

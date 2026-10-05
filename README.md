@@ -32,11 +32,24 @@ Pin 1 is marked "1" on the radar's antenna side. TX/RX crossed the wrong way and
 
 ## Dashboard
 
-- **3D view**: orbit, zoom, top-down, and sensor point of view. Auto-orbit when idle.
-  - Energy columns: the radar's per-band energy (0.75 m bands). The left half of the beam is moving energy and the right half is still energy. Columns glow when they cross the trigger threshold.
-  - Range shells: translucent walls at each target's distance.
-  - Figures: a walking figure for a moving target, sitting on a chair or couch or lying on a bed for a still one, chosen by the zone it's in.
-- **Room editor**: set room size, drag and aim the sensor, and draw zones. The zone name sets the 3D furniture: *bed*, *couch/sofa*, *desk/table*, *chair*, *door*; anything else becomes a rug.
+- **3D room**: wood floor (or your own floor-plan image), walls that cut away on the camera side, lighting and soft shadows, and furniture built from your zones.
+  - Views: orbit, top-down, sensor point of view, and a follow camera. Auto-orbit when idle.
+- **People**: an animated 3D human for each tracked person.
+  - Walks at human speed instead of jumping, turns toward the direction of travel.
+  - Walks to the desk chair or couch and sits, lies down on the bed, or stands on open floor.
+  - Walks out through the door when they leave.
+  - The model is the three.js "Soldier" sample (a Mixamo character), loaded at runtime from threejs.org and not stored in this repo. If it can't load, a built-in figure is used.
+- **Tracking**: the raw radar is filtered into stable tracks:
+  - A median filter plus an alpha-beta filter on distance, with outlier gating.
+  - Walking vs still decided with hysteresis from real distance change, so fidgeting in a chair isn't "walking".
+  - Zone hysteresis, so the estimate doesn't flip back and forth.
+  - A second person only when two separate distances persist.
+- **Radar overlays** (toggles): beam, range rings, target distance shells, and energy columns per 0.75 m band (left half moving, right half still; brighter when above the trigger).
+- **Side panel**: each person's activity, zone and its likelihood, distance, approaching or receding speed, motion level, and time in view. Also today's arrivals, time present, longest and current visit, and live signal stats.
+- **Room editor**: set room size, sensor height and field of view; drag and aim the sensor; draw zones; import a floor-plan image (the hub shares it with your phone). Each zone has a type, chosen explicitly or guessed from its name, and the type picks the furniture and the pose:
+  - *bed*, *couch*, *desk*, *table*, *chair*: furniture people sit or lie on
+  - *counter*, *tv*, *door*, *window*, *plant*: other furniture and fixtures
+  - *rug*: the default for anything else
 - **Charts**: energy by distance band with thresholds and the calibrated noise floor, plus distance over time.
 - **Activity**: arrival/leave log with the likely zone, a 24-hour presence strip (hub mode), and a time-spent heatmap.
 - **Sensor controls**: empty-room calibration (sets each band's threshold just above its measured noise), sensitivity presets, max range, clear-after delay, per-band thresholds, and factory reset.
