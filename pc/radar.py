@@ -38,8 +38,10 @@ def now_ms():
 
 
 def find_port():
+    # Only USB-UART bridge chips (the radar's DevKit uses a CP210x). Native-USB Espressif boards
+    # (VID 0x303A, e.g. ESP32-S3 projects) are skipped so the hub never grabs another device's port.
     for p in list_ports.comports():
-        if p.vid in (0x10C4, 0x1A86, 0x0403, 0x303A):  # CP210x, CH340, FTDI, Espressif
+        if p.vid in (0x10C4, 0x1A86, 0x0403):  # CP210x, CH340, FTDI
             return p.device
     return None
 
