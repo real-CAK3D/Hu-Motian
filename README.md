@@ -39,8 +39,9 @@ Pin 1 is marked "1" on the radar's antenna side. TX/RX crossed the wrong way and
   - Walks to the desk chair or couch and sits, lies down on the bed, or stands on open floor.
   - Walks out through the door when they leave.
   - Waves when they first appear.
-  - The model is the "Casual Character" from Quaternius's [Ultimate Modular Men Pack](https://poly.pizza/bundle/Ultimate-Modular-Men-Pack-ZiH8muWqwQ) (CC0 public domain), in `pc/web/assets/person.glb`. The hub serves it; the ESP32's own page loads it from Poly Pizza. If neither works, a built-in figure is used.
-  - Sitting bends the joints around the person's own left-right axis rather than the rig's bone axes, so other humanoid `.glb` models can be dropped in as `person.glb`.
+  - **Avatars**: pick yours from 11 characters (Casual, Hoodie, Business, Worker, Beach, Farmer, Punk, Adventurer, SWAT, King, Astronaut). The radar can't tell people apart, so the first person in view wears your avatar and everyone else gets a different one. The choice is saved with the room layout, so every device shows the same.
+  - Characters are from Quaternius's [Ultimate Modular Men Pack](https://poly.pizza/bundle/Ultimate-Modular-Men-Pack-ZiH8muWqwQ) (CC0 public domain), in `pc/web/assets/<id>.glb` with `.webp` thumbnails. Each loads only when someone wears it. The hub serves them; the ESP32's own page loads them from Poly Pizza. If neither works, a built-in figure is used.
+  - Sitting bends the joints around the person's own left-right axis rather than the rig's bone axes, so other humanoid `.glb` models can be added to the `AVATARS` list.
 - **Tracking**: the raw radar is filtered into stable tracks:
   - A median filter plus an alpha-beta filter on distance, with outlier gating.
   - Walking vs still decided with hysteresis from real distance change, so fidgeting in a chair isn't "walking".

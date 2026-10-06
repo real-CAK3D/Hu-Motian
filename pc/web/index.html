@@ -52,6 +52,11 @@ button.glass{padding:5px 10px}
 .person .big{font-size:20px;font-weight:600;text-align:right}.person .big small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
 .meter{grid-column:2/4;display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
 .meter .bar{flex:1}
+.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:var(--panel2)}
+.avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px}
+.avbtn{padding:4px 4px 2px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--ink2)}
+.avbtn img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--panel2)}
+.avbtn.on{border-color:var(--sweep);box-shadow:0 0 0 1px var(--sweep);color:var(--ink)}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat .k{font-size:12px;color:var(--muted)}.stat .v{font-size:20px;font-weight:600}.stat .s{font-size:12px;color:var(--ink2)}
 #log{max-height:280px;overflow:auto;margin:0;padding:0;list-style:none}
@@ -96,6 +101,9 @@ table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2p
   </section>
   <aside class="side">
     <section class="card"><div class="card-h"><h2>People</h2><span class="sp"></span><span class="small muted" id="pplCount"></span></div><div id="people"></div></section>
+    <section class="card"><div class="card-h"><h2>Your avatar</h2></div>
+      <div class="avgrid" id="avatars"></div>
+      <div class="note">The radar can't tell people apart, so the first person in view wears your avatar and anyone else who shows up gets a different character.</div></section>
     <section class="card"><div class="card-h"><h2>Today</h2></div><div class="stats" id="today"></div></section>
     <section class="card"><div class="card-h"><h2>Radar signal</h2></div><div class="stats" id="signal"></div></section>
   </aside>
@@ -315,7 +323,7 @@ function trackerUpdate(r){
   for(const ms of meas){
     let best=null,bd=1.3;for(const t of TR.tracks){if(used.has(t))continue;const d=Math.abs(t.d-ms.d);if(d<bd){bd=d;best=t}}
     if(!best){
-      if(!TR.tracks.length||(TR.tracks.length===1&&TR.pair>=20&&!used.size)){best=newTrack(ms.d,now);TR.tracks.push(best)}
+      if(!TR.tracks.length||(TR.tracks.length===1&&TR.pair>=20)){best=newTrack(ms.d,now);TR.tracks.push(best)}
       else if(meas.length===1&&!used.has(TR.tracks[0]))best=TR.tracks[0];
       else continue}
     used.add(best);trackStep(best,ms.d,ms.mot,dt,now)}
@@ -449,7 +457,7 @@ function init3D(){
   V.clip=[new THREE.Plane(new THREE.Vector3(1,0,0),0),new THREE.Plane(new THREE.Vector3(-1,0,0),4),new THREE.Plane(new THREE.Vector3(0,0,1),0),new THREE.Plane(new THREE.Vector3(0,0,-1),4)];
   V.clock=new THREE.Clock();
   new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;V.renderer.setSize(w,h,false);V.renderer.domElement.style.width='100%';V.renderer.domElement.style.height=h+'px';V.cam.aspect=w/h;V.cam.updateProjectionMatrix()}).observe(host);
-  build3D();setView(V.view,true);loadAvatar();
+  build3D();setView(V.view,true);getModel(myAvatar());
 }
 
 // ---- furniture (built facing local +z, back against the wall at local -z)
@@ -563,29 +571,51 @@ function setView(v,instant){
   else V.tween={p0:V.cam.position.clone(),t0:V.ctl.target.clone(),p1:pos,t1:tgt,s:performance.now()};
 }
 
-// ---- people: Quaternius "Casual Character" (CC0, pc/web/assets/person.glb; served by the hub, Poly Pizza as fallback)
-// with a procedural fallback figure when neither can load.
-const AVATAR_URLS=[api('assets/person.glb'),'https://static.poly.pizza/90a9e2d4-053f-42f1-99a2-8f5e1180ea7f.glb'];
-function loadAvatar(){
-  if(!THREE.GLTFLoader||!THREE.SkeletonUtils){V.avatarFailed=true;return}
-  $('#loading3d').hidden=false;
-  const tryUrl=i=>{if(i>=AVATAR_URLS.length){V.avatarFailed=true;$('#loading3d').hidden=true;return}
-    new THREE.GLTFLoader().load(AVATAR_URLS[i],gltf=>{
-      const sc=gltf.scene;sc.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(sc),h=bb.max.y-bb.min.y;
-      V.avatar={gltf,scale:1.76/h};$('#loading3d').hidden=true;
-      for(const[f,p]of V.people){V.scene.remove(p.root);disposeTree(p.root)}V.people.clear();
-    },undefined,()=>tryUrl(i+1))};
-  tryUrl(0);
+// ---- people: Quaternius "Ultimate Modular Men Pack" characters (CC0) in pc/web/assets/<id>.glb, served by the hub,
+// with Poly Pizza as fallback (the ESP32 page) and a procedural figure when neither can load. Loaded on first use.
+const AVATARS=[['casual','Casual','90a9e2d4-053f-42f1-99a2-8f5e1180ea7f'],['hoodie','Hoodie','bcd66ec5-5e81-4901-a222-47abc875fe2a'],
+  ['business','Business','e599abbe-7d73-488c-9d7e-3ead281e705c'],['worker','Worker','3a5f3056-ffe6-42eb-bd52-122afcbd22b2'],
+  ['beach','Beach','f771a536-1c18-4a47-bb56-ceea4b603455'],['farmer','Farmer','81f2f0cf-6f53-4b57-92ea-dba0928620f2'],
+  ['punk','Punk','e56f23b5-3270-406f-8924-f77cad980c43'],['adventurer','Adventurer','bbe369ee-a686-42c7-adad-14356f5f2f15'],
+  ['swat','SWAT','713f6535-f4f3-4367-a4c6-ced126ae0936'],['king','King','29a3436b-3b06-4dbf-a236-bcec18f3351a'],
+  ['astronaut','Astronaut','0076345b-bbea-42d5-931c-4a5ad2050b18']].map(([id,name,uuid])=>({id,name,uuid}));
+const avatarById=id=>AVATARS.find(a=>a.id===id)||AVATARS[0];
+const thumbUrl=a=>api('assets/'+a.id+'.webp'),thumbFallback=a=>`https://static.poly.pizza/${a.uuid}.webp`;
+V.models={};
+function getModel(id){
+  const a=avatarById(id);let m=V.models[a.id];if(m)return m;
+  m=V.models[a.id]={state:'loading'};
+  if(!THREE.GLTFLoader||!THREE.SkeletonUtils){m.state='fail';return m}
+  const urls=[api('assets/'+a.id+'.glb'),`https://static.poly.pizza/${a.uuid}.glb`];
+  const tryUrl=i=>{if(i>=urls.length){m.state='fail';return}
+    new THREE.GLTFLoader().load(urls[i],gltf=>{const sc=gltf.scene;sc.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(sc);
+      Object.assign(m,{state:'ok',gltf,scale:1.76/(bb.max.y-bb.min.y)})},undefined,()=>tryUrl(i+1))};
+  tryUrl(0);return m;
 }
-function makePerson(){
+// Who looks like whom: the radar can't tell people apart, so the first person in view gets your avatar
+// and everyone else gets a different character, in a fixed order, kept for as long as they stay in view.
+const GUEST_ORDER=['hoodie','business','worker','beach','farmer','punk','casual','adventurer','swat','king','astronaut'];
+function myAvatar(){return avatarById(S.room.avatar||'casual').id}
+function assignAvatars(){
+  const live=S.figs.filter(f=>!f.gone),mine=myAvatar();
+  if(!live.some(f=>f.avatar===mine)){const first=live.find(f=>!f.avatar);if(first)first.avatar=mine}
+  for(const f of live)if(!f.avatar){const used=new Set(live.map(x=>x.avatar));f.avatar=GUEST_ORDER.find(id=>id!==mine&&!used.has(id))||mine}
+}
+function setMyAvatar(id){
+  const old=myAvatar();if(id===old)return;S.room.avatar=id;saveRoom();renderAvatarPicker();
+  for(const f of S.figs){if(f.avatar===old)f.avatar=id;else if(f.avatar===id)f.avatar=null}
+  assignAvatars();getModel(id);
+}
+function makePerson(f){
+  const md=getModel(f.avatar);if(md.state==='loading')return null;
   const root=new THREE.Group(),pose=new THREE.Group();root.add(pose);V.scene.add(root);
-  const p={root,pose,sit:0,lie:0,walkW:0,mats:[],labelText:'',kind:'dummy'};
-  if(V.avatar){
-    const model=THREE.SkeletonUtils.clone(V.avatar.gltf.scene);model.scale.setScalar(V.avatar.scale);
+  const p={root,pose,sit:0,lie:0,walkW:0,mats:[],labelText:'',kind:'dummy',avatar:f.avatar};
+  if(md.state==='ok'){
+    const model=THREE.SkeletonUtils.clone(md.gltf.scene);model.scale.setScalar(md.scale);
     model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false;o.frustumCulled=false;o.material=o.material.clone();o.material.transparent=true;p.mats.push(o.material)}});
     pose.add(model);p.model=model;p.kind='gltf';
     // clips are named like "CharacterArmature|Walk"; match on the suffix
-    p.mixer=new THREE.AnimationMixer(model);const clip=(...ns)=>{for(const n of ns){const c=V.avatar.gltf.animations.find(a=>a.name===n||a.name.endsWith('|'+n));if(c)return c}};
+    p.mixer=new THREE.AnimationMixer(model);const clip=(...ns)=>{for(const n of ns){const c=md.gltf.animations.find(a=>a.name===n||a.name.endsWith('|'+n));if(c)return c}};
     p.idle=p.mixer.clipAction(clip('Idle_Neutral','Idle'));p.walk=p.mixer.clipAction(clip('Walk'));p.idle.play();p.walk.play();p.walk.setEffectiveWeight(0);
     const wc=clip('Wave');if(wc){p.wave=p.mixer.clipAction(wc);p.wave.setLoop(THREE.LoopOnce);p.wave.clampWhenFinished=false;p.waveLeft=0}
     p.mixer.update(Math.random()*2);
@@ -687,7 +717,12 @@ function draw3D(ts){
     V.heatTex.needsUpdate=true}
   // people
   const alive=new Set();
-  for(const f of S.figs){let p=V.people.get(f);if(!p&&(V.avatar||V.avatarFailed)){p=makePerson();V.people.set(f,p)}if(!p)continue;alive.add(f);updatePerson(p,f,dt)}
+  assignAvatars();let loading=false;
+  for(const f of S.figs){let p=V.people.get(f);
+    if(p&&p.avatar!==f.avatar){V.scene.remove(p.root);disposeTree(p.root);V.people.delete(f);p=null}  // avatar changed: rebuild
+    if(!p){p=makePerson(f);if(p)V.people.set(f,p);else loading=true}
+    if(!p)continue;alive.add(f);updatePerson(p,f,dt)}
+  $('#loading3d').hidden=!loading;
   for(const[f,p]of V.people)if(!alive.has(f)){V.scene.remove(p.root);disposeTree(p.root);V.people.delete(f)}
   V.renderer.render(V.scene,V.cam);
 }
@@ -749,7 +784,13 @@ rc.addEventListener('pointermove',e=>{const b=rc.getBoundingClientRect(),px=e.cl
   if(drag.k==='zone'){const z=R.zones[drag.i];z.x=snap(clamp(p.x-drag.dx,0,R.w-z.w));z.y=snap(clamp(p.y-drag.dy,0,R.h-z.h))}
   if(drag.k==='resize'){const z=R.zones[drag.i];z.w=snap(clamp(p.x-z.x,.2,R.w-z.x));z.h=snap(clamp(p.y-z.y,.2,R.h-z.y))}});
 rc.addEventListener('pointerup',()=>{if(!drag)return;if(drag.new){addingZone=false;$('#btnAddZone').classList.remove('on')}drag=null;saveRoom();renderZones()});
-function syncEditor(){$('#rw').value=S.room.w;$('#rh').value=S.room.h;$('#rf').value=S.room.fov;$('#rmh').value=S.room.mh||1.2;renderZones();initHeat()}
+function syncEditor(){$('#rw').value=S.room.w;$('#rh').value=S.room.h;$('#rf').value=S.room.fov;$('#rmh').value=S.room.mh||1.2;renderZones();initHeat();renderAvatarPicker()}
+// Avatar picker: thumbnails from the hub, Poly Pizza as fallback
+function renderAvatarPicker(){
+  const el=$('#avatars'),mine=myAvatar();
+  if(!el.children.length)el.innerHTML=AVATARS.map(a=>`<button class="avbtn" data-av="${a.id}" title="${a.name}"><img alt="" loading="lazy" src="${thumbUrl(a)}" onerror="this.onerror=null;this.src='${thumbFallback(a)}'">${a.name}</button>`).join('');
+  el.querySelectorAll('[data-av]').forEach(b=>{b.classList.toggle('on',b.dataset.av===mine);b.onclick=()=>setMyAvatar(b.dataset.av)});
+}
 function renderZones(){const el=$('#zones');el.innerHTML='';
   S.room.zones.forEach((z,i)=>{const row=document.createElement('div');row.className='row';
     row.innerHTML=`<input type="text" maxlength="24" aria-label="Zone name"><select aria-label="Zone type"><option value="">auto (${kindOf({n:z.n})})</option>${KINDS.map(k=>`<option>${k}</option>`).join('')}</select><span class="small muted">${z.w.toFixed(2)} × ${z.h.toFixed(2)} m</span><button class="danger">Delete</button>`;
@@ -853,7 +894,7 @@ function renderSide(){
   else el.innerHTML=figs.map((f,i)=>{const t=f.t,col=f.vis==='walk'||t.state==='walk'?'var(--move)':'var(--still)',v=t.v;
     const dir=Math.abs(v)<.08?'Holding distance':v<0?`Approaching ${(-v).toFixed(1)} m/s`:`Moving away ${v.toFixed(1)} m/s`;
     const where=t.out?'outside the room outline':`${esc(t.zoneName)} <span class="muted">(${Math.round(t.zonePct*100)}% likely)</span>`;
-    return`<div class="person"><div class="avatar" style="border-color:${col}">${ICON[f.vis]||ICON.stand}</div>
+    return`<div class="person"><div class="avatar" style="border-color:${col}">${f.avatar?`<img alt="${avatarById(f.avatar).name}" src="${thumbUrl(avatarById(f.avatar))}" onerror="this.onerror=null;this.src='${thumbFallback(avatarById(f.avatar))}'">`:ICON[f.vis]||ICON.stand}</div>
       <div><div class="act">${activity(f)}</div><div class="sub">${where}</div><div class="sub">${dir} · here ${fmtDur((now-t.born)/1000)}</div></div>
       <div class="big">${fmtMm(t.d)}<small>from sensor</small></div>
       <div class="meter"><span>Motion</span><span class="bar"><i style="width:${Math.round(t.mot*100)}%;background:${col}"></i></span><span>${Math.round(t.mot*100)}%</span></div></div>`}).join('');
