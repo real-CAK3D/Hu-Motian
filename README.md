@@ -38,7 +38,9 @@ Pin 1 is marked "1" on the radar's antenna side. TX/RX crossed the wrong way and
   - Walks at human speed instead of jumping, turns toward the direction of travel.
   - Walks to the desk chair or couch and sits, lies down on the bed, or stands on open floor.
   - Walks out through the door when they leave.
-  - The model is the three.js "Soldier" sample (a Mixamo character), loaded at runtime from threejs.org and not stored in this repo. If it can't load, a built-in figure is used.
+  - Waves when they first appear.
+  - The model is the "Casual Character" from Quaternius's [Ultimate Modular Men Pack](https://poly.pizza/bundle/Ultimate-Modular-Men-Pack-ZiH8muWqwQ) (CC0 public domain), in `pc/web/assets/person.glb`. The hub serves it; the ESP32's own page loads it from Poly Pizza. If neither works, a built-in figure is used.
+  - Sitting bends the joints around the person's own left-right axis rather than the rig's bone axes, so other humanoid `.glb` models can be dropped in as `person.glb`.
 - **Tracking**: the raw radar is filtered into stable tracks:
   - A median filter plus an alpha-beta filter on distance, with outlier gating.
   - Walking vs still decided with hysteresis from real distance change, so fidgeting in a chair isn't "walking".

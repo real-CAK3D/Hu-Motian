@@ -179,6 +179,13 @@ def make_handler(hub):
 
         def do_GET(self):
             u = urlparse(self.path)
+            if "/assets/" in u.path:  # 3D model files next to the dashboard
+                name = u.path.rsplit("/", 1)[-1]
+                f = WEB.parent / "assets" / name
+                if name and "/" not in name and "\\" not in name and not name.startswith(".") and f.is_file():
+                    ctype = "model/gltf-binary" if name.endswith(".glb") else "application/octet-stream"
+                    return self._send(200, f.read_bytes(), ctype)
+                return self._send(404, '{"error":"not found"}')
             path = u.path.rstrip("/").rsplit("/", 1)[-1] if u.path not in ("/", "") else ""
             if path in ("", "index.html", "radar"):
                 return self._send(200, WEB.read_bytes(), "text/html; charset=utf-8")

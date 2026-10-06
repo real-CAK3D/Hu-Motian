@@ -563,8 +563,9 @@ function setView(v,instant){
   else V.tween={p0:V.cam.position.clone(),t0:V.ctl.target.clone(),p1:pos,t1:tgt,s:performance.now()};
 }
 
-// ---- people: a rigged, animated human (three.js "Soldier" sample, loaded at runtime) with a procedural fallback
-const AVATAR_URLS=['https://threejs.org/examples/models/gltf/Soldier.glb','https://raw.githubusercontent.com/mrdoob/three.js/r147/examples/models/gltf/Soldier.glb'];
+// ---- people: Quaternius "Casual Character" (CC0, pc/web/assets/person.glb; served by the hub, Poly Pizza as fallback)
+// with a procedural fallback figure when neither can load.
+const AVATAR_URLS=[api('assets/person.glb'),'https://static.poly.pizza/90a9e2d4-053f-42f1-99a2-8f5e1180ea7f.glb'];
 function loadAvatar(){
   if(!THREE.GLTFLoader||!THREE.SkeletonUtils){V.avatarFailed=true;return}
   $('#loading3d').hidden=false;
@@ -580,14 +581,18 @@ function makePerson(){
   const root=new THREE.Group(),pose=new THREE.Group();root.add(pose);V.scene.add(root);
   const p={root,pose,sit:0,lie:0,walkW:0,mats:[],labelText:'',kind:'dummy'};
   if(V.avatar){
-    const model=THREE.SkeletonUtils.clone(V.avatar.gltf.scene);model.scale.setScalar(V.avatar.scale);model.rotation.y=Math.PI;
+    const model=THREE.SkeletonUtils.clone(V.avatar.gltf.scene);model.scale.setScalar(V.avatar.scale);
     model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false;o.frustumCulled=false;o.material=o.material.clone();o.material.transparent=true;p.mats.push(o.material)}});
     pose.add(model);p.model=model;p.kind='gltf';
-    p.mixer=new THREE.AnimationMixer(model);const clip=n=>V.avatar.gltf.animations.find(a=>a.name===n);
-    p.idle=p.mixer.clipAction(clip('Idle'));p.walk=p.mixer.clipAction(clip('Walk'));p.idle.play();p.walk.play();p.walk.setEffectiveWeight(0);
+    // clips are named like "CharacterArmature|Walk"; match on the suffix
+    p.mixer=new THREE.AnimationMixer(model);const clip=(...ns)=>{for(const n of ns){const c=V.avatar.gltf.animations.find(a=>a.name===n||a.name.endsWith('|'+n));if(c)return c}};
+    p.idle=p.mixer.clipAction(clip('Idle_Neutral','Idle'));p.walk=p.mixer.clipAction(clip('Walk'));p.idle.play();p.walk.play();p.walk.setEffectiveWeight(0);
+    const wc=clip('Wave');if(wc){p.wave=p.mixer.clipAction(wc);p.wave.setLoop(THREE.LoopOnce);p.wave.clampWhenFinished=false;p.waveLeft=0}
     p.mixer.update(Math.random()*2);
-    const b=n=>model.getObjectByName('mixamorig'+n);
-    p.bones={hips:b('Hips'),ul:b('LeftUpLeg'),ur:b('RightUpLeg'),ll:b('LeftLeg'),lr:b('RightLeg'),sp:b('Spine'),la:b('LeftArm'),ra:b('RightArm'),lf:b('LeftForeArm'),rf:b('RightForeArm')};
+    // GLTFLoader strips '.' from node names ("UpperLeg.L" -> "UpperLegL"); try both, plus Mixamo names
+    const b=(...ns)=>{for(const n of ns){const o=model.getObjectByName(n)||model.getObjectByName(n.replace(/\./g,''))||model.getObjectByName('mixamorig'+n);if(o)return o}};
+    p.bones={hips:b('Hips'),ul:b('UpperLeg.L','LeftUpLeg'),ur:b('UpperLeg.R','RightUpLeg'),ll:b('LowerLeg.L','LeftLeg'),lr:b('LowerLeg.R','RightLeg'),
+      la:b('UpperArm.L','LeftArm'),ra:b('UpperArm.R','RightArm'),lf:b('LowerArm.L','LeftForeArm'),rf:b('LowerArm.R','RightForeArm')};
     model.updateMatrixWorld(true);const hp=new THREE.Vector3();p.bones.hips.getWorldPosition(hp);p.hipY=hp.y;
   }else buildDummy(p);
   const ring=new THREE.Mesh(new THREE.RingGeometry(.28,.34,40),new THREE.MeshBasicMaterial({color:C.still,transparent:true,opacity:.8,depthWrite:false}));
@@ -617,18 +622,28 @@ function poseDummy(p,dt,f){
   d.al.j1.rotation.x=w*.45*sn+s*-.5;d.ar.j1.rotation.x=-w*.45*sn+s*-.5;d.al.j2.rotation.x=d.ar.j2.rotation.x=-.25-s*.6;
   d.spine.rotation.x=.04*w+Math.sin(performance.now()/600)*.01;
 }
-const SIT=1;  // sign of the hip/knee bend for the rigged model
+// Bend a bone around a world-space axis (the person's left-right axis), whatever the rig's own bone orientation.
+const _q=new THREE.Quaternion(),_pq=new THREE.Quaternion(),_ax=new THREE.Vector3();
+function bendWorld(bone,axis,angle){if(!bone||!angle)return;bone.parent.getWorldQuaternion(_pq);
+  _q.setFromAxisAngle(axis,angle);bone.quaternion.premultiply(_pq.clone().invert().multiply(_q).multiply(_pq));bone.updateMatrixWorld(true)}
 function updatePerson(p,f,dt){
   const vis=f.vis,anc=f.anchor;
   p.root.position.set(f.x,0,f.y);p.root.rotation.y=f.head;
   const k=Math.min(1,dt*3.5);p.sit+=(((vis==='sit')?1:0)-p.sit)*k;p.lie+=(((vis==='lie')?1:0)-p.lie)*k;p.walkW+=(((vis==='walk')?1:0)-p.walkW)*Math.min(1,dt*5);
   const seat=anc&&anc.pose==='sit'?anc.seat:.47;
   if(p.kind==='gltf'){
-    p.idle.setEffectiveWeight(1-p.walkW);p.walk.setEffectiveWeight(p.walkW);p.walk.timeScale=clamp(f.spd/1.1,.6,1.5);
+    // wave once when someone first appears standing
+    if(p.wave&&!p.waved&&f.a>.3&&vis==='stand'){p.waved=true;p.wave.reset().play();p.waveLeft=p.wave.getClip().duration}
+    const wv=p.waveLeft>0?Math.min(1,p.waveLeft*3,(p.wave.getClip().duration-p.waveLeft)*3+.2):0;if(p.waveLeft>0)p.waveLeft-=dt;
+    if(p.wave)p.wave.setEffectiveWeight(wv*(1-p.walkW)*(1-p.sit)*(1-p.lie));
+    p.idle.setEffectiveWeight((1-p.walkW)*(1-(p.wave?p.wave.getEffectiveWeight():0)));p.walk.setEffectiveWeight(p.walkW);p.walk.timeScale=clamp(f.spd/1.1,.6,1.5);
     p.mixer.update(dt);
     const B=p.bones,s=p.sit;
-    if(s>.001){B.ul.rotation.x+=SIT*-1.55*s;B.ur.rotation.x+=SIT*-1.55*s;B.ll.rotation.x+=SIT*1.6*s;B.lr.rotation.x+=SIT*1.6*s;
-      if(B.la){B.la.rotation.x+=-.35*s;B.ra.rotation.x+=-.35*s}if(B.lf){B.lf.rotation.x+=-.5*s;B.rf.rotation.x+=-.5*s}}
+    if(s>.001){
+      p.root.updateMatrixWorld(true);_ax.set(1,0,0).applyQuaternion(p.root.getWorldQuaternion(new THREE.Quaternion()));
+      // thighs forward (feet toward +z), shins back down, upper arms and forearms forward onto the lap/desk
+      for(const[up,lo]of[[B.ul,B.ll],[B.ur,B.lr]]){bendWorld(up,_ax,-1.55*s);bendWorld(lo,_ax,1.6*s)}
+      for(const[up,lo]of[[B.la,B.lf],[B.ra,B.rf]]){bendWorld(up,_ax,-.45*s);bendWorld(lo,_ax,-.65*s)}}
     p.model.position.y=(seat+.06-p.hipY)*s;p.model.position.z=-.12*s;
   }else{poseDummy(p,dt,f);p.d.body.position.y=0}
   // lying: rotate onto the back along the bed, head toward the headboard (local -z)
