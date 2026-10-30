@@ -1,0 +1,49 @@
+# Push a tag like v1.0.0 to publish a GitHub Release with the firmware and the phone app.
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install platformio esptool
+      - name: Build firmware
+        run: pio run -d firmware
+      - name: Package
+        run: |
+          B=firmware/.pio/build/esp32dev
+          APP0=$(find ~/.platformio/packages/framework-arduinoespressif32 -name boot_app0.bin | head -1)
+          mkdir -p dist
+          # one file to flash at 0x0 (bootloader + partitions + app)
+          python -m esptool --chip esp32 merge_bin -o dist/hu-motian-esp32-full.bin --flash_mode dio --flash_freq 40m --flash_size 4MB \
+            0x1000 $B/bootloader.bin 0x8000 $B/partitions.bin 0xe000 "$APP0" 0x10000 $B/firmware.bin
+          cp $B/firmware.bin dist/hu-motian-esp32-app.bin
+          (cd pc && zip -qr ../dist/hu-motian-app.zip web radar.py status.py)
+          ls -la dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body: |
+            ## Install the phone app (Android, Chrome)
+            1. Open **https://real-cak3d.github.io/Hu-Motian/** in Chrome. Ghost Hunter is at **https://real-cak3d.github.io/Hu-Motian/ghost.html**.
+            2. Tap **⋮ → Add to Home screen** (or **Install app**). It then opens like a normal app and works offline.
+            3. Plug the ESP32 into the phone with a USB-C cable (or an OTG adapter) and tap **Connect USB**.
+
+            The app needs the website to install: Android doesn't let a downloaded file use USB, the camera and the compass the way Chrome does, so there's no separate APK.
+
+            ## Update the ESP32 firmware
+            - **PlatformIO / PowerShell:** `./flash.ps1 -Port COM6`
+            - **Or flash the file here:** `hu-motian-esp32-full.bin` at address `0x0` with the [ESP flash tool](https://espressif.github.io/esptool-js/) (Chrome on a PC: Connect → add the file at 0x0 → Program).
+
+            ## Files
+            - `hu-motian-esp32-full.bin`: complete firmware image for address 0x0
+            - `hu-motian-esp32-app.bin`: application only (address 0x10000)
+            - `hu-motian-app.zip`: the dashboard, Ghost Hunter and the PC hub
