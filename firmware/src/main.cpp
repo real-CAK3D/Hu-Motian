@@ -10,6 +10,7 @@
 // Commands (USB serial line or GET /cmd?c=...):
 //   status | params | cal <secs> [delay] | cal stop | sens <gate|all> <move> <still>
 //   range <moveGate> <stillGate> <idleSecs> | hold <ms> | factory | eng <0|1>
+// Extras from a sensor kit (RGB/two-colour/flash LEDs, Hall, thermistor, sound, vibration): see fx.h.
 // Web: /  dashboard (gzipped, built from pc/web/index.html), /data, /cmd, /room (GET/POST).
 
 #include <Arduino.h>
@@ -20,6 +21,7 @@
 #include <Preferences.h>
 #include "ld2410.h"
 #include "web_gz.h"
+#include "fx.h"
 
 static const int PIN_A = 16, PIN_B = 17, PIN_OUT = 4, PIN_LED = 2, PIN_BUZZ = 25;
 static const uint32_t BAUDS[] = {256000, 115200, 57600, 38400, 9600};
@@ -115,6 +117,7 @@ String readingJson() {
     s += ",\"sg\":"; appendArr(s, r.stillGates, ld2410::GATES);
     if (r.light >= 0) { s += ",\"lt\":"; s += r.light; }
   }
+  fx::appendReading(s);
   s += '}';
   return s;
 }
@@ -164,6 +167,7 @@ String statusJson() {
   if (calMsg.length()) { s += ",\"msg\":\""; s += calMsg; s += '"'; }
   s += '}';
   s += ",\"diag\":{\"idle16\":"; s += idle16; s += ",\"idle17\":"; s += idle17; s += '}';
+  fx::appendStatus(s);
   s += '}';
   return s;
 }
@@ -184,6 +188,11 @@ String runCommand(String line) {
   int sp = line.indexOf(' ');
   String verb = sp < 0 ? line : line.substring(0, sp);
   String rest = sp < 0 ? "" : line.substring(sp + 1);
+  {
+    String msg;
+    int h = fx::handle(verb, rest, msg, prefs);
+    if (h >= 0) return ack(c, h == 1, msg);
+  }
   long a[4] = {0, 0, 0, 0};
   int na = 0;
   String all = "";
@@ -309,6 +318,7 @@ void setup() {
   ledcAttachPin(PIN_BUZZ, 0);
   prefs.begin("radar");
   holdMs = prefs.getUInt("hold", 3000);
+  fx::load(prefs);
   delay(200);
   Serial.println("{\"t\":\"boot\"}");
 
@@ -341,7 +351,9 @@ void loop() {
     if (ch == '\n' || ch == '\r') {
       if (cmdBuf.length()) {
         Serial.println(runCommand(cmdBuf));
-        Serial.println(statusJson());
+        // live light/buzzer commands arrive several times a second; skip the full status for those
+        bool live = cmdBuf.startsWith("led") || cmdBuf.startsWith("flash") || cmdBuf.startsWith("beep") || cmdBuf.startsWith("fx");
+        if (!live) Serial.println(statusJson());
         cmdBuf = "";
       }
     } else if (cmdBuf.length() < 120) cmdBuf += ch;
@@ -367,6 +379,7 @@ void loop() {
   present = now;
   digitalWrite(PIN_LED, present);
   if (buzzOffAt && millis() > buzzOffAt) { ledcWriteTone(0, 0); buzzOffAt = 0; }
+  fx::tick(present, hit ? max(radar.rep.moveEnergy, radar.rep.stillEnergy) : 0);
 
   static uint32_t lastR = 0, lastSt = 0;
   if (millis() - lastR >= 100) { lastR = millis(); Serial.println(readingJson()); }
