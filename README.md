@@ -2,9 +2,10 @@
 
 A human radar built on an **ESP32** and an **HLK-LD2410B** 24 GHz mmWave presence sensor, with a live **3D dashboard**: a room you can orbit, the radar beam fanned across the floor, energy columns per distance band, and jointed 3D figures that walk, sit, or lie down where the radar thinks you are.
 
-It runs two ways, both serving the same dashboard:
+It runs three ways, all showing the same dashboard:
 
 - **PC hub** (USB): `pc/radar.py` reads the board over USB, keeps a 24-hour activity history, beeps on arrival, and serves the dashboard. Put it behind Tailscale Serve to check it from your phone anywhere.
+- **Phone app** (USB cable): plug the ESP32 straight into an Android phone and open the app at https://real-cak3d.github.io/Hu-Motian/. No PC, no WiFi. See [Phone app](#phone-app-usb-cable).
 - **Standalone** (WiFi): the ESP32 serves the dashboard itself at `http://humanradar.local/`. The 3D view needs internet to load three.js; without it, the page falls back to a 2D floor plan.
 
 ## Hardware
@@ -29,6 +30,28 @@ Pin 1 is marked "1" on the radar's antenna side. TX/RX crossed the wrong way and
    tailscale serve --bg --set-path /radar http://127.0.0.1:8765
    ```
    Then open `https://<your-pc>.<tailnet>.ts.net/radar/` on your phone.
+
+## Phone app (USB cable)
+
+The dashboard also works as an installable phone app that reads the radar straight from a USB cable. It uses the same JSON lines the PC hub reads, so the firmware doesn't change.
+
+1. Open **https://real-cak3d.github.io/Hu-Motian/** in **Chrome on Android**. Tap ⋮ → **Add to Home screen** (or **Install app**).
+2. Plug the ESP32 into the phone. The phone powers the board and the radar.
+   - Use a USB-C to USB-C cable, or an OTG adapter plus your normal USB cable.
+   - If the board's red power light stays off with a USB-C to USB-C cable, use an OTG adapter with a USB-A to USB-C cable. Some DevKits' USB-C ports only take power from USB-A.
+3. Tap **Connect USB** and pick **CP2102** from the list.
+
+After that it reconnects by itself whenever you plug the board in with the app open. While connected:
+- The screen stays on.
+- Arrivals are kept for 24 hours on the phone.
+- Calibration and sensor settings work the same as with the hub.
+
+**What works where:**
+- **Chrome on Android:** works. The page drives the DevKit's CP2102 USB chip itself over WebUSB.
+- **Chrome or Edge on a PC:** **Connect USB** also works there, through Web Serial and the normal CP210x driver. Close the PC hub first, because only one program can use the port at a time.
+- **iPhone / Safari:** can't. iOS doesn't let web pages use USB. Use WiFi mode (`http://humanradar.local/`) instead.
+
+**Publishing (one time):** in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` then publishes `pc/web` whenever it changes on `main`.
 
 ## Dashboard
 
@@ -88,7 +111,9 @@ firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server
   src/ld2410.h   report + command protocol (engineering mode, params, sensitivity, range)
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
-pc/web/index.html  the dashboard (single file, three.js 3D view)
+pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
+pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
+.github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic
 flash.ps1        build + flash
 start-hub.ps1    start the hub in the background
