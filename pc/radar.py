@@ -2,6 +2,7 @@
 
 Bridges the ESP32 (USB serial) to the web dashboard in pc/web/index.html:
   GET  /           dashboard
+  GET  /ghost.html Ghost Hunter (AR ghost-hunting mode)
   GET  /data       latest reading + status   {"r":{...},"st":{...},"hub":true}
   GET  /cmd?c=...  send a command to the radar firmware, returns its ack
   GET  /history    arrive/leave events from the last 24 h (stored in events.jsonl)
@@ -189,6 +190,8 @@ def make_handler(hub):
             path = u.path.rstrip("/").rsplit("/", 1)[-1] if u.path not in ("/", "") else ""
             if path in ("", "index.html", "radar"):
                 return self._send(200, WEB.read_bytes(), "text/html; charset=utf-8")
+            if path == "ghost.html":
+                return self._send(200, (WEB.parent / "ghost.html").read_bytes(), "text/html; charset=utf-8")
             if path == "data":
                 with hub.lock:
                     st = dict(hub.st or {"t": "st", "ok": False, "wiring": hub.link})

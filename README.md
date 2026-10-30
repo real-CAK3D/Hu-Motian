@@ -53,6 +53,31 @@ After that it reconnects by itself whenever you plug the board in with the app o
 
 **Publishing (one time):** in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` then publishes `pc/web` whenever it changes on `main`.
 
+## Ghost Hunter (AR ghost-hunting mode)
+
+`pc/web/ghost.html` is a ghost-hunting mode for the phone. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html. It shows the camera view with a ghost overlay, a P.K.E. meter (an LED bar with wings that open as the reading climbs), Geiger-style crackle, and an eerie drone. The view can switch to a radar scope.
+
+**Real**: only what the radar actually detects.
+- Tape the radar to the back of the phone, gold antenna side facing out, so it points where the camera points. The radar measures distance only, so the phone's compass supplies the direction.
+- Turn slowly. Each detection stays on screen and on the scope in the direction you found it (orange = moving, blue = still), so a sweep maps where people are.
+
+**Ghost**: staged encounters.
+- A faint reading appears somewhere around you. Sweep until the meter climbs and the ghost fades in.
+- It creeps closer. If you stare too long, it darts somewhere else.
+- Hold **TRAP** while it's in the crosshair, within about 5 m, to capture it. Wait too long and it flies straight at you: full-screen face, scream, screen flash, vibration.
+- With the radar connected, someone actually walking up sets the ghost off ("Something moved!").
+
+**Hunt**: GPS chase, outdoors.
+- A ghost appears 45–95 m away. An arrow, the distance, and the meter guide you to it.
+- It wanders, and once per ghost it may run when you get near. Follow it.
+- Within about 9 m the close encounter starts: find it, then trap it or get scared.
+
+**Sensors**:
+- Direction and aim come from the compass and gyro.
+- GPS is only used by Hunt, because it can't give a direction while you stand still and is only accurate to about ±5–10 m.
+- On iPhone, Ghost and Hunt work, but Real needs the radar, and iOS can't use USB.
+- Settings (⚙): jump scares on/off, volume, and whether real movement triggers ghosts. Jump scares flash the screen, so turn them off for anyone sensitive to flashing light.
+
 ## Dashboard
 
 - **3D room**: wood floor (or your own floor-plan image), walls that cut away on the camera side, lighting and soft shadows, and furniture built from your zones.
@@ -112,6 +137,7 @@ firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
 pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
+pc/web/ghost.html  Ghost Hunter: AR ghost-hunting mode (Real / Ghost / Hunt)
 pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
 .github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic

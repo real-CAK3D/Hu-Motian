@@ -78,6 +78,7 @@ table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2p
   <span class="pill" id="state"><span class="dot" id="stateDot"></span><span id="stateTxt">Connecting…</span></span>
   <span class="pill small"><span class="dot" id="connDot"></span><span id="connTxt">–</span></span>
   <span class="sp"></span>
+  <button id="ghostLink" title="Ghost Hunter: AR ghost-hunting mode" onclick="location.href='ghost.html'" hidden>👻 Ghost mode</button>
   <button id="btnUsb" title="Read the radar straight from a USB cable" hidden>Connect USB</button>
   <button id="btnSound" title="Beep in this window when someone arrives">Sound off</button>
   <button id="btnNotify" title="Notification on arrival" hidden>Notifications off</button>
@@ -350,6 +351,7 @@ function usbUI(){
   usbCardUI();
 }
 function usbCardUI(){
+  $('#ghostLink').hidden=!(S.hub||USB.on||/\.github\.io$/.test(location.hostname));  // the ESP32 itself doesn't serve ghost.html
   const show=!USB.on&&!S.ok&&(S.fails||0)>=3;if(!show){if(!USB.on&&S.ok)$('#usbCard').hidden=true;return}
   const el=$('#usbTxt');
   if(!el.dataset.err)el.innerHTML=canUSB
