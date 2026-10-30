@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Ghost Hunter</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#000000"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--ink:#dfe9e2;--dim:#7d9486;--glow:#38ff9c;--amber:#ffb627;--red:#ff3b30;--line:rgba(56,255,156,.22)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:var(--ink);font:14px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow:hidden;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+#app.shake{animation:shake .5s}
+@keyframes shake{10%,90%{transform:translate(-3px,2px)}20%,80%{transform:translate(7px,-4px)}30%,50%,70%{transform:translate(-11px,6px)}40%,60%{transform:translate(11px,-6px)}}
+#stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}
+#cam{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
+#view{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+header{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;gap:5px;align-items:center;padding:calc(env(safe-area-inset-top) + 7px) 8px 7px;background:linear-gradient(#000d,#0000)}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 9px}
+.seg button.on{background:var(--glow);color:#00140a;font-weight:700}
+button,select{font:inherit;font-size:13px;color:var(--ink);background:rgba(6,12,9,.85);border:1px solid var(--line);border-radius:7px;padding:6px 9px;cursor:pointer}
+button.on{border-color:var(--glow);color:var(--glow)}button:disabled{opacity:.4}
+.sp{flex:1}
+#recBtn.on{background:var(--red);color:#fff;border-color:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.55}}
+#devctl{position:absolute;left:8px;right:104px;bottom:10px;z-index:3;display:flex;gap:6px;flex-wrap:wrap}
+#devctl[hidden],[hidden]{display:none!important}
+#trap{position:absolute;right:10px;bottom:10px;z-index:3;width:84px;height:84px;border-radius:50%;font-weight:800;letter-spacing:.08em;font-size:14px;color:#1a0f00;
+  background:radial-gradient(circle at 50% 35%,#ffd36b,#ffb627 55%,#a86c00);border:3px solid #ffe7a6;box-shadow:0 0 0 4px rgba(255,182,39,.18);touch-action:none}
+#trap.hold{box-shadow:0 0 0 calc(4px + var(--p,0)*16px) rgba(255,182,39,.35),0 0 36px rgba(255,182,39,.8)}
+#dock{display:flex;gap:6px;overflow-x:auto;padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);background:#050806;border-top:1px solid var(--line);scrollbar-width:none}
+#dock::-webkit-scrollbar{display:none}
+#dock button{flex:0 0 auto;padding:9px 12px;border-radius:999px}
+#dock button.on{background:var(--glow);color:#00140a;font-weight:700}
+#flash{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;background:#fff}
+#flash.go{animation:flash .8s ease-out}
+@keyframes flash{0%{opacity:1;background:#fff}12%{opacity:.9;background:#e8f0ff}100%{opacity:0;background:#000}}
+.overlay{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.92);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto}
+.box{max-width:480px;width:100%;border:1px solid var(--line);border-radius:14px;padding:16px;background:#020604}
+.box h1{margin:0 0 4px;font-size:22px;color:var(--glow);letter-spacing:.08em}
+.box h2{font-size:14px;color:var(--glow);margin:16px 0 4px;letter-spacing:.06em}
+.box p{color:var(--dim);margin:8px 0}.box ul{color:var(--dim);margin:6px 0 10px;padding-left:18px}.box li{margin:4px 0}.box li b{color:var(--ink)}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(56,255,156,.1)}
+.opt input[type=range]{accent-color:var(--glow);width:130px}.opt input[type=checkbox]{width:22px;height:22px;accent-color:var(--glow)}
+#go{width:100%;margin-top:10px;padding:13px;font-size:17px;font-weight:800;letter-spacing:.12em;background:var(--glow);color:#00140a;border:0;position:sticky;bottom:0}
+.small{font-size:11px;color:var(--dim)}.warnTxt{color:var(--amber)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.row label{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:4px}
+.row input[type=number]{width:52px;font:inherit;font-size:12px;color:var(--ink);background:#0a120d;border:1px solid var(--line);border-radius:6px;padding:4px}
+.hw{border-top:1px solid rgba(56,255,156,.1);padding:8px 0}.hwh{display:flex;justify-content:space-between;gap:8px}.hwst{font-size:12px}.hwv{font-size:12px;color:var(--amber)}
+.row button{padding:4px 9px;font-size:12px}
+.act{position:absolute;right:16px;z-index:3;width:72px;padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.05em;border-radius:999px}
+#provBtn{bottom:144px;color:#ff8a80;border-color:rgba(255,59,48,.5)}#calmBtn{bottom:106px;color:#9fd0ff;border-color:rgba(74,160,255,.5)}
+.box.wide{max-width:720px}#map{height:58vh;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#071009}
+.gl,.cx{border-top:1px solid rgba(56,255,156,.12);padding:8px 0}.gh{display:flex;justify-content:space-between;gap:8px}.cx.unk b{color:var(--dim)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tile{border:1px solid var(--line);border-radius:10px;padding:8px}.tile b{font-size:20px;color:var(--ink)}
+.box h3{font-size:13px;color:var(--glow);margin:14px 0 4px}.bar2{display:grid;grid-template-columns:130px 1fr 60px;gap:6px;align-items:center;font-size:11px;color:var(--dim);margin:3px 0}
+.bar2 i{display:block;height:8px;background:var(--glow);border-radius:4px;min-width:2px}.bar2 em{font-style:normal;text-align:right}
+button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6px}
+#logList{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;font-size:11px}#logList li{padding:2px 0;border-bottom:1px solid rgba(56,255,156,.08);color:var(--dim)}#logList li b{color:var(--ink);font-weight:400}
+</style></head><body>
+<div id="app">
+  <div id="stage">
+    <video id="cam" playsinline muted autoplay></video>
+    <canvas id="view"></canvas>
+    <header>
+      <div class="seg" id="tabs"><button data-mode="real">Real</button><button data-mode="ghost">Ghost</button><button data-mode="hunt">Hunt</button></div>
+      <span class="sp"></span>
+      <button id="recBtn" title="Record evidence video">● REC</button>
+      <button id="usbBtn" title="Connect the radar over USB" hidden>USB</button>
+      <button id="jBtn" title="Journal: haunt map, codex, stats, contained ghosts">📖</button>
+      <button id="gear" title="Settings, hardware and evidence log">⚙</button>
+    </header>
+    <div id="devctl" hidden><span id="ctlDyn" style="display:contents"></span>
+      <select id="boxRate" title="Sweep speed" hidden><option value="100">100 ms</option><option value="200" selected>200 ms</option><option value="300">300 ms</option></select></div>
+    <button id="provBtn" class="act" title="Provoke it: raises its hostility">PROVOKE</button>
+    <button id="calmBtn" class="act" title="Speak calmly: may lower its hostility">CALM</button>
+    <button id="trap">TRAP</button>
+  </div>
+  <div id="dock"></div>
+</div>
+<span id="boxWord" hidden></span><span id="evpTxt" hidden>Record in silence, then listen back.</span>
+<div id="flash"></div>
+<div class="overlay" id="journal" hidden>
+  <div class="box wide">
+    <div class="row" id="jtabs" style="margin:0 0 8px"><button data-j="map" class="on">Map</button><button data-j="codex">Codex</button><button data-j="stats">Stats</button><button data-j="vault">Contained</button><span class="sp"></span><button id="jClose">✕</button></div>
+    <div id="jBody"></div>
+  </div>
+</div>
+<div class="overlay" id="start">
+  <div class="box">
+    <h1>GHOST HUNTER</h1>
+    <p>Paranormal-investigation kit for Hu-Motian. Pick a device from the bar at the bottom: night vision, thermal, an SLS camera, a laser grid, a K-II meter, an EMF/temperature meter, a REM pod, a spirit box, a word box, an EVP recorder, or the radar.</p>
+    <ul>
+      <li><b>Real</b>: nothing is faked. Only the radar and your kit sensors drive the devices. Tape the radar to the back of the phone, gold side out.</li>
+      <li><b>Ghost</b>: a staged haunting, made up by the app. It moves around the room you're in and stays where it is when you look away. Find it, then hold <b>TRAP</b> before it comes for you.</li>
+      <li><b>Hunt</b>: an outdoor GPS chase that ends in a staged encounter.</li>
+    </ul>
+    <p class="small">Headphones make it much better: footsteps, knocks and whispers come from where the apparition actually is.</p>
+    <div class="opt"><label for="oScare">Jump scares</label><input type="checkbox" id="oScare"></div>
+    <div class="opt"><label for="oVol">Volume</label><input type="range" id="oVol" min="0" max="1" step="0.05"></div>
+    <div class="opt"><label for="oRadar">Real movement sets ghosts off<br><span class="small">Ghost mode + radar: someone walking up triggers the attack</span></label><input type="checkbox" id="oRadar"></div>
+    <div class="opt"><label for="oVoices">Voices (spirit box, word box)</label><input type="checkbox" id="oVoices"></div>
+    <div class="opt"><label for="oZoom">Camera match<br><span class="small">if things slide against the room as you turn, nudge this</span></label><input type="range" id="oZoom" min="0.6" max="1.6" step="0.02"></div>
+    <p class="small warnTxt">Jump scares flash the screen and play a loud scream. Turn them off for anyone sensitive to flashing light or sudden noise. The thermal view is an effect made from camera brightness; phones have no heat sensor.</p>
+    <h2>HARDWARE (ESP32 KIT MODULES)</h2>
+    <p class="small" id="hwNote"></p>
+    <p class="small">Signal pins go to the GPIO numbers below (they're printed on the ESP32 as D32, D33…). Module "−" goes to GND. Sensors go on 3V3, because the ESP32's analog pins can't take 5 V.</p>
+    <div id="hwList"></div>
+    <h2>EVIDENCE LOG</h2>
+    <ul id="logList"></ul>
+    <div class="row"><button id="logExport">Export log</button><button id="logClear">Clear</button></div>
+    <button id="go">START</button>
+    <p class="small" style="text-align:center"><a href="./" style="color:var(--dim)">← back to the radar dashboard</a></p>
+  </div>
+</div>
+<script src="ghost/engine.js"></script>
+<script src="ghost/spirits.js"></script>
+<script src="ghost/view.js"></script>
+</body></html>

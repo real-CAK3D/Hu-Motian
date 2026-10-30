@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Human Radar</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0d0d0d"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{color-scheme:dark;--bg:#0d0d0d;--panel:#1a1a19;--panel2:#222220;--grid:#2c2c2a;--axis:#383835;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;
 --move:#d95926;--still:#3987e5;--sweep:#199e70;--heat:#9085e9;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--ring:rgba(255,255,255,.10)}
@@ -77,11 +78,18 @@ table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2p
   <span class="pill" id="state"><span class="dot" id="stateDot"></span><span id="stateTxt">Connecting…</span></span>
   <span class="pill small"><span class="dot" id="connDot"></span><span id="connTxt">–</span></span>
   <span class="sp"></span>
+  <button id="ghostLink" title="Ghost Hunter: AR ghost-hunting mode" onclick="location.href='ghost.html'" hidden>👻 Ghost mode</button>
+  <button id="btnUsb" title="Read the radar straight from a USB cable" hidden>Connect USB</button>
   <button id="btnSound" title="Beep in this window when someone arrives">Sound off</button>
   <button id="btnNotify" title="Notification on arrival" hidden>Notifications off</button>
   <button id="btnTheme" title="Switch light/dark">Theme</button>
 </header>
 <main>
+  <section class="card c12" id="usbCard" hidden>
+    <div class="card-h"><h2>Connect the radar</h2></div>
+    <div id="usbTxt" class="small"></div>
+    <div class="row"><button id="btnUsb2" class="on">Connect USB</button></div>
+  </section>
   <section class="card c8 hero" id="hero">
     <div id="view3d"></div>
     <div id="loading3d" class="glass" hidden>Loading people…</div>
@@ -203,8 +211,11 @@ function fit(k){const o=cv[k],r=o.c.getBoundingClientRect(),d=devicePixelRatio||
 
 // ================================================================ data
 async function poll(){
-  try{const j=await(await fetch(api('data'),{cache:'no-store'})).json();S.ok=true;onData(j)}catch(e){S.ok=false}
-  setTimeout(poll,110);
+  if(USB.on){S.ok=Date.now()-USB.last<1500;setTimeout(poll,250);return}
+  try{const j=await(await fetch(api('data'),{cache:'no-store'})).json();S.ok=true;S.fails=0;onData(j)}catch(e){S.ok=false;S.fails=(S.fails||0)+1}
+  if(S.fails===3)usbAuto();
+  usbCardUI();
+  setTimeout(poll,S.ok?110:S.fails>20?1500:300);
 }
 function onData(j){
   if('hub' in j)S.hub=j.hub;
@@ -219,14 +230,14 @@ function onData(j){
   while(S.hist.length&&now-S.hist[0].t>600000)S.hist.shift();
   const p=!!r.p;
   if(p&&!S.present){S.since=now;onArrive(r)}
-  if(!p&&S.present&&!S.hub)S.events.unshift({t:now,type:'leave',dur:(now-S.since)/1000});
+  if(!p&&S.present&&!S.hub)addEvent({t:now,type:'leave',dur:(now-S.since)/1000});
   S.present=p;
   accumulateHeat();
   drawGates();drawTimeline();
 }
 function onArrive(r){
   const d=(r.s&1?r.md:r.sd)||r.dd;
-  if(!S.hub){S.events.unshift({t:Date.now(),type:'arrive',d,s:r.s});if(S.events.length>300)S.events.pop()}
+  if(!S.hub)addEvent({t:Date.now(),type:'arrive',d,s:r.s});
   if(S.sound)beep();
   if(S.notify&&'Notification'in window&&Notification.permission==='granted')new Notification('Human detected',{body:`${fmtM(d)} from the sensor`,silent:true});
 }
@@ -238,10 +249,122 @@ async function pollHistory(){
 }
 async function cmd(c){
   $('#cmdMsg').textContent='Sending: '+c+' …';
-  try{const j=await(await fetch(api('cmd?c=')+encodeURIComponent(c),{cache:'no-store'})).json();
+  try{const j=USB.on?await usbCmd(c):await(await fetch(api('cmd?c=')+encodeURIComponent(c),{cache:'no-store'})).json();
     $('#cmdMsg').textContent=(j.ok?'Done: ':'Failed: ')+c+(j.msg?' — '+j.msg:'');return j}
   catch(e){$('#cmdMsg').textContent='Could not reach the radar';return{ok:false}}
 }
+
+// Local arrive/leave log (no hub). Over USB it's kept for 24 h in this browser, like the hub's history.
+function addEvent(e){
+  S.events.unshift(e);
+  if(USB.on){const cut=Date.now()-864e5;while(S.events.length&&S.events[S.events.length-1].t<cut)S.events.pop();store.set('usbEvents',JSON.stringify(S.events))}
+  else if(S.events.length>300)S.events.pop();
+}
+const longHist=()=>S.hub||USB.on;
+
+// ================================================================ USB cable (phone or PC browser reads the ESP32 directly, no hub)
+// The firmware streams the same JSON lines the hub reads. Chrome on Android drives the DevKit's CP210x chip
+// itself over WebUSB (Android has no driver for it); desktop Chrome/Edge use Web Serial and the OS driver.
+const USB={on:false,busy:false,kind:'',last:0,dev:null,port:null,write:null,close:null,waiters:[],lock:null};
+const USB_VIDS=[0x10C4,0x1A86,0x0403];  // CP210x, CH340, FTDI
+const isAndroid=/Android/i.test(navigator.userAgent),canWebUSB='usb'in navigator,canSerial='serial'in navigator,canUSB=canWebUSB||canSerial;
+const useWebUSB=()=>(isAndroid&&canWebUSB)||!canSerial;
+function lineSplitter(){let buf='';return chunk=>{buf+=chunk;let i;while((i=buf.indexOf('\n'))>=0){usbLine(buf.slice(0,i));buf=buf.slice(i+1)}if(buf.length>16384)buf=''}}
+function usbLine(line){
+  line=line.trim();if(line[0]!=='{')return;let m;try{m=JSON.parse(line)}catch(e){return}
+  if(m.t==='r'){USB.last=Date.now();S.ok=true;onData({hub:false,r:m})}
+  else if(m.t==='st')onData({hub:false,st:m});
+  else if(m.t==='ack'){const w=USB.waiters.find(w=>w.c===m.cmd);if(w){dropWaiter(w);clearTimeout(w.to);w.res(m)}}
+}
+function dropWaiter(w){const i=USB.waiters.indexOf(w);if(i>=0)USB.waiters.splice(i,1)}
+function usbCmd(c){
+  c=c.trim().replace(/"/g,"'").replace(/\\/g,'/').slice(0,120);
+  return new Promise(res=>{const w={c,res};USB.waiters.push(w);
+    w.to=setTimeout(()=>{dropWaiter(w);res({t:'ack',cmd:c,ok:false,msg:'no reply from radar'})},8000);
+    USB.write(c+'\n').catch(()=>{})});
+}
+async function openWebUSB(dev){
+  dev=dev||await navigator.usb.requestDevice({filters:[{vendorId:0x10C4}]});
+  await dev.open();if(!dev.configuration)await dev.selectConfiguration(1);
+  const itf=dev.configuration.interfaces[0],n=itf.interfaceNumber;await dev.claimInterface(n);
+  const eps=itf.alternate.endpoints,epIn=eps.find(e=>e.direction==='in'&&e.type==='bulk').endpointNumber,epOut=eps.find(e=>e.direction==='out'&&e.type==='bulk').endpointNumber;
+  const ctl=(request,value,data)=>dev.controlTransferOut({requestType:'vendor',recipient:'interface',request,value,index:n},data);
+  await ctl(0x00,0x0001);                              // CP210x IFC_ENABLE
+  await ctl(0x1E,0,new Uint32Array([115200]).buffer);  // SET_BAUDRATE
+  await ctl(0x03,0x0800);                              // SET_LINE_CTL: 8 data bits, no parity, 1 stop
+  await ctl(0x07,0x0300);                              // SET_MHS: DTR and RTS off, so connecting doesn't reset the ESP32
+  const enc=new TextEncoder(),dec=new TextDecoder(),feed=lineSplitter();
+  USB.dev=dev;USB.write=s=>dev.transferOut(epOut,enc.encode(s));
+  USB.close=async()=>{try{await ctl(0x00,0x0000)}catch(e){}try{await dev.close()}catch(e){}};
+  USB.on=true;
+  (async()=>{try{while(USB.on){const r=await dev.transferIn(epIn,512);if(r.data&&r.data.byteLength)feed(dec.decode(r.data,{stream:true}))}}catch(e){}usbLost()})();
+  return 'USB';
+}
+async function openSerial(port){
+  port=port||await navigator.serial.requestPort({filters:USB_VIDS.map(v=>({usbVendorId:v}))});
+  await port.open({baudRate:115200});
+  try{await port.setSignals({dataTerminalReady:false,requestToSend:false})}catch(e){}
+  const enc=new TextEncoder(),dec=new TextDecoderStream(),closed=port.readable.pipeTo(dec.writable).catch(()=>{}),reader=dec.readable.getReader(),feed=lineSplitter();
+  USB.port=port;
+  USB.write=async s=>{const w=port.writable.getWriter();try{await w.write(enc.encode(s))}finally{w.releaseLock()}};
+  USB.close=async()=>{try{await reader.cancel()}catch(e){}await closed;try{await port.close()}catch(e){}};
+  USB.on=true;
+  (async()=>{try{for(;;){const{value,done}=await reader.read();if(done)break;feed(value)}}catch(e){}usbLost()})();
+  return 'USB';
+}
+async function usbStart(open){
+  if(USB.on||USB.busy)return;USB.busy=true;
+  try{
+    USB.kind=await open();S.hub=false;USB.last=0;
+    try{const cut=Date.now()-864e5;S.events=JSON.parse(store.get('usbEvents','[]')).filter(e=>e.t>=cut)}catch(e){S.events=[]}
+    usbUI();drawOcc();keepAwake();
+    usbCmd('status');
+  }catch(e){
+    if(e&&e.name!=='NotFoundError')usbError(e);  // NotFoundError = the picker was cancelled
+  }finally{USB.busy=false}
+}
+function usbConnect(){if(USB.on)return usbDisconnect();return usbStart(()=>useWebUSB()?openWebUSB():openSerial())}
+async function usbAuto(){  // reconnect to a board this browser was already allowed to use, without a tap
+  if(USB.on||S.ok||!canUSB)return;
+  try{
+    if(useWebUSB()){const d=(await navigator.usb.getDevices()).find(d=>d.vendorId===0x10C4);if(d)await usbStart(()=>openWebUSB(d))}
+    else{const p=(await navigator.serial.getPorts())[0];if(p)await usbStart(()=>openSerial(p))}
+  }catch(e){}
+}
+async function usbDisconnect(){USB.on=false;const c=USB.close;USB.close=null;USB.dev=USB.port=null;if(c)await c();usbUI()}
+function usbLost(){
+  if(!USB.on)return;USB.on=false;USB.dev=USB.port=null;S.ok=false;
+  for(const w of USB.waiters.splice(0)){clearTimeout(w.to);w.res({t:'ack',cmd:w.c,ok:false,msg:'USB unplugged'})}
+  if(USB.close){const c=USB.close;USB.close=null;c()}
+  usbUI();
+}
+function usbError(e){
+  const m=String(e&&e.message||e);
+  $('#usbTxt').innerHTML='<b>Could not open the board:</b> '+esc(m)+(/claim|busy|access|in use|open/i.test(m)?'<br>Close any other app using it (the PC hub, Arduino or PlatformIO serial monitor), unplug and replug, then try again.':'');
+  $('#usbTxt').dataset.err='1';$('#usbCard').hidden=false;
+}
+function usbUI(){
+  const b=$('#btnUsb');b.hidden=!canUSB;b.textContent=USB.on?'USB connected':'Connect USB';b.classList.toggle('on',USB.on);
+  $('#occCard').hidden=!longHist();
+  if(USB.on){$('#connTxt').textContent='USB cable';$('#usbCard').hidden=true}
+  else if($('#connTxt').textContent==='USB cable'){$('#connTxt').textContent='Unplugged';$('#connDot').style.background=C.muted}
+  usbCardUI();
+}
+function usbCardUI(){
+  $('#ghostLink').hidden=!(S.hub||USB.on||/\.github\.io$/.test(location.hostname));  // the ESP32 itself doesn't serve ghost.html
+  const show=!USB.on&&!S.ok&&(S.fails||0)>=3;if(!show){if(!USB.on&&S.ok)$('#usbCard').hidden=true;return}
+  const el=$('#usbTxt');
+  if(!el.dataset.err)el.innerHTML=canUSB
+    ?'Plug the ESP32 into this device with a USB cable (on a phone: USB-C to USB-C, or an OTG adapter), then tap <b>Connect USB</b> and pick <b>CP2102</b> from the list. After the first time it reconnects by itself when you plug it in.'
+    :'This browser can\'t talk to USB devices. Use <b>Chrome on Android</b>, or <b>Chrome or Edge on a PC</b>. iPhones and Safari don\'t allow web pages to use USB; on an iPhone use WiFi mode (http://humanradar.local/) instead.';
+  $('#btnUsb2').hidden=!canUSB;$('#usbCard').hidden=false;
+}
+async function keepAwake(){try{if(USB.on&&'wakeLock'in navigator&&!USB.lock){USB.lock=await navigator.wakeLock.request('screen');USB.lock.addEventListener('release',()=>USB.lock=null)}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake()});
+$('#btnUsb').onclick=$('#btnUsb2').onclick=()=>{$('#usbTxt').dataset.err='';usbConnect()};
+if(canWebUSB){navigator.usb.addEventListener('connect',()=>setTimeout(usbAuto,600));navigator.usb.addEventListener('disconnect',e=>{if(e.device===USB.dev)usbLost()})}
+if(canSerial){navigator.serial.addEventListener('connect',()=>setTimeout(usbAuto,600));navigator.serial.addEventListener('disconnect',e=>{if(e.target===USB.port)usbLost()})}
+if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 // ================================================================ room model
 // Zone type: explicit (z.k) or guessed from the name. Drives furniture, poses and the location prior.
@@ -653,7 +776,8 @@ function poseDummy(p,dt,f){
   d.spine.rotation.x=.04*w+Math.sin(performance.now()/600)*.01;
 }
 // Bend a bone around a world-space axis (the person's left-right axis), whatever the rig's own bone orientation.
-const _q=new THREE.Quaternion(),_pq=new THREE.Quaternion(),_ax=new THREE.Vector3();
+// Guarded: without three.js (offline) this line must not stop the rest of the page from running.
+const _q=V.ok?new THREE.Quaternion():null,_pq=V.ok?new THREE.Quaternion():null,_ax=V.ok?new THREE.Vector3():null;
 function bendWorld(bone,axis,angle){if(!bone||!angle)return;bone.parent.getWorldQuaternion(_pq);
   _q.setFromAxisAngle(axis,angle);bone.quaternion.premultiply(_pq.clone().invert().multiply(_q).multiply(_pq));bone.updateMatrixWorld(true)}
 function updatePerson(p,f,dt){
@@ -870,7 +994,7 @@ function periods(){const ev=S.events.slice().reverse(),out=[];let a=null;
   for(const e of ev){if(e.type==='arrive')a=e;else if(e.type==='leave'&&a){out.push({a:a.t,b:e.t,d:a.d});a=null}}
   if(a)out.push({a:a.t,b:Date.now(),d:a.d,open:true});return out}
 function drawOcc(){
-  if(!S.hub)return;const o=fit('occ'),x=o.x,W=o.w,H=o.h;x.clearRect(0,0,W,H);
+  if(!longHist())return;const o=fit('occ'),x=o.x,W=o.w,H=o.h;x.clearRect(0,0,W,H);
   const now=Date.now(),t0=now-864e5,X=t=>8+(W-16)*(t-t0)/864e5,ps=periods().filter(p=>p.b>t0);
   x.fillStyle=C.panel2;x.fillRect(8,6,W-16,30);x.fillStyle=C.crit;for(const p of ps){const a=X(Math.max(p.a,t0));x.fillRect(a,6,Math.max(1.5,X(p.b)-a),30)}
   x.font='11px system-ui,sans-serif';x.fillStyle=C.muted;x.textAlign='center';x.textBaseline='top';
@@ -902,11 +1026,11 @@ function renderSide(){
   const today=new Date().setHours(0,0,0,0),ps=periods().filter(p=>p.b>=today),tot=ps.reduce((s,p)=>s+Math.min(p.b,now)-Math.max(p.a,today),0)/1000;
   const longest=ps.reduce((m,p)=>Math.max(m,(Math.min(p.b,now)-Math.max(p.a,today))/1000),0),arr=S.events.filter(e=>e.type==='arrive'&&e.t>=today).length;
   const cur=S.present&&S.since?(now-S.since)/1000:0;
-  setHTML('#today',stat('Arrivals',arr,S.hub?'since midnight':'since this page opened')+stat('Time present',fmtDur(tot),ps.length?`${ps.length} visit${ps.length>1?'s':''}`:'—')+
+  setHTML('#today',stat('Arrivals',arr,longHist()?'since midnight':'since this page opened')+stat('Time present',fmtDur(tot),ps.length?`${ps.length} visit${ps.length>1?'s':''}`:'—')+
     stat('Longest visit',longest?fmtDur(longest):'–','')+stat('Current visit',cur?fmtDur(cur):'–',cur?'since '+fmtT(S.since):'nobody here'));
   const r=S.r,fresh=S.ok&&r&&r.ok,fps=S.frameTimes.length/3;
   setHTML('#signal',stat('Moving target',fresh&&r.s&1?fmtM(r.md):'–',fresh&&r.s&1?`energy ${r.me}`:'none')+stat('Still target',fresh&&r.s&2?fmtM(r.sd):'–',fresh&&r.s&2?`energy ${r.se}`:'none')+
-    stat('Update rate',S.ok?fps.toFixed(1)+'/s':'offline',S.hub?'PC hub over USB':'direct over WiFi')+stat('Light level',r&&r.lt!=null?r.lt:'–','sensor photodiode'));
+    stat('Update rate',S.ok?fps.toFixed(1)+'/s':'offline',USB.on?'USB cable to this device':S.hub?'PC hub over USB':'direct over WiFi')+stat('Light level',r&&r.lt!=null?r.lt:'–','sensor photodiode'));
 }
 const stat=(k,v,s)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s||'&nbsp;'}</div></div>`;
 function setHTML(sel,h){const e=$(sel);if(e.innerHTML!==h)e.innerHTML=h}
@@ -929,8 +1053,8 @@ function renderLog(){
 let syncedCfg=false;
 function updateStatus(){
   const st=S.st;
-  $('#connTxt').textContent=S.hub?'PC hub':st.ip?'WiFi '+st.ip:'Direct';$('#connDot').style.background=S.ok?C.good:C.muted;
-  $('#occCard').hidden=!S.hub;$('#btnNotify').hidden=!('Notification'in window&&isSecureContext);
+  $('#connTxt').textContent=USB.on?'USB cable':S.hub?'PC hub':st.ip?'WiFi '+st.ip:'Direct';$('#connDot').style.background=S.ok?C.good:C.muted;
+  $('#occCard').hidden=!longHist();$('#btnNotify').hidden=!('Notification'in window&&isSecureContext);
   setHTML('#wiring',`Wiring: <b>${esc(st.wiring||'–')}</b>${st.baud?' · '+st.baud+' baud':''}${st.fw?' · firmware '+esc(st.fw):''}${st.ssid?'<br>WiFi: '+esc(st.ssid)+' ('+st.rssi+' dBm) · http://humanradar.local/':st.portal?'<br>WiFi not set up: join "HumanRadar-Setup" from your phone':''}`);
   const cal=st.cal||{},busy=cal.state==='wait'||cal.state==='run',tot=(+$('#calSecs').value)+(+$('#calDelay').value);
   $('#btnCal').textContent=busy?'Cancel calibration':'Calibrate empty room';
@@ -968,7 +1092,7 @@ function hideTip(){$('#tip').style.display='none'}
 // ================================================================ boot
 {const th=store.get('theme',null);if(th)document.documentElement.dataset.theme=th}
 loadColors();matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{loadColors();V.key=''});
-syncEditor();loadRoom();loadFloorplan();poll();pollHistory();
+syncEditor();loadRoom();loadFloorplan();usbUI();poll();pollHistory();
 if(V.ok){try{init3D()}catch(e){console.error(e);V.ok=false}}
 if(V.ok){
   $('#planNote').textContent='Changes show up in the 3D view as you edit.';

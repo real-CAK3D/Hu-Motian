@@ -2,9 +2,10 @@
 
 A human radar built on an **ESP32** and an **HLK-LD2410B** 24 GHz mmWave presence sensor, with a live **3D dashboard**: a room you can orbit, the radar beam fanned across the floor, energy columns per distance band, and jointed 3D figures that walk, sit, or lie down where the radar thinks you are.
 
-It runs two ways, both serving the same dashboard:
+It runs three ways, all showing the same dashboard:
 
 - **PC hub** (USB): `pc/radar.py` reads the board over USB, keeps a 24-hour activity history, beeps on arrival, and serves the dashboard. Put it behind Tailscale Serve to check it from your phone anywhere.
+- **Phone app** (USB cable): plug the ESP32 straight into an Android phone and open the app at https://real-cak3d.github.io/Hu-Motian/. No PC, no WiFi. See [Phone app](#phone-app-usb-cable).
 - **Standalone** (WiFi): the ESP32 serves the dashboard itself at `http://humanradar.local/`. The 3D view needs internet to load three.js; without it, the page falls back to a 2D floor plan.
 
 ## Hardware
@@ -29,6 +30,136 @@ Pin 1 is marked "1" on the radar's antenna side. TX/RX crossed the wrong way and
    tailscale serve --bg --set-path /radar http://127.0.0.1:8765
    ```
    Then open `https://<your-pc>.<tailnet>.ts.net/radar/` on your phone.
+
+## Phone app (USB cable)
+
+The dashboard also works as an installable phone app that reads the radar straight from a USB cable. It uses the same JSON lines the PC hub reads, so the firmware doesn't change.
+
+1. Open **https://real-cak3d.github.io/Hu-Motian/** in **Chrome on Android**. Tap ⋮ → **Add to Home screen** (or **Install app**).
+2. Plug the ESP32 into the phone. The phone powers the board and the radar.
+   - Use a USB-C to USB-C cable, or an OTG adapter plus your normal USB cable.
+   - If the board's red power light stays off with a USB-C to USB-C cable, use an OTG adapter with a USB-A to USB-C cable. Some DevKits' USB-C ports only take power from USB-A.
+3. Tap **Connect USB** and pick **CP2102** from the list.
+
+After that it reconnects by itself whenever you plug the board in with the app open. While connected:
+- The screen stays on.
+- Arrivals are kept for 24 hours on the phone.
+- Calibration and sensor settings work the same as with the hub.
+
+**What works where:**
+- **Chrome on Android:** works. The page drives the DevKit's CP2102 USB chip itself over WebUSB.
+- **Chrome or Edge on a PC:** **Connect USB** also works there, through Web Serial and the normal CP210x driver. Close the PC hub first, because only one program can use the port at a time.
+- **iPhone / Safari:** can't. iOS doesn't let web pages use USB. Use WiFi mode (`http://humanradar.local/`) instead.
+
+**Publishing (one time):** in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` then publishes `pc/web` whenever it changes on `main`.
+
+## Ghost Hunter (paranormal investigation kit)
+
+`pc/web/ghost.html` (+ `pc/web/ghost/engine.js`, `view.js`) turns the phone, radar and kit modules into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
+
+**Devices** (pick one from the bar at the bottom)
+
+| Device | What it does |
+|---|---|
+| Night vision | IR-style green image with grain |
+| Thermal | Thermal-style iron palette made from camera brightness, a centre spot temperature and a scale bar. Phones have no heat sensor. |
+| SLS camera | Dark depth image with an IR dot pattern; a stick figure is drawn wherever a "body" is detected |
+| Laser grid | Green dots fixed on the room around you; anything standing in the room blocks them |
+| K-II meter | 5-LED EMF meter |
+| EMF/temp meter | LCD with EMF and temperature, the RT-EMF alarm beep, and a red light |
+| REM pod | Proximity LEDs around an antenna dome, escalating alarm, cold/warm LEDs |
+| Spirit box | FM sweep (100/200/300 ms) with static chop |
+| Word box | Picks words from sensor changes, the way the real devices do, and says them |
+| EVP recorder | 15 s raw mic; reverse / slow playback, anomaly marks, WAV export |
+| Radar | Heading-up scope |
+
+The camera devices draw a found-footage overlay: REC, timestamp, battery, temperature and a mini K-II. The picture breaks up with interference as readings rise. **● REC** saves screen + sound as an evidence video, and **⚙ → Evidence log** exports every event.
+
+**It stays where it is.**
+- Orientation comes from the gyro, slowly corrected to true north by the compass. Magnetic glitches are ignored.
+- The staged apparition, its cold spots, drifting orbs and shadow figures have real positions in the room around you. They keep moving while you look away.
+- They're drawn in true perspective, standing on the floor, about 1.4 m below the phone.
+- With headphones, footsteps, knocks and whispers come from where they actually are.
+- If things slide against the real room as you turn, adjust **⚙ → Camera match**.
+
+**Modes**
+- **Real**: nothing is faked.
+  - Radar hits are anchored where the radar (taped to the back of the phone, gold side out) was pointing.
+  - The SLS figure, laser-grid shadow and warm thermal body come from the live radar target.
+  - The EMF meters use the **Hall sensor**; temperature comes from the **thermistor**.
+  - The REM pod is driven by radar proximity and the **touch antenna, IR tripwire and vibration** sensors.
+  - The word box picks words from real sensor changes; the spirit box is static only.
+- **Ghost**: a staged haunting with persistent, individual ghosts (below).
+- **Hunt**: follows the arrow to the nearest open lead or a haunt you haven't cleared; with nothing on the map, a fresh trail.
+
+**Ghosts.** 18 kinds, from common to legendary, each with its own look, habits, voice and temper:
+
+| Kind | Rarity | Look | Habits |
+|---|---|---|---|
+| Residual imprint | ★ | pale, faded | paces the same path, never notices you |
+| Spirit lights | ★ | orbs | float, circle, startle |
+| Wandering soul | ★ | pale | wanders, cries, may follow you |
+| Ectoplasmic mist | ★★ | fog column | drifts toward warmth, very cold |
+| Shadow person | ★★ | shadow | watches, peeks from doorways, vanishes when seen |
+| Lost child | ★★★ | small, pale | giggles, beckons "come here", hides, points |
+| Guide | ★★★ | glowing | **points the way to other spirits** |
+| Woman in white | ★★★ | gown, long hair | floats, weeps, beckons |
+| Poltergeist | ★★★ | invisible | knocks, throws things, flickers the lights |
+| Stalker | ★★★ | shadow | only moves when you look away |
+| Black dog | ★★★ | hound, red eyes | circles, growls, chases |
+| Trickster | ★★★ | shadow | erratic, teleports, mimics, **lies about directions** |
+| The Hat Man | ★★★★ | tall, hat, red eyes | stares, stalks, blinks closer |
+| Wraith | ★★★★ | ragged, floating | circles, then dives at you |
+| Revenant | ★★★★ | shadow, red eyes | hostile, runs at you |
+| Banshee | ★★★★ | gown, hair | screams (the wail), swoops |
+| Doppelgänger | ★★★★★ | looks like you | appears where you just looked |
+| Inhuman | ★★★★★ | dark, red eyes | crawls on all fours, chases; laughs when you try to calm it |
+
+Each ghost you meet:
+- **Its own identity**: a name and story (e.g. "Lived here and drowned in the river, 1882"), a **level** (1–10) and a **hostility** (0–100%, Passive → Enraged). Together these give a **threat** rating.
+- **A living mood**: its behaviour changes with its mood. Calm ones stand, wander, beckon and point. Angry ones stare you down, chase, dive and attack. Staring at a hostile one makes it angrier.
+- **Your actions**: **PROVOKE** raises its hostility. **CALM** may lower it, depending on the kind.
+- **Identification**: like a real investigation. Collect any **2 pieces of evidence** to reveal its name, kind and level:
+  - Apparition, EMF 5, freezing temps
+  - Spirit box, word box, EVP
+  - SLS figure, laser grid
+  The encounter card fills in as you go.
+- **Containment**: hold **TRAP** (or the kit's push button). Higher levels and angrier ghosts take longer, fight back, and can break free and attack.
+
+**The haunt map.** A ghost becomes real the first time you see it:
+- **It stays.** It's saved at that GPS spot with a 30–50 ft area. Leave and its readings fade. Come back into the area and the same ghost is there, unseen until you spot it again.
+- **Leads.** Guides, lost children and tricksters point. Their direction becomes a lead on the map 50–150 m away, and following it (Hunt) finds another ghost. A trickster's lead may be a lie.
+- **📖 Journal**:
+  - **Map**: OpenStreetMap, coloured by hostility, with open leads.
+  - **Codex**: which of the 18 kinds you've discovered, identified and contained.
+  - **Stats**: ghosts met, sightings, contained x of y, kinds discovered, attacks survived, escapes, provokes and calms, knocks, thrown objects, flickers, voices heard, EVP sessions and anomalies, leads, distance walked, time hunting, and the highest, angriest and rarest ghosts.
+  - **Contained**: everything you've caught, with a Release option (they go home angry).
+
+### Kit lights and sensors (optional)
+
+Set them up in **⚙ → Hardware** while the radar is connected; the board saves the pins. Module "−" goes to GND. **Sensors go on 3V3**, because the ESP32's analog pins can't take 5 V. Suggested pins (all free on a DevKit):
+
+| Module | Kit part | ESP32 pins |
+|---|---|---|
+| RGB LED | KY-016 / KY-009 | R GPIO32, G GPIO33, B GPIO27 |
+| 2-colour LED | KY-011 / KY-029 | red GPIO22, green GPIO23 |
+| 7-colour flash LED | KY-034 | GPIO19 |
+| Buzzer | KY-006 / KY-012 | GPIO25 (built in) |
+| Hall magnetic sensor | KY-035 / KY-024 (AO) | GPIO34 |
+| Thermistor | KY-013 | GPIO35 |
+| Sound sensor | KY-037 / KY-038 (AO) | GPIO39 (VN) |
+| Vibration / knock / tilt | KY-002 / KY-031 / KY-020 | GPIO18 |
+| Push button (physical TRAP) | KY-004 | GPIO13 |
+| Touch antenna (REM pod) | KY-036 (DO) | GPIO14 |
+| Light sensor | KY-018 | GPIO36 (VP) |
+| IR tripwire | KY-032 (OUT) | GPIO26 |
+
+What they do:
+- **The lights follow the app.** The RGB LED shows the K-II colour, the REM pod gets a colour chase and two-tone alarm, there's a flicker when the ghost is near, a white strobe as it rushes you, and a scare blast.
+- **Without the app,** the RGB LED shows the radar's signal strength K-II style.
+- **The sensors feed Real mode** as described above. The push button works as a physical TRAP button.
+
+Firmware commands are listed in `firmware/src/fx.h`.
 
 ## Dashboard
 
@@ -84,11 +215,14 @@ range <moveGate> <stillGate> <idleSecs> | hold <ms> | eng <0|1> | factory
 ## Layout
 
 ```
-firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server, calibration
+firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server, calibration, kit modules (fx.h)
   src/ld2410.h   report + command protocol (engineering mode, params, sensitivity, range)
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
-pc/web/index.html  the dashboard (single file, three.js 3D view)
+pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
+pc/web/ghost.html, ghost/*.js  Ghost Hunter: engine (sensors, link, audio), spirits (bestiary, behaviour, haunt map, stats), view (devices, drawing, UI)
+pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
+.github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic
 flash.ps1        build + flash
 start-hub.ps1    start the hub in the background
