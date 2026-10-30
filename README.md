@@ -53,30 +53,40 @@ After that it reconnects by itself whenever you plug the board in with the app o
 
 **Publishing (one time):** in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` then publishes `pc/web` whenever it changes on `main`.
 
-## Ghost Hunter (AR ghost-hunting mode)
+## Ghost Hunter (paranormal investigation mode)
 
-`pc/web/ghost.html` is a ghost-hunting mode for the phone. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html. It shows the camera view with a ghost overlay, a P.K.E. meter (an LED bar with wings that open as the reading climbs), Geiger-style crackle, and an eerie drone. The view can switch to a radar scope.
+`pc/web/ghost.html` turns the phone and radar into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
 
-**Real**: only what the radar actually detects.
-- Tape the radar to the back of the phone, gold antenna side facing out, so it points where the camera points. The radar measures distance only, so the phone's compass supplies the direction.
-- Turn slowly. Each detection stays on screen and on the scope in the direction you found it (orange = moving, blue = still), so a sweep maps where people are.
+**Camera**
+- Lenses: **NV** (night-vision green with film grain), **Therm** (a thermal-style view built from camera brightness; phones have no heat sensor) and **Color**.
+- Found-footage overlay: REC timer, date and time, battery, temperature, a mini EMF meter, compass tape, and signal interference that gets worse as readings climb (grain, tearing, frozen frames).
+- **● REC** saves the screen plus sound (the room mic and the app's audio) as an evidence video.
 
-**Ghost**: staged encounters.
-- A faint reading appears somewhere around you. Sweep until the meter climbs and the ghost fades in.
-- It creeps closer. If you stare too long, it darts somewhere else.
-- Hold **TRAP** while it's in the crosshair, within about 5 m, to capture it. Wait too long and it flies straight at you: full-screen face, scream, screen flash, vibration.
-- With the radar connected, someone actually walking up sets the ghost off ("Something moved!").
+**Tools**
+- **EMF**: a K-II style 5-LED meter (0.5 / 1.5 / 5 / 10 / 20+ mG) with a history graph.
+- **Spirit box**: an FM sweep at 100, 200 or 300 ms per step, with static bursts and station fragments.
+- **EVP**: records 15 s from the mic with phone processing off. Play it back normally, reversed or slowed, and save it as WAV. It automatically marks anomalies (50 ms windows much louder than the session's median).
+- **Log**: timestamped evidence, exportable as text.
 
-**Hunt**: GPS chase, outdoors.
-- A ghost appears 45–95 m away. An arrow, the distance, and the meter guide you to it.
-- It wanders, and once per ghost it may run when you get near. Follow it.
-- Within about 9 m the close encounter starts: find it, then trap it or get scared.
+**Modes**
+- **Real**: nothing is faked.
+  - Tape the radar to the back of the phone, gold antenna side facing out, so it points where the camera points.
+  - Radar hits are stamped with the compass heading and stay in view, so turning slowly maps who's around you.
+  - The EMF meter shows the radar return strength. On the thermal lens the live radar target shows up as a warm figure.
+  - Spirit box is pure static, EVP gets real analysis only, and temperature shows "--" because there's no sensor.
+- **Ghost**: a staged haunting, all made up by the app.
+  - It starts with an EMF fluctuation somewhere around you.
+  - From a distance it shows as drifting orbs. Closer, a shadow figure stands on the floor at true human scale for its distance. On thermal it's a cold spot, and the temperature drops (COLD SPOT).
+  - Knocks, spirit-box words ("behind you", "closer"…), and a whisper planted in EVP recordings.
+  - It creeps closer and relocates if you stare. Hold **TRAP** to contain it, or it rushes the camera and you get the jump scare.
+  - With the radar connected, someone actually walking up sets it off.
+- **Hunt**: an outdoor GPS chase that ends in a staged encounter. The ghost sometimes moves away when you get near.
 
-**Sensors**:
-- Direction and aim come from the compass and gyro.
-- GPS is only used by Hunt, because it can't give a direction while you stand still and is only accurate to about ±5–10 m.
-- On iPhone, Ghost and Hunt work, but Real needs the radar, and iOS can't use USB.
-- Settings (⚙): jump scares on/off, volume, and whether real movement triggers ghosts. Jump scares flash the screen, so turn them off for anyone sensitive to flashing light.
+**Sensors and settings**
+- Direction comes from the compass and gyro, and the floor is assumed about 1.4 m below the phone.
+- GPS is only used by Hunt.
+- Settings (⚙): jump scares, volume, radar triggers, and spirit-box voices.
+- The exported log notes that Ghost and Hunt entries are staged.
 
 ## Dashboard
 
@@ -137,7 +147,7 @@ firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
 pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
-pc/web/ghost.html  Ghost Hunter: AR ghost-hunting mode (Real / Ghost / Hunt)
+pc/web/ghost.html  Ghost Hunter: NV/thermal camera, EMF, spirit box, EVP, evidence log/video (Real / Ghost / Hunt)
 pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
 .github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic

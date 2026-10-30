@@ -3,84 +3,107 @@
 <title>Ghost Hunter</title>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#000000"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#000;--ink:#d8ffe9;--dim:#6fa88a;--glow:#38ff9c;--amber:#ffb627;--red:#ff3b30;--panel:rgba(4,14,9,.82);--line:rgba(56,255,156,.28)}
+:root{--bg:#000;--ink:#dfe9e2;--dim:#7d9486;--glow:#38ff9c;--amber:#ffb627;--red:#ff3b30;--panel:#060a08;--line:rgba(56,255,156,.22)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow:hidden;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
 #app{position:fixed;inset:0;display:flex;flex-direction:column}
-#app.shake{animation:shake .45s}
-@keyframes shake{10%,90%{transform:translate(-3px,2px)}20%,80%{transform:translate(6px,-4px)}30%,50%,70%{transform:translate(-10px,6px)}40%,60%{transform:translate(10px,-6px)}}
-#stage{position:relative;flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#06180f,#000 75%)}
-#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.55) contrast(1.15) brightness(.85);display:none}
+#app.shake{animation:shake .5s}
+@keyframes shake{10%,90%{transform:translate(-3px,2px)}20%,80%{transform:translate(7px,-4px)}30%,50%,70%{transform:translate(-11px,6px)}40%,60%{transform:translate(11px,-6px)}}
+#stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}
+#cam{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
 #view{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-header{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;gap:6px;align-items:center;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;
-  background:linear-gradient(#000c,#0000)}
-.tabs{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.tabs button{border:0;border-radius:0;padding:7px 11px}
-.tabs button.on{background:var(--glow);color:#00140a;font-weight:700}
-button,a.btn{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;text-decoration:none}
+header{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;gap:5px;align-items:center;padding:calc(env(safe-area-inset-top) + 7px) 8px 7px;background:linear-gradient(#000d,#0000)}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 9px}
+.seg button.on{background:var(--glow);color:#00140a;font-weight:700}
+button,select{font:inherit;font-size:13px;color:var(--ink);background:rgba(6,12,9,.85);border:1px solid var(--line);border-radius:7px;padding:6px 9px;cursor:pointer}
 button.on{border-color:var(--glow);color:var(--glow)}
+button:disabled{opacity:.4}
 .sp{flex:1}
-#hud{position:absolute;left:10px;right:10px;top:calc(env(safe-area-inset-top) + 52px);z-index:2;pointer-events:none;font-size:12px;color:var(--dim);text-shadow:0 0 4px #000}
-#ticker{font-size:15px;color:var(--glow);text-shadow:0 0 8px rgba(56,255,156,.7);margin-top:2px;min-height:20px}
-#ticker.warn{color:var(--amber);text-shadow:0 0 8px rgba(255,182,39,.7)}
-#ticker.alert{color:var(--red);text-shadow:0 0 10px rgba(255,59,48,.9);animation:blink .35s infinite}
-@keyframes blink{50%{opacity:.35}}
-#panel{position:relative;z-index:3;background:var(--panel);border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
-#pke{width:100%;height:78px;display:block}
-.read{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim)}
-.read b{color:var(--ink);font-size:15px;font-weight:600}
-#trap{grid-row:1/3;grid-column:2;width:92px;height:92px;border-radius:50%;font-weight:800;letter-spacing:.08em;font-size:15px;color:#1a0f00;
-  background:radial-gradient(circle at 50% 35%,#ffd36b,#ffb627 55%,#a86c00);border:3px solid #ffe7a6;box-shadow:0 0 0 4px rgba(255,182,39,.2),0 0 24px rgba(255,182,39,.35);touch-action:none}
-#trap.hold{box-shadow:0 0 0 calc(4px + var(--p,0)*18px) rgba(255,182,39,.35),0 0 40px rgba(255,182,39,.8)}
+#panel{position:relative;z-index:3;background:var(--panel);border-top:1px solid var(--line);padding:6px 8px calc(env(safe-area-inset-bottom) + 8px);display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:8px}
+#tools{min-width:0;display:flex;flex-direction:column;gap:5px}
+.ttabs{display:flex;gap:4px}.ttabs button{flex:1;padding:5px 2px;font-size:12px}
+.tool{height:128px;min-width:0;position:relative}
+.tool[hidden]{display:none}
+.tool canvas{width:100%;display:block}
+#emf{height:128px}
+#evpWave{height:62px;background:#020503;border:1px solid var(--line);border-radius:6px}
+.row{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:5px}
+.row button{padding:5px 8px;font-size:12px}
+.small{font-size:11px;color:var(--dim)}
+#boxFreq{font-size:30px;color:var(--amber);text-shadow:0 0 10px rgba(255,182,39,.6);letter-spacing:.04em}
+#boxWord{font-size:24px;color:var(--ink);min-height:32px;letter-spacing:.2em;text-transform:uppercase;text-shadow:0 0 12px rgba(255,255,255,.5)}
+#logList{list-style:none;margin:0;padding:0;height:96px;overflow:auto;font-size:11px}
+#logList li{padding:2px 0;border-bottom:1px solid rgba(56,255,156,.08);color:var(--dim)}#logList li b{color:var(--ink);font-weight:400}
+.side{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center}
+#trap{width:84px;height:84px;border-radius:50%;font-weight:800;letter-spacing:.08em;font-size:14px;color:#1a0f00;background:radial-gradient(circle at 50% 35%,#ffd36b,#ffb627 55%,#a86c00);
+  border:3px solid #ffe7a6;box-shadow:0 0 0 4px rgba(255,182,39,.18);touch-action:none}
+#trap.hold{box-shadow:0 0 0 calc(4px + var(--p,0)*16px) rgba(255,182,39,.35),0 0 36px rgba(255,182,39,.8)}
 #trap[hidden]{display:none}
+#recBtn{width:84px;font-weight:700}#recBtn.on{background:var(--red);color:#fff;border-color:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.55}}
 #flash{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;background:#fff}
-#flash.go{animation:flash .9s ease-out}
-@keyframes flash{0%{opacity:1;background:#fff}15%{opacity:.95;background:#ff2a1a}100%{opacity:0;background:#300}}
-.overlay{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+#flash.go{animation:flash .8s ease-out}
+@keyframes flash{0%{opacity:1;background:#fff}12%{opacity:.9;background:#e8f0ff}100%{opacity:0;background:#000}}
+.overlay{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
 .overlay[hidden]{display:none}
-.box{max-width:440px;width:100%;border:1px solid var(--line);border-radius:14px;padding:18px;background:#020a06;box-shadow:0 0 40px rgba(56,255,156,.12)}
-.box h1{margin:0 0 4px;font-size:24px;color:var(--glow);letter-spacing:.06em;text-shadow:0 0 12px rgba(56,255,156,.6)}
-.box p{color:var(--dim);margin:8px 0}
-.box ul{color:var(--dim);margin:6px 0 10px;padding-left:18px}
-.box li{margin:4px 0}.box li b{color:var(--ink)}
-.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(56,255,156,.12)}
-.opt input[type=range]{accent-color:var(--glow);width:140px}
-.opt input[type=checkbox]{width:22px;height:22px;accent-color:var(--glow)}
-#go{width:100%;margin-top:12px;padding:14px;font-size:18px;font-weight:800;letter-spacing:.1em;background:var(--glow);color:#00140a;border:0}
-.small{font-size:12px}.warnTxt{color:var(--amber)}
+.box{max-width:460px;width:100%;border:1px solid var(--line);border-radius:14px;padding:16px;background:#020604;max-height:100%;overflow:auto}
+.box h1{margin:0 0 4px;font-size:22px;color:var(--glow);letter-spacing:.08em}
+.box p{color:var(--dim);margin:8px 0}.box ul{color:var(--dim);margin:6px 0 10px;padding-left:18px}.box li{margin:4px 0}.box li b{color:var(--ink)}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(56,255,156,.1)}
+.opt input[type=range]{accent-color:var(--glow);width:130px}.opt input[type=checkbox]{width:22px;height:22px;accent-color:var(--glow)}
+#go{width:100%;margin-top:10px;padding:13px;font-size:17px;font-weight:800;letter-spacing:.12em;background:var(--glow);color:#00140a;border:0}
+.warnTxt{color:var(--amber)}
 </style></head><body>
 <div id="app">
   <div id="stage">
     <video id="cam" playsinline muted autoplay></video>
     <canvas id="view"></canvas>
     <header>
-      <div class="tabs" id="tabs"><button data-mode="real">Real</button><button data-mode="ghost">Ghost</button><button data-mode="hunt">Hunt</button></div>
+      <div class="seg" id="tabs"><button data-mode="real">Real</button><button data-mode="ghost">Ghost</button><button data-mode="hunt">Hunt</button></div>
       <span class="sp"></span>
+      <button id="lensBtn" title="Camera lens: normal, night vision, thermal style">NV</button>
       <button id="viewBtn" title="Camera or radar scope">Cam</button>
       <button id="usbBtn" title="Connect the radar over USB" hidden>USB</button>
       <button id="gear" title="Settings">⚙</button>
     </header>
-    <div id="hud"><div id="status">–</div><div id="ticker"></div></div>
   </div>
   <div id="panel">
-    <canvas id="pke"></canvas>
-    <div class="read"><span>PKE <b id="pkeV">0.0</b></span><span id="distW">Range <b id="distV">–</b></span><span>Trapped <b id="caps">0</b></span></div>
-    <button id="trap">TRAP</button>
+    <div id="tools">
+      <div class="ttabs" id="ttabs"><button data-tool="emf" class="on">EMF</button><button data-tool="box">Spirit box</button><button data-tool="evp">EVP</button><button data-tool="log">Log</button></div>
+      <div class="tool" id="t-emf"><canvas id="emf"></canvas></div>
+      <div class="tool" id="t-box" hidden>
+        <div class="row" style="margin-top:0;justify-content:space-between"><span id="boxFreq">FM 87.5</span>
+          <span><select id="boxRate" title="Sweep speed"><option value="100">100 ms</option><option value="200" selected>200 ms</option><option value="300">300 ms</option></select>
+          <button id="boxBtn">Sweep</button></span></div>
+        <div id="boxWord"></div>
+        <div class="small" id="boxNote">Ask a question out loud, then listen.</div>
+      </div>
+      <div class="tool" id="t-evp" hidden>
+        <canvas id="evpWave"></canvas>
+        <div class="row"><button id="evpRec">● Rec 15 s</button><button id="evpPlay" disabled>▶ Play</button><button id="evpRev" disabled>◀ Reverse</button><button id="evpSlow" disabled>Slow</button><button id="evpSave" disabled>Save</button></div>
+        <div class="small" id="evpTxt">Record in silence, ask questions, leave pauses for answers.</div>
+      </div>
+      <div class="tool" id="t-log" hidden><ul id="logList"></ul><div class="row" style="margin-top:3px"><button id="logExport">Export log</button><button id="logClear">Clear</button></div></div>
+    </div>
+    <div class="side"><button id="trap">TRAP</button><button id="recBtn" title="Record evidence video">● REC</button></div>
   </div>
 </div>
 <div id="flash"></div>
 <div class="overlay" id="start">
   <div class="box">
     <h1>GHOST HUNTER</h1>
-    <p>Hu-Motian's radar, ready for ghost hunting. Three modes:</p>
+    <p>Paranormal-investigation kit for Hu-Motian's radar: a night-vision camera, an EMF meter, a spirit box and an EVP recorder.</p>
     <ul>
-      <li><b>Real</b>: only what the radar truly detects. Tape the radar to the back of the phone, gold antenna side facing out, and turn slowly. Detections stay on screen in the direction you found them.</li>
-      <li><b>Ghost</b>: staged encounters. Sweep the room to find the reading, aim at it, and hold <b>TRAP</b> before it gets you.</li>
-      <li><b>Hunt</b>: go outside and use GPS to track down a ghost that wanders, and sometimes runs. Get close and it shows up.</li>
+      <li><b>Real</b>: nothing is faked. The radar mounted on the phone (gold side out) shows what's really there, and the tools only show what they really pick up.</li>
+      <li><b>Ghost</b>: a staged haunting. Readings, orbs, a shadow figure, cold spots, spirit-box voices and EVP whispers are all made up by the app. Find it, then trap it before it comes for you.</li>
+      <li><b>Hunt</b>: an outdoor GPS chase that ends in a staged encounter.</li>
     </ul>
     <div class="opt"><label for="oScare">Jump scares</label><input type="checkbox" id="oScare"></div>
     <div class="opt"><label for="oVol">Volume</label><input type="range" id="oVol" min="0" max="1" step="0.05"></div>
-    <div class="opt"><label for="oRadar">Real movement sets ghosts off<br><span class="small" style="color:var(--dim)">Ghost mode + radar: someone walking up triggers the attack</span></label><input type="checkbox" id="oRadar"></div>
+    <div class="opt"><label for="oRadar">Real movement sets ghosts off<br><span class="small">Ghost mode + radar: someone walking up triggers the attack</span></label><input type="checkbox" id="oRadar"></div>
+    <div class="opt"><label for="oVoices">Spirit-box voices in Ghost/Hunt</label><input type="checkbox" id="oVoices"></div>
+    <p class="small">The thermal lens is a thermal-style view made from camera brightness. Phones have no heat sensor.</p>
     <p class="small warnTxt">Jump scares flash the screen and play a loud scream. Turn them off for anyone sensitive to flashing light or sudden noise.</p>
     <button id="go">START</button>
     <p class="small" style="text-align:center"><a href="./" style="color:var(--dim)">← back to the radar dashboard</a></p>
@@ -89,14 +112,24 @@ button.on{border-color:var(--glow);color:var(--glow)}
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180,rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180,rand=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
 const wrap=a=>((a%360)+540)%360-180;  // -> [-180,180)
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const pad=(n,w=2)=>String(n).padStart(w,'0');
 
 // ================================================================ settings / mode
-const CFG={scares:store.get('gh.scares','1')==='1',vol:+store.get('gh.vol','0.8'),radarTrig:store.get('gh.radarTrig','1')==='1'};
-let MODE=store.get('gh.mode','ghost'),VIEW=store.get('gh.view','cam'),started=false,caps=+store.get('gh.caps','0');
-$('#caps').textContent=caps;
+const CFG={scares:store.get('gh.scares','1')==='1',vol:+store.get('gh.vol','0.8'),radarTrig:store.get('gh.radarTrig','1')==='1',voices:store.get('gh.voices','1')==='1'};
+let MODE=store.get('gh.mode','ghost'),VIEW=store.get('gh.view','cam'),LENS=store.get('gh.lens','nv'),started=false,caps=+store.get('gh.caps','0');
+const staged=()=>MODE!=='real';
+
+// ================================================================ evidence log
+const LOG=JSON.parse(store.get('gh.log','[]')||'[]');
+function logEv(txt){LOG.unshift({t:Date.now(),m:MODE,txt});if(LOG.length>300)LOG.pop();store.set('gh.log',JSON.stringify(LOG));renderLog()}
+function renderLog(){$('#logList').innerHTML=LOG.length?LOG.slice(0,120).map(e=>{const d=new Date(e.t);return`<li>${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} <b>${e.txt.replace(/</g,'&lt;')}</b></li>`}).join(''):'<li>No evidence yet.</li>'}
+$('#logExport').onclick=()=>{const txt=LOG.slice().reverse().map(e=>`${new Date(e.t).toLocaleString()}  [${e.m}]  ${e.txt}`).join('\n');download(new Blob([`Hu-Motian ghost hunt log\n(Ghost/Hunt entries are staged by the app; Real entries are actual sensor readings.)\n\n${txt}\n`],{type:'text/plain'}),`ghost-log-${stamp()}.txt`)};
+$('#logClear').onclick=()=>{if(confirm('Clear the evidence log?')){LOG.length=0;store.set('gh.log','[]');renderLog()}};
+function stamp(){const d=new Date();return`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
 
 // ================================================================ orientation (compass + gyro)
 // Heading of the rear camera, from the device rotation matrix (W3C DeviceOrientation, Z-X'-Y'').
@@ -140,14 +173,16 @@ function geoMove(la,lo,bear,m){const R=6371000,d=m/R,b=bear*D2R,p1=la*D2R,l1=lo*
   return[p2/D2R,(l1+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(p1),Math.cos(d)-Math.sin(p1)*Math.sin(p2)))/D2R]}
 
 // ================================================================ radar link (USB cable, or the PC hub when served by it)
-const RD={last:0,r:null,ms:-1,blips:[]};
+const RD={last:0,r:null,ms:-1,blips:[],lastLog:0};
 function onReading(r){
-  RD.r=r;RD.last=Date.now();
+  const was=RD.r&&RD.r.s;RD.r=r;RD.last=Date.now();
   if(r.s&&r.ok!==false){const mv=!!(r.s&1),d=((mv?r.md:r.sd)||r.dd)/100,e=Math.max(mv?r.me:0,r.s&2?r.se:0);
     RD.blips.push({b:O.h,d,e,mv,t:Date.now()});
-    while(RD.blips.length>900||(RD.blips.length&&Date.now()-RD.blips[0].t>40000))RD.blips.shift()}
+    while(RD.blips.length>900||(RD.blips.length&&Date.now()-RD.blips[0].t>40000))RD.blips.shift();
+    if(MODE==='real'&&!was&&Date.now()-RD.lastLog>4000){RD.lastLog=Date.now();logEv(`Radar: ${mv?'moving':'still'} target ${d.toFixed(2)} m, heading ${Math.round(O.h)}°`)}}
 }
 const radarLive=()=>Date.now()-RD.last<1500;
+const radarTarget=()=>{if(!radarLive()||!RD.r||!RD.r.s)return null;const r=RD.r,mv=!!(r.s&1);return{mv,d:((mv?r.md:r.sd)||r.dd)/100,e:Math.max(mv?r.me:0,r.s&2?r.se:0)}};
 const USB={on:false,busy:false,dev:null,port:null,close:null};
 const isAndroid=/Android/i.test(navigator.userAgent),canWebUSB='usb'in navigator,canSerial='serial'in navigator,canUSB=canWebUSB||canSerial;
 const useWebUSB=()=>(isAndroid&&canWebUSB)||!canSerial;
@@ -193,79 +228,168 @@ const AU={ctx:null};
 function auInit(){
   if(AU.ctx)return;const C=new(window.AudioContext||window.webkitAudioContext)();AU.ctx=C;
   AU.master=C.createGain();AU.master.gain.value=CFG.vol;AU.master.connect(C.destination);
-  // eerie drone: two detuned saws through a wobbling low-pass
-  AU.lp=C.createBiquadFilter();AU.lp.type='lowpass';AU.lp.frequency.value=300;AU.lp.Q.value=8;
+  AU.lp=C.createBiquadFilter();AU.lp.type='lowpass';AU.lp.frequency.value=300;AU.lp.Q.value=8;  // low, uneasy room tone
   AU.dg=C.createGain();AU.dg.gain.value=0;AU.lp.connect(AU.dg);AU.dg.connect(AU.master);
   for(const f of[55,55.8,82.6]){const o=C.createOscillator();o.type='sawtooth';o.frequency.value=f;const g=C.createGain();g.gain.value=.33;o.connect(g);g.connect(AU.lp);o.start()}
   const lfo=C.createOscillator(),lg=C.createGain();lfo.frequency.value=.31;lg.gain.value=120;lfo.connect(lg);lg.connect(AU.lp.frequency);lfo.start();
-  // noise buffer for clicks/whooshes
-  const n=C.sampleRate,buf=C.createBuffer(1,n,n),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;AU.noise=buf;
+  const n=C.sampleRate*2,buf=C.createBuffer(1,n,C.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;AU.noise=buf;
 }
-function noiseHit(dur,gain,type,freq,when){const C=AU.ctx;if(!C)return;const t=when||C.currentTime,s=C.createBufferSource(),f=C.createBiquadFilter(),g=C.createGain();
-  s.buffer=AU.noise;s.loop=true;f.type=type;f.frequency.value=freq;g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  s.connect(f);f.connect(g);g.connect(AU.master);s.start(t,Math.random()*.5);s.stop(t+dur+.02);return{f,t}}
-const click=()=>noiseHit(.012,.5,'highpass',2500);
-function whoosh(dur=.9){const h=noiseHit(dur,.6,'bandpass',300);if(h){h.f.frequency.setValueAtTime(250,h.t);h.f.frequency.exponentialRampToValueAtTime(3200,h.t+dur*.6);h.f.Q.value=2}}
+function noiseHit(dur,gain,type,freq,when,flat){const C=AU.ctx;if(!C)return;const t=when||C.currentTime,s=C.createBufferSource(),f=C.createBiquadFilter(),g=C.createGain();
+  s.buffer=AU.noise;s.loop=true;f.type=type;f.frequency.value=freq;
+  if(flat){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.005);g.gain.setValueAtTime(gain,t+dur-.01);g.gain.linearRampToValueAtTime(0,t+dur)}
+  else{g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur)}
+  s.connect(f);f.connect(g);g.connect(AU.master);s.start(t,Math.random()*1.5);s.stop(t+dur+.02);return{f,g,t}}
+const click=()=>noiseHit(.012,.35,'highpass',2500);
+function whoosh(dur=.9){const h=noiseHit(dur,.5,'bandpass',300);if(h){h.f.frequency.setValueAtTime(250,h.t);h.f.frequency.exponentialRampToValueAtTime(3200,h.t+dur*.6);h.f.Q.value=2}}
+function knock(n=3){const C=AU.ctx;if(!C)return;for(let i=0;i<n;i++){const t=C.currentTime+i*rand(.28,.42),o=C.createOscillator(),g=C.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(55,t+.12);
+  g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g);g.connect(AU.master);o.start(t);o.stop(t+.2);noiseHit(.05,.5,'lowpass',900,t)}}
 function scream(){const C=AU.ctx;if(!C)return;const t=C.currentTime;
-  const ws=C.createWaveShaper(),curve=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;curve[i]=Math.tanh(x*6)}ws.curve=curve;
-  const g=C.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(1,t+.03);g.gain.setValueAtTime(1,t+.7);g.gain.exponentialRampToValueAtTime(.0001,t+1.6);
-  ws.connect(g);g.connect(AU.master);
-  for(const[ty,f0,f1,f2]of[['sawtooth',380,1500,240],['square',190,760,120],['sawtooth',570,2100,330]]){const o=C.createOscillator();o.type=ty;
-    o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+.18);o.frequency.exponentialRampToValueAtTime(f2,t+1.5);
-    const v=C.createOscillator(),vg=C.createGain();v.frequency.value=23;vg.gain.value=f1*.06;v.connect(vg);vg.connect(o.frequency);v.start(t);v.stop(t+1.6);
-    o.connect(ws);o.start(t);o.stop(t+1.6)}
-  noiseHit(1.2,.9,'bandpass',1800);
+  // sub boom + breathy shriek (filtered noise with a moving formant) + a distorted voice-like glide
+  const b=C.createOscillator(),bg=C.createGain();b.frequency.setValueAtTime(70,t);b.frequency.exponentialRampToValueAtTime(28,t+.7);bg.gain.setValueAtTime(1,t);bg.gain.exponentialRampToValueAtTime(.001,t+.9);b.connect(bg);bg.connect(AU.master);b.start(t);b.stop(t+.95);
+  const h=noiseHit(1.4,1,'bandpass',1500,t,true);if(h){h.f.Q.value=7;h.f.frequency.setValueAtTime(900,t);h.f.frequency.exponentialRampToValueAtTime(3400,t+.25);h.f.frequency.exponentialRampToValueAtTime(1200,t+1.3)}
+  const ws=C.createWaveShaper(),curve=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;curve[i]=Math.tanh(x*5)}ws.curve=curve;
+  const g=C.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.55,t+.04);g.gain.setValueAtTime(.55,t+.6);g.gain.exponentialRampToValueAtTime(.0001,t+1.4);ws.connect(g);g.connect(AU.master);
+  for(const[f0,f1,f2]of[[420,1250,260],[436,1310,250]]){const o=C.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+.2);o.frequency.exponentialRampToValueAtTime(f2,t+1.3);
+    const v=C.createOscillator(),vg=C.createGain();v.frequency.value=17;vg.gain.value=f1*.05;v.connect(vg);vg.connect(o.frequency);v.start(t);v.stop(t+1.4);o.connect(ws);o.start(t);o.stop(t+1.4)}
 }
 function zap(){const C=AU.ctx;if(!C)return;const t=C.currentTime,o=C.createOscillator(),g=C.createGain();o.type='square';
-  o.frequency.setValueAtTime(1800,t);o.frequency.exponentialRampToValueAtTime(90,t+1.1);g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.0001,t+1.2);
-  o.connect(g);g.connect(AU.master);o.start(t);o.stop(t+1.25);noiseHit(1.1,.4,'highpass',4000)}
+  o.frequency.setValueAtTime(1800,t);o.frequency.exponentialRampToValueAtTime(90,t+1.1);g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.0001,t+1.2);
+  o.connect(g);g.connect(AU.master);o.start(t);o.stop(t+1.25);noiseHit(1.1,.35,'highpass',4000)}
 function auUpdate(level,dt){
   if(!AU.ctx)return;const C=AU.ctx,t=C.currentTime;
   AU.master.gain.setTargetAtTime(CFG.vol,t,.1);
-  AU.dg.gain.setTargetAtTime(level*.22,t,.15);AU.lp.frequency.setTargetAtTime(180+level*1400,t,.2);
-  if(Math.random()<(.6+level*level*45)*dt)click();  // Geiger-style crackle, faster as the reading climbs
+  AU.dg.gain.setTargetAtTime(staged()?level*.2:level*.06,t,.15);AU.lp.frequency.setTargetAtTime(180+level*1300,t,.2);
+  if(Math.random()<(.3+level*level*30)*dt)click();  // EMF-meter crackle
 }
 const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
-// ================================================================ ghost (staged encounters; also the close-range part of Hunt)
-// States: idle -> near (approaching, findable) -> charge (flies at you) -> gone ; or near -> trapped.
-const G={state:'idle',wait:3,b:0,d:8,el:8,vis:0,age:0,charge:0,d0:0,aimT:0,hold:0,trapT:0,scareT:0,cool:0};
-function spawnGhost(bear,dist){
-  G.state='near';G._warned=false;G.b=bear;G.d=dist;G.el=rand(2,14);G.vis=0;G.age=0;G.aimT=0;G.hold=0;
-  say(MODE==='hunt'?'It\'s here. Look around…':'Faint PKE reading… sweep slowly.');
+// ================================================================ spirit box (radio sweep)
+const WORDS=['here','leave','cold','who','behind','hello','help','dark','stay','go','yes','no','watching','closer','get out','with you','below','now','mine','listen','don\'t','run'];
+const BOX={on:false,freq:87.5,next:0,lastWord:0};
+function boxToggle(){auInit();BOX.on=!BOX.on;BOX.next=AU.ctx.currentTime+.05;$('#boxBtn').classList.toggle('on',BOX.on);$('#boxBtn').textContent=BOX.on?'Stop':'Sweep';
+  $('#boxNote').textContent=BOX.on?(staged()?'Ask a question out loud, then listen.':'Real mode: pure radio static. Nothing is added.'):'Ask a question out loud, then listen.';if(BOX.on)logEv('Spirit box sweep started')}
+$('#boxBtn').onclick=boxToggle;
+function boxStep(when,rate){
+  const C=AU.ctx,dur=rate/1000*.8;
+  noiseHit(dur,.32,'bandpass',rand(900,2200),when,true);  // AM static burst; the gaps between steps make the classic chop
+  if(Math.random()<.32){const o=C.createOscillator(),f=C.createBiquadFilter(),g=C.createGain();o.type='sawtooth';o.frequency.setValueAtTime(rand(100,230),when);o.frequency.linearRampToValueAtTime(rand(100,260),when+dur*.6);
+    f.type='bandpass';f.frequency.value=rand(500,1500);f.Q.value=5;g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.18,when+.01);g.gain.linearRampToValueAtTime(0,when+dur*.6);
+    o.connect(f);f.connect(g);g.connect(AU.master);o.start(when);o.stop(when+dur*.6+.02)}  // a fragment of a "station"
 }
-function startCharge(why){if(G.state!=='near')return;G.state='charge';G.charge=0;G.d0=Math.max(G.d,2.5);say(why||'IT\'S COMING!','alert');whoosh(1)}
+function boxUpdate(){
+  if(!BOX.on||!AU.ctx)return;const C=AU.ctx,rate=+$('#boxRate').value;
+  while(BOX.next<C.currentTime+.12){boxStep(BOX.next,rate);BOX.next+=rate/1000;BOX.freq=BOX.freq>=107.9?87.5:+(BOX.freq+.2).toFixed(1)}
+  $('#boxFreq').textContent='FM '+BOX.freq.toFixed(1);
+  if(staged()&&CFG.voices&&performance.now()-BOX.lastWord>3500&&Math.random()<(.003+L*.035)){BOX.lastWord=performance.now();
+    const near=(G.state==='near'&&G.d<4)||G.state==='charge',w=near?pick(['behind','closer','here','now','behind you','run']):pick(WORDS);speak(w)}
+}
+function speak(w){
+  $('#boxWord').textContent=w;setTimeout(()=>{if($('#boxWord').textContent===w)$('#boxWord').textContent=''},2500);logEv(`Spirit box: "${w.toUpperCase()}"`);
+  if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(w);u.rate=rand(.62,.95);u.pitch=rand(.05,.45);u.volume=clamp(CFG.vol*.9,0,1);speechSynthesis.speak(u)}
+}
+
+// ================================================================ EVP recorder
+const EVP={mr:null,stream:null,an:null,buf:null,rev:null,plant:null,anoms:[],src:null,playT0:0,playRate:1,playRev:false,live:false,t0:0};
+async function evpRecord(){
+  if(EVP.mr){EVP.mr.stop();return}
+  auInit();
+  try{EVP.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}catch(e){$('#evpTxt').textContent='Microphone not available: '+(e.message||e);return}
+  EVP.an=AU.ctx.createAnalyser();EVP.an.fftSize=1024;AU.ctx.createMediaStreamSource(EVP.stream).connect(EVP.an);
+  const chunks=[];EVP.mr=new MediaRecorder(EVP.stream);EVP.mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  EVP.mr.onstop=async()=>{EVP.live=false;EVP.mr=null;for(const t of EVP.stream.getTracks())t.stop();$('#evpRec').textContent='● Rec 15 s';$('#evpRec').classList.remove('on');
+    try{const ab=await new Blob(chunks).arrayBuffer();EVP.buf=await AU.ctx.decodeAudioData(ab);
+      EVP.plant=staged()?plantWhisper(EVP.buf):null;EVP.rev=null;EVP.anoms=findAnomalies(EVP.buf);
+      for(const b of['#evpPlay','#evpRev','#evpSlow','#evpSave'])$(b).disabled=false;
+      $('#evpTxt').textContent=EVP.anoms.length?`${EVP.anoms.length} anomal${EVP.anoms.length>1?'ies':'y'} at ${EVP.anoms.map(a=>a.t.toFixed(1)+' s').join(', ')}. Listen reversed and slowed.`:'No anomalies found. Try another session.';
+      logEv(`EVP session ${EVP.buf.duration.toFixed(0)} s: ${EVP.anoms.length} anomal${EVP.anoms.length===1?'y':'ies'}`)}
+    catch(e){$('#evpTxt').textContent='Could not decode the recording: '+(e.message||e)}};
+  EVP.mr.start();EVP.live=true;EVP.t0=performance.now();$('#evpRec').textContent='■ Stop';$('#evpRec').classList.add('on');$('#evpTxt').textContent='Recording… ask a question, then stay silent.';
+  setTimeout(()=>{if(EVP.mr&&EVP.mr.state==='recording')EVP.mr.stop()},15000);
+}
+// Staged modes: mix an unintelligible whisper (noise shaped by vowel formants) into the recording, the way real EVPs sound.
+function plantWhisper(buf){
+  const sr=buf.sampleRate,data=buf.getChannelData(0),dur=rand(.8,1.3),len=Math.floor(sr*dur);if(buf.duration<4)return null;
+  const start=Math.floor(sr*rand(2.5,buf.duration-dur-.5));let rms=0;for(let i=0;i<data.length;i+=64)rms+=data[i]*data[i];rms=Math.sqrt(rms/(data.length/64));
+  const amp=clamp(rms*4,.015,.25),syl=Math.random()<.5?2:3,F=[[300,870],[270,2290],[730,1090],[520,1190],[440,1020],[660,1720]];
+  const bp=(f,q)=>{const w=2*Math.PI*f/sr,al=Math.sin(w)/(2*q),a0=1+al;return{b0:al/a0,b2:-al/a0,a1:-2*Math.cos(w)/a0,a2:(1-al)/a0,x1:0,x2:0,y1:0,y2:0}};
+  const run=(s,x)=>{const y=s.b0*x+s.b2*s.x2-s.a1*s.y1-s.a2*s.y2;s.x2=s.x1;s.x1=x;s.y2=s.y1;s.y1=y;return y};
+  const out=new Float32Array(len);
+  for(let k=0;k<syl;k++){const[f1,f2]=pick(F),a=bp(f1,6),b=bp(f2,8),s0=Math.floor(k*len/syl),s1=Math.floor((k+1)*len/syl);
+    for(let i=s0;i<s1;i++){const x=Math.random()*2-1,env=Math.sin(Math.PI*(i-s0)/(s1-s0))**2;out[i]+=(run(a,x)+run(b,x)*.7)*env}}
+  let pk=0;for(const v of out)pk=Math.max(pk,Math.abs(v));
+  for(let c=0;c<buf.numberOfChannels;c++){const ch=buf.getChannelData(c);for(let i=0;i<len;i++)ch[start+i]+=out[i]/pk*amp}
+  return{t:start/sr,dur};
+}
+// Real analysis for any recording: 50 ms windows much louder than the session's median.
+function findAnomalies(buf){
+  const d=buf.getChannelData(0),sr=buf.sampleRate,w=Math.floor(sr*.05),rms=[];
+  for(let i=0;i+w<=d.length;i+=w){let s=0;for(let j=i;j<i+w;j++)s+=d[j]*d[j];rms.push(Math.sqrt(s/w))}
+  const med=rms.slice().sort((a,b)=>a-b)[Math.floor(rms.length/2)]||0,th=Math.max(med*3.2,.012),out=[];
+  for(let i=4;i<rms.length;i++)if(rms[i]>th&&(!out.length||i*.05-out[out.length-1].t>1.2))out.push({t:i*.05,v:rms[i]});
+  return out.slice(0,6);
+}
+function evpPlay(rev,rate){
+  if(!EVP.buf)return;auInit();if(EVP.src){try{EVP.src.stop()}catch(e){}}
+  let b=EVP.buf;if(rev){if(!EVP.rev){const r=AU.ctx.createBuffer(b.numberOfChannels,b.length,b.sampleRate);for(let c=0;c<b.numberOfChannels;c++){const s=b.getChannelData(c),o=r.getChannelData(c);for(let i=0;i<s.length;i++)o[i]=s[s.length-1-i]}EVP.rev=r}b=EVP.rev}
+  const s=AU.ctx.createBufferSource();s.buffer=b;s.playbackRate.value=rate;s.connect(AU.master);s.start();EVP.src=s;EVP.playT0=AU.ctx.currentTime;EVP.playRate=rate;EVP.playRev=rev;s.onended=()=>{if(EVP.src===s)EVP.src=null};
+}
+function evpSave(){
+  const b=EVP.buf;if(!b)return;const d=b.getChannelData(0),n=d.length,ab=new ArrayBuffer(44+n*2),v=new DataView(ab),ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  ws(0,'RIFF');v.setUint32(4,36+n*2,true);ws(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,b.sampleRate,true);v.setUint32(28,b.sampleRate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,clamp(d[i],-1,1)*32767,true);download(new Blob([ab],{type:'audio/wav'}),`evp-${stamp()}.wav`);
+}
+$('#evpRec').onclick=evpRecord;$('#evpPlay').onclick=()=>evpPlay(false,1);$('#evpRev').onclick=()=>evpPlay(true,1);$('#evpSlow').onclick=()=>evpPlay(false,.6);$('#evpSave').onclick=evpSave;
+function drawEVP(){
+  const c=$('#evpWave'),r=c.getBoundingClientRect(),dpr=devicePixelRatio||1;if(!r.width)return;if(c.width!==Math.round(r.width*dpr)){c.width=r.width*dpr;c.height=r.height*dpr}
+  const x=c.getContext('2d'),w=r.width,h=r.height;x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.strokeStyle='#38ff9c';x.lineWidth=1;
+  if(EVP.live&&EVP.an){const a=new Float32Array(EVP.an.fftSize);EVP.an.getFloatTimeDomainData(a);x.beginPath();for(let i=0;i<a.length;i++){const xx=i/a.length*w,yy=h/2+a[i]*h*2;i?x.lineTo(xx,yy):x.moveTo(xx,yy)}x.stroke();
+    x.fillStyle='#ff3b30';x.font='11px ui-monospace,monospace';x.fillText('● REC '+((performance.now()-EVP.t0)/1000).toFixed(1)+' s',6,12);return}
+  if(!EVP.buf){x.fillStyle='#4a5e52';x.font='11px ui-monospace,monospace';x.fillText('no recording',6,h/2+4);return}
+  const d=EVP.buf.getChannelData(0),step=Math.ceil(d.length/w),dur=EVP.buf.duration;
+  for(const a of EVP.anoms){x.fillStyle='rgba(255,182,39,.22)';x.fillRect(a.t/dur*w-3,0,8,h)}
+  x.beginPath();for(let i=0;i<w;i++){let mn=1,mx=-1;for(let j=i*step;j<Math.min(d.length,(i+1)*step);j++){const v=d[j];if(v<mn)mn=v;if(v>mx)mx=v}x.moveTo(i+.5,h/2+mn*h*.9);x.lineTo(i+.5,h/2+mx*h*.9)}x.stroke();
+  if(EVP.src){let p=(AU.ctx.currentTime-EVP.playT0)*EVP.playRate/dur;if(EVP.playRev)p=1-p;x.fillStyle='#fff';x.fillRect(clamp(p,0,1)*w,0,1.5,h)}
+}
+
+// ================================================================ ghost (staged encounters; also the close-range part of Hunt)
+// States: idle -> near (approaching, findable) -> charge (rushes you) -> gone ; or near -> trapped.
+const G={state:'idle',wait:3,b:0,d:8,vis:0,age:0,charge:0,d0:0,aimT:0,hold:0,trapT:0,scareT:0,cool:0,_warned:false,knocked:false};
+function spawnGhost(bear,dist){
+  G.state='near';G._warned=false;G.knocked=false;G.b=bear;G.d=dist;G.vis=0;G.age=0;G.aimT=0;G.hold=0;
+  say(MODE==='hunt'?'It\'s here. Look around…':'EMF fluctuation detected… sweep slowly.');logEv(`EMF spike detected near heading ${Math.round(((bear%360)+360)%360)}°`);
+}
+function startCharge(why){if(G.state!=='near')return;G.state='charge';G.charge=0;G.d0=Math.max(G.d,3);say(why||'IT\'S COMING!','alert');whoosh(1.1);logEv('Apparition approached rapidly')}
 function ghostStep(dt){
   const aim=Math.abs(wrap(G.b-O.h)),pointed=aim<HFOV()/2-4;
-  if(G.state==='idle'){G.wait-=dt;if(G.wait<=0&&MODE==='ghost')spawnGhost(O.h+rand(-160,160),rand(6.5,8.5))}
+  if(G.state==='idle'){G.wait-=dt;if(G.wait<=0&&MODE==='ghost')spawnGhost(O.h+rand(-160,160),rand(7,9))}
   else if(G.state==='near'){
     G.age+=dt;
-    G.d=Math.max(1.2,G.d-(.16+(pointed?.32:0))*dt);
-    G.b+=Math.sin(G.age*.8)*7*dt+Math.sin(G.age*.23)*4*dt;G.el+=Math.sin(G.age*1.3)*2*dt;
-    const target=pointed?clamp(1.25-G.d/6,0,1):0;G.vis+=(target-G.vis)*Math.min(1,dt*2);
+    G.d=Math.max(1.4,G.d-(.13+(pointed?.27:0))*dt);
+    G.b+=Math.sin(G.age*.8)*6*dt+Math.sin(G.age*.23)*4*dt;
+    const target=pointed?clamp(1.3-G.d/7,0,1):0;G.vis+=(target-G.vis)*Math.min(1,dt*1.5);
     G.aimT=pointed?G.aimT+dt:0;
-    if(G.aimT>3.2&&G.d>2.4&&Math.random()<dt*.6){G.b+=(Math.random()<.5?-1:1)*rand(35,70);G.aimT=0;whoosh(.6);say('It moved! Find it again.','warn')}  // darts away
-    if(G.d<2.3&&pointed)startCharge();
-    else if(G.age>48)startCharge('Behind you…');
+    if(!G.knocked&&G.age>6&&Math.random()<dt*.15){G.knocked=true;knock(3);say('Did you hear that?','warn');logEv('Three knocks heard')}
+    if(G.aimT>3.5&&G.d>2.6&&Math.random()<dt*.5){G.b+=(Math.random()<.5?-1:1)*rand(35,70);G.aimT=0;whoosh(.6);say('It moved. Find it again.','warn');logEv('Apparition relocated')}
+    if(G.d<2.4&&pointed)startCharge();
+    else if(G.age>50)startCharge('Behind you…');
     else if(CFG.radarTrig&&radarLive()&&RD.r&&RD.r.s&1&&RD.r.md<300&&G.age>4)startCharge('Something moved!');
-    if(G.d<4&&G.state==='near'&&!G._warned){G._warned=true;say('Strong reading! It\'s close…','warn')}
+    if(G.d<4.2&&G.state==='near'&&!G._warned){G._warned=true;say('Strong readings. It\'s close…','warn');logEv('EMF 5/5, cold spot forming')}
   }
   else if(G.state==='charge'){
-    G.charge+=dt/1.0;const e=G.charge*G.charge;
-    G.b+=wrap(O.h-G.b)*Math.min(1,dt*7);G.el+=(O.pitch-G.el)*Math.min(1,dt*6);  // it comes straight at the camera
+    G.charge+=dt/1.1;const e=G.charge*G.charge;
+    G.b+=wrap(O.h-G.b)*Math.min(1,dt*7);  // it comes straight at the camera
     G.d=Math.max(.12,G.d0*(1-e));G.vis=1;
-    if(G.charge>=1){G.state='gone';G.cool=rand(7,16);G._warned=false;
-      if(CFG.scares){G.scareT=.55;scream();buzz([300,60,500,60,250]);$('#flash').classList.remove('go');void $('#flash').offsetWidth;$('#flash').classList.add('go');
+    if(G.charge>=1){G.state='gone';G.cool=rand(8,16);G._warned=false;
+      if(CFG.scares){G.scareT=.6;scream();buzz([300,60,500,60,250]);$('#flash').classList.remove('go');void $('#flash').offsetWidth;$('#flash').classList.add('go');
         $('#app').classList.remove('shake');void $('#app').offsetWidth;$('#app').classList.add('shake')}
       else whoosh(.8);
-      say('It got you… and it\'s gone.','warn')}
+      say('…it\'s gone.','warn');logEv('Contact. Readings dropped to zero')}
   }
   else if(G.state==='trapped'){G.trapT+=dt;if(G.trapT>1.3){G.state='gone';G.cool=rand(5,12)}}
-  else if(G.state==='gone'){G.cool-=dt;if(G.cool<=0){G.state='idle';G.wait=rand(2,6);if(MODE==='hunt')hunt.respawn=true;if(MODE==='ghost')say('Scanning… quiet for now.')}}
+  else if(G.state==='gone'){G.cool-=dt;if(G.cool<=0){G.state='idle';G.wait=rand(3,8);if(MODE==='hunt')hunt.respawn=true;if(MODE==='ghost')say('Monitoring… quiet for now.')}}
   if(G.scareT>0)G.scareT-=dt;
-  // trap: hold while it's in your sights and close
-  const can=(G.state==='near'||(G.state==='charge'&&G.charge<.45))&&aim<20&&G.d<4.8;
-  if(trapDown&&can){G.hold+=dt;if(G.hold>=1.3){G.state='trapped';G.trapT=0;G.hold=0;caps++;store.set('gh.caps',caps);$('#caps').textContent=caps;zap();buzz([60,40,60,40,200]);say(`Ghost trapped! (${caps} total)`)}}
+  const can=(G.state==='near'||(G.state==='charge'&&G.charge<.45))&&aim<20&&G.d<5;
+  if(trapDown&&can){G.hold+=dt;if(G.hold>=1.3){G.state='trapped';G.trapT=0;G.hold=0;caps++;store.set('gh.caps',caps);zap();buzz([60,40,60,40,200]);say(`Entity contained (${caps} total)`);logEv(`Entity contained (#${caps})`)}}
   else G.hold=Math.max(0,G.hold-dt*2);
   $('#trap').style.setProperty('--p',clamp(G.hold/1.3,0,1));
 }
@@ -277,111 +401,230 @@ function huntStep(dt){
   if(hunt.respawn||hunt.lat==null){
     if(GPS.acc>40)return;
     const b=rand(0,360),m=rand(45,95);[hunt.lat,hunt.lon]=geoMove(GPS.lat,GPS.lon,b,m);hunt.dir=rand(0,360);hunt.fled=false;hunt.fleeT=0;hunt.respawn=false;
-    G.state='idle';G.wait=1e9;say(`New reading ${Math.round(m)} m away. Follow the arrow.`);
+    G.state='idle';G.wait=1e9;say(`Faint readings ${Math.round(m)} m away. Follow the arrow.`);logEv(`Hunt: readings ${Math.round(m)} m away`);
   }
   hunt.dist=geoDist(GPS.lat,GPS.lon,hunt.lat,hunt.lon);hunt.bear=geoBear(GPS.lat,GPS.lon,hunt.lat,hunt.lon);
-  if(G.state!=='idle')return;  // close encounter running
-  // wander, and once per ghost make a run for it when you get near
+  if(G.state!=='idle')return;
   if(hunt.fleeT>0){hunt.fleeT-=dt;hunt.dir=hunt.bear+rand(-20,20)}
-  else{hunt.dir+=rand(-40,40)*dt;if(!hunt.fled&&hunt.dist<28&&Math.random()<.5){hunt.fled=true;hunt.fleeT=12;say('It\'s running! Follow it!','alert');whoosh(1.2)}else if(!hunt.fled&&hunt.dist<28)hunt.fled=true}
+  else{hunt.dir+=rand(-40,40)*dt;if(!hunt.fled&&hunt.dist<28){hunt.fled=true;if(Math.random()<.5){hunt.fleeT=12;say('It\'s moving away! Follow it!','alert');whoosh(1.2);logEv('Hunt: target moving away')}}}
   [hunt.lat,hunt.lon]=geoMove(hunt.lat,hunt.lon,hunt.dir,(hunt.fleeT>0?1.7:.35)*dt);
   if(hunt.dist<9)spawnGhost(hunt.bear,Math.min(7,hunt.dist+2));
 }
 
-// ================================================================ PKE level per mode
-let L=0,Lt=0;
+// ================================================================ meter level, temperature
+let L=0;
 const beam=(diff,w)=>.15+.85*Math.exp(-((diff/w)**2));
 function targetLevel(){
-  if(MODE==='real'){
-    if(!radarLive()||!RD.r||!RD.r.s)return .02;const r=RD.r,mv=r.s&1,d=((mv?r.md:r.sd)||r.dd)/100,e=Math.max(mv?r.me:0,r.s&2?r.se:0);
-    return clamp(e/100*1.25,0,1)*(.45+.55*clamp(1-d/6,0,1));
-  }
+  if(MODE==='real'){const t=radarTarget();if(!t)return .02;return clamp(t.e/100*1.25,0,1)*(.45+.55*clamp(1-t.d/6,0,1))}
   if(G.state==='near'||G.state==='charge')return G.state==='charge'?1:clamp(Math.pow(clamp(1-G.d/9,0,1),.8)*beam(Math.abs(wrap(G.b-O.h)),38)*1.15,0,1);
   if(MODE==='hunt'&&hunt.dist!=null)return clamp(Math.pow(clamp(1-hunt.dist/130,0,1),1.4)*beam(Math.abs(wrap(hunt.bear-O.h)),55),0,.9);
   return .03;
 }
+const TEMP={base:rand(20.4,21.8),v:null};
+function tempStep(dt){
+  if(!staged()){TEMP.v=null;return}
+  TEMP.base+=(Math.random()-.5)*.02*dt;const near=G.state==='near'||G.state==='charge';
+  const drop=near?clamp((6-G.d)/4.5,0,1)*7.5*clamp(.4+.6*beam(Math.abs(wrap(G.b-O.h)),40),0,1):0,tgt=TEMP.base-drop+(Math.random()-.5)*.08;
+  TEMP.v=TEMP.v==null?tgt:TEMP.v+(tgt-TEMP.v)*Math.min(1,dt*.9);
+}
+const mG=lv=>.1+Math.pow(lv,1.6)*26;
 
-// ================================================================ drawing
-const cv=$('#view'),cx=cv.getContext('2d'),pk=$('#pke'),px=pk.getContext('2d');let W=0,H=0,PW=0,PH=0;
-function resize(){const d=devicePixelRatio||1,r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0);
-  const p=pk.getBoundingClientRect();PW=p.width;PH=p.height;pk.width=PW*d;pk.height=PH*d;px.setTransform(d,0,0,d,0,0)}
-addEventListener('resize',resize);
+// ================================================================ camera + lenses
+const cam={ok:false,stream:null};
+async function startCam(){
+  if(cam.stream||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  try{cam.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    const v=$('#cam');v.srcObject=cam.stream;await v.play().catch(()=>{});cam.ok=true;
+    const tr=cam.stream.getVideoTracks()[0];cam.torch=!!(tr.getCapabilities&&tr.getCapabilities().torch)}
+  catch(e){cam.ok=false;say('Camera not available, using the scope.','warn');VIEW='scope';uiSync()}
+}
+function stopCam(){if(cam.stream){for(const t of cam.stream.getTracks())t.stop();cam.stream=null;cam.ok=false;$('#cam').srcObject=null}}
+const cv=$('#view'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+const camC=document.createElement('canvas'),camX=camC.getContext('2d',{willReadFrequently:true});
 const HFOV=()=>W>H?64:48,VFOV=()=>W>H?48:64;  // typical rear-camera field of view
-const camOn=()=>VIEW==='cam'&&cam.ok;
-function screenOf(bear,el){return{x:W/2+wrap(bear-O.h)/HFOV()*W,y:H*.46-(el-O.pitch)/VFOV()*H}}
-function drawGhost(x,y,s,alpha,t,angry){
-  if(alpha<=.01||s<2)return;cx.save();cx.translate(x,y);cx.globalAlpha=clamp(alpha,0,1);
-  cx.shadowColor=angry?'rgba(255,60,40,.9)':'rgba(140,255,210,.9)';cx.shadowBlur=s*.35;
-  const r=s/2,top=-s*.55,bot=s*.6;
-  const gr=cx.createRadialGradient(0,top+r*.6,r*.1,0,0,s*.9);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(.55,angry?'rgba(255,200,190,.75)':'rgba(190,255,228,.7)');gr.addColorStop(1,'rgba(120,255,200,0)');
-  cx.fillStyle=gr;cx.beginPath();cx.moveTo(-r,top+r);cx.arc(0,top+r,r,Math.PI,0);
-  const sway=Math.sin(t*2.1)*r*.15;cx.quadraticCurveTo(r*1.05,0,r*.9+sway,bot);
-  for(let i=0;i<=8;i++){const xx=r*.9-i*(1.8*r/8)+sway,yy=bot+(i%2?-1:1)*s*.07*Math.sin(t*6+i);cx.lineTo(xx,yy)}
-  cx.quadraticCurveTo(-r*1.05,0,-r,top+r);cx.fill();
-  cx.shadowBlur=0;cx.fillStyle=angry?'#2a0000':'#031008';
-  const ey=top+r*.95,ex=r*.36,ew=r*.2,eh=angry?r*.16:r*.3;
-  for(const sx of[-1,1]){cx.save();cx.translate(sx*ex,ey);if(angry)cx.rotate(sx*.35);cx.beginPath();cx.ellipse(0,0,ew,eh,0,0,7);cx.fill();
-    if(angry){cx.fillStyle='#ff2a1a';cx.beginPath();cx.arc(0,eh*.2,ew*.35,0,7);cx.fill();cx.fillStyle='#2a0000'}cx.restore()}
-  const mo=angry?r*.45:r*.18;cx.beginPath();cx.ellipse(0,ey+r*.55,r*.22+(angry?r*.12:0),mo,0,0,7);cx.fill();
+const CAM_H=1.4;  // phone height above the floor (m)
+function resize(){DPR=devicePixelRatio||1;const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);
+  const e=$('#emf'),er=e.getBoundingClientRect();e.width=er.width*DPR;e.height=er.height*DPR}
+addEventListener('resize',resize);
+const yOfEl=el=>H*.5-(el-O.pitch)/VFOV()*H,xOfBear=b=>W/2+wrap(b-O.h)/HFOV()*W;
+// figure geometry for a person-sized apparition standing on the floor at distance d
+function figRect(b,d){const top=yOfEl(Math.atan2(1.72-CAM_H,d)/D2R),bot=yOfEl(Math.atan2(-CAM_H,d)/D2R),x=xOfBear(b);return{x,top,bot,h:bot-top}}
+// iron-style palette for the thermal look
+const IRON=(()=>{const st=[[0,[4,2,18]],[.18,[38,12,110]],[.38,[132,22,140]],[.56,[218,58,52]],[.74,[255,150,10]],[.9,[255,224,90]],[1,[255,255,230]]],lut=new Uint8Array(256*3);
+  for(let i=0;i<256;i++){const v=i/255;let k=0;while(k<st.length-2&&v>st[k+1][0])k++;const[a,ca]=st[k],[b,cb]=st[k+1],f=(v-a)/(b-a);for(let c=0;c<3;c++)lut[i*3+c]=ca[c]+(cb[c]-ca[c])*f}return lut})();
+let freezeUntil=0;
+function updateCamFrame(t){
+  if(performance.now()<freezeUntil)return;  // a dropped/frozen frame during interference
+  const v=$('#cam'),has=cam.ok&&v.readyState>=2&&v.videoWidth,therm=LENS==='thermal',sc=therm?110/Math.min(W,H):.5;
+  const w=Math.max(4,Math.round(W*sc)),h=Math.max(4,Math.round(H*sc));if(camC.width!==w||camC.height!==h){camC.width=w;camC.height=h}
+  if(has){const s=Math.max(w/v.videoWidth,h/v.videoHeight),sw=w/s,sh=h/s;
+    camX.filter=LENS==='nv'?'grayscale(1) brightness(1.8) contrast(1.4)':therm?'grayscale(1) blur(1.5px)':'saturate(.75) contrast(1.08)';
+    camX.drawImage(v,(v.videoWidth-sw)/2,(v.videoHeight-sh)/2,sw,sh,0,0,w,h);camX.filter='none'}
+  else{const g=camX.createLinearGradient(0,0,0,h);g.addColorStop(0,'#141414');g.addColorStop(1,'#050505');camX.fillStyle=g;camX.fillRect(0,0,w,h)}
+  if(therm)thermalize(w,h,sc);
+  else if(LENS==='nv'){camX.globalCompositeOperation='multiply';camX.fillStyle='#5bff8f';camX.fillRect(0,0,w,h);camX.globalCompositeOperation='source-over'}
+}
+function thermalize(w,h,sc){
+  const img=camX.getImageData(0,0,w,h),p=img.data,n=w*h,lum=new Float32Array(n);let mn=1,mx=0;
+  for(let i=0;i<n;i++){const v=(p[i*4]*.3+p[i*4+1]*.59+p[i*4+2]*.11)/255;lum[i]=v;if(v<mn)mn=v;if(v>mx)mx=v}
+  const span=Math.max(.15,mx-mn);for(let i=0;i<n;i++)lum[i]=.12+.78*(lum[i]-mn)/span;
+  // staged cold spot: the apparition shows up colder than the room
+  if(staged()&&(G.state==='near'||G.state==='charge')&&G.vis>.02){
+    const f=figRect(G.b,G.d),cxp=f.x*sc,cyp=(f.top+f.h*.45)*sc,rx=Math.max(2,f.h*.2*sc),ry=Math.max(3,f.h*.55*sc),k=.75*G.vis;
+    for(let y=Math.max(0,Math.floor(cyp-ry*2));y<Math.min(h,cyp+ry*2);y++)for(let x=Math.max(0,Math.floor(cxp-rx*2));x<Math.min(w,cxp+rx*2);x++){
+      const dx=(x-cxp)/rx,dy=(y-cyp)/ry,g=Math.exp(-(dx*dx+dy*dy)*1.4);lum[y*w+x]-=k*g}}
+  // real mode: the radar's live target as a warm signature dead ahead
+  const tg=MODE==='real'&&radarTarget();
+  if(tg){const cxp=w/2,cyp=h*.5,rr=clamp(14/tg.d,3,22)*(w/110),k=clamp(tg.e/100,.2,.8);
+    for(let y=Math.max(0,Math.floor(cyp-rr*2.5));y<Math.min(h,cyp+rr*2.5);y++)for(let x=Math.max(0,Math.floor(cxp-rr));x<Math.min(w,cxp+rr);x++){
+      const dx=(x-cxp)/(rr*.5),dy=(y-cyp)/(rr*1.3);lum[y*w+x]+=k*Math.exp(-(dx*dx+dy*dy))}}
+  for(let i=0;i<n;i++){const j=clamp(Math.round(lum[i]*255),0,255)*3;p[i*4]=IRON[j];p[i*4+1]=IRON[j+1];p[i*4+2]=IRON[j+2]}
+  camX.putImageData(img,0,0);
+}
+// film grain tiles
+const GRAIN=[0,1,2].map(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),d=x.createImageData(128,128);
+  for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}x.putImageData(d,0,0);return c});
+
+// ================================================================ apparitions
+function drawOrbs(t,alpha){
+  if(alpha<=.02)return;cx.save();cx.globalCompositeOperation='lighter';
+  for(let i=0;i<3;i++){const b=G.b+Math.sin(t*.35+i*2.1)*7+i*3-3,el=1+i*5+Math.sin(t*.6+i)*4,x=xOfBear(b),y=yOfEl(el),r=3+i*1.5+Math.sin(t*2+i)*1.2;
+    const a=alpha*(.45+.55*Math.max(0,Math.sin(t*1.7+i*1.9)));if(a<.03)continue;
+    const g=cx.createRadialGradient(x,y,0,x,y,r*3);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.35,`rgba(220,255,235,${a*.5})`);g.addColorStop(1,'rgba(0,0,0,0)');
+    cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r*3,0,7);cx.fill()}
   cx.restore();
 }
-function drawTape(){  // compass tape along the top
-  const y=H-26,span=HFOV()*1.3;cx.save();cx.font='11px ui-monospace,monospace';cx.textAlign='center';cx.fillStyle='rgba(0,0,0,.35)';cx.fillRect(0,y-14,W,28);
-  for(let a=Math.ceil((O.h-span)/5)*5;a<=O.h+span;a+=5){const x=W/2+wrap(a-O.h)/HFOV()*W,n=((a%360)+360)%360,big=n%45===0;
-    cx.strokeStyle=big?'rgba(56,255,156,.9)':'rgba(56,255,156,.4)';cx.beginPath();cx.moveTo(x,y-(big?10:5));cx.lineTo(x,y);cx.stroke();
-    if(big){cx.fillStyle='#38ff9c';cx.fillText({0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW'}[n],x,y+12)}}
-  cx.fillStyle='#ffb627';cx.beginPath();cx.moveTo(W/2,y-12);cx.lineTo(W/2-5,y-20);cx.lineTo(W/2+5,y-20);cx.fill();cx.restore();
+function figurePath(x,top,h,t){
+  const w=h*.27,sway=Math.sin(t*.9)*h*.012;cx.beginPath();
+  cx.ellipse(x+sway,top+h*.07,h*.062,h*.075,0,0,7);  // head
+  cx.moveTo(x-w*.18+sway,top+h*.14);cx.quadraticCurveTo(x-w*.55,top+h*.16,x-w*.55,top+h*.24);  // shoulders
+  cx.lineTo(x-w*.5,top+h*.52);cx.lineTo(x-w*.32,top+h*.55);cx.lineTo(x-w*.3,top+h);cx.lineTo(x-w*.06,top+h);cx.lineTo(x,top+h*.58);
+  cx.lineTo(x+w*.06,top+h);cx.lineTo(x+w*.3,top+h);cx.lineTo(x+w*.32,top+h*.55);cx.lineTo(x+w*.5,top+h*.52);cx.lineTo(x+w*.55,top+h*.24);
+  cx.quadraticCurveTo(x+w*.55,top+h*.16,x+w*.18+sway,top+h*.14);cx.closePath();
 }
-function reticle(level){const r=34+level*10;cx.save();cx.strokeStyle=`rgba(56,255,156,${.35+level*.5})`;cx.lineWidth=1.5;cx.beginPath();cx.arc(W/2,H*.46,r,0,7);cx.stroke();
-  for(const a of[0,90,180,270]){const c=Math.cos(a*D2R),s=Math.sin(a*D2R);cx.beginPath();cx.moveTo(W/2+c*(r-8),H*.46+s*(r-8));cx.lineTo(W/2+c*(r+10),H*.46+s*(r+10));cx.stroke()}cx.restore()}
+function drawFigure(t,alpha){
+  if(alpha<=.02)return;const f=figRect(G.b,G.d);if(f.x<-f.h||f.x>W+f.h)return;
+  const flick=Math.random()<.07?.15:.75+.25*Math.sin(t*9)*Math.sin(t*2.3);
+  cx.save();cx.filter=`blur(${Math.max(1.5,f.h*.018)}px)`;
+  if(LENS==='thermal'){cx.globalAlpha=alpha*.25*flick;cx.fillStyle='#1a0640'}  // the cold spot does most of the work in thermal
+  else{cx.globalAlpha=alpha*.8*flick;cx.fillStyle=LENS==='nv'?'#000a02':'#050507'}
+  figurePath(f.x,f.top,f.h,t);cx.fill();
+  if(LENS!=='thermal'&&G.state==='charge'){cx.globalAlpha=alpha*flick;cx.fillStyle='rgba(240,250,245,.85)';  // eyes catch the IR light
+    for(const s of[-1,1]){cx.beginPath();cx.arc(f.x+s*f.h*.022,f.top+f.h*.065,Math.max(1,f.h*.008),0,7);cx.fill()}}
+  cx.restore();
+}
+const FACE=(()=>{const c=document.createElement('canvas');c.width=320;c.height=400;const x=c.getContext('2d');
+  const g=x.createRadialGradient(160,180,20,160,200,190);g.addColorStop(0,'rgba(232,238,232,1)');g.addColorStop(.55,'rgba(170,180,172,.95)');g.addColorStop(.8,'rgba(60,66,62,.6)');g.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=g;x.beginPath();x.ellipse(160,200,125,175,0,0,7);x.fill();
+  x.filter='blur(7px)';x.fillStyle='#050505';for(const s of[-1,1]){x.beginPath();x.ellipse(160+s*48,165,30,38,s*.15,0,7);x.fill()}
+  x.beginPath();x.ellipse(160,292,34,62,0,0,7);x.fill();x.filter='blur(3px)';x.fillStyle='rgba(20,20,20,.7)';x.beginPath();x.ellipse(160,225,10,22,0,0,7);x.fill();
+  x.filter='none';x.fillStyle='rgba(255,255,255,.9)';for(const s of[-1,1]){x.beginPath();x.arc(160+s*48,170,3,0,7);x.fill()}
+  x.strokeStyle='rgba(10,10,10,.6)';x.lineWidth=5;x.filter='blur(2px)';for(let i=0;i<14;i++){x.beginPath();const sx=60+i*15;x.moveTo(sx,40);x.quadraticCurveTo(sx+rand(-20,20),140,sx+rand(-30,30),rand(180,300));x.stroke()}
+  return c})();
+function drawFace(scale,alpha){
+  const h=H*scale,w=h*.8,x=W/2-w/2,y=H*.5-h*.5;cx.save();cx.globalAlpha=alpha;
+  if(LENS==='nv'){cx.filter='grayscale(1) brightness(1.4)'}else if(LENS==='thermal'){cx.filter='invert(1) hue-rotate(200deg) saturate(3)'}
+  cx.drawImage(FACE,x,y,w,h);cx.globalAlpha=alpha*.35;cx.drawImage(FACE,x+h*.02,y,w,h);cx.drawImage(FACE,x-h*.02,y,w,h);cx.restore();
+  if(LENS==='nv'){cx.save();cx.globalCompositeOperation='multiply';cx.fillStyle='#5bff8f';cx.globalAlpha=alpha;cx.fillRect(x,y,w,h);cx.restore()}
+}
+
+// ================================================================ interference + HUD (drawn into the canvas so recordings include it)
+function interference(level,t){
+  const k=clamp((level-.3)/.7,0,1);if(k<=0)return;
+  cx.save();cx.globalAlpha=k*.22;cx.globalCompositeOperation='screen';const g=GRAIN[(t*30|0)%3];cx.translate(rand(-64,0),rand(-64,0));cx.fillStyle=cx.createPattern(g,'repeat');cx.fillRect(0,0,W+64,H+64);cx.restore();
+  const bands=Math.floor(k*5+Math.random()*k*3);
+  for(let i=0;i<bands;i++){const y=rand(0,H),hh=rand(2,10+k*30),off=rand(-30,30)*k;cx.drawImage(cv,0,y*DPR,W*DPR,hh*DPR,off,y,W,hh)}
+  if(Math.random()<k*.08){cx.fillStyle=`rgba(255,255,255,${k*.12})`;cx.fillRect(0,rand(0,H),W,rand(1,3))}
+  if(k>.5&&Math.random()<.02)freezeUntil=performance.now()+rand(60,180);
+}
+let BAT=null;if(navigator.getBattery)navigator.getBattery().then(b=>BAT=b).catch(()=>{});
+const MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function drawHUD(t,level){
+  const top=Math.max(54,(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0)+54),d=new Date();
+  cx.save();cx.font='13px ui-monospace,Menlo,monospace';cx.textBaseline='top';cx.shadowColor='#000';cx.shadowBlur=4;
+  // corner brackets
+  cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=2;const m=10,l=22;
+  for(const[x,y,sx,sy]of[[m,top,1,1],[W-m,top,-1,1],[m,H-48,1,-1],[W-m,H-48,-1,-1]]){cx.beginPath();cx.moveTo(x,y+sy*l);cx.lineTo(x,y);cx.lineTo(x+sx*l,y);cx.stroke()}
+  cx.fillStyle='#fff';
+  if(REC.mr){if((t*2|0)%2===0){cx.fillStyle='#ff3b30';cx.beginPath();cx.arc(m+24,top+15,6,0,7);cx.fill()}cx.fillStyle='#fff';const s=(performance.now()-REC.t0)/1000|0;cx.fillText(`REC ${pad(s/3600|0)}:${pad(s/60%60|0)}:${pad(s%60)}`,m+36,top+8)}
+  else cx.fillText('STBY',m+14,top+8);
+  cx.fillText(`${MON[d.getMonth()]} ${pad(d.getDate())} ${d.getFullYear()}  ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`,m+14,top+26);
+  cx.textAlign='right';
+  cx.fillText(LENS==='nv'?'IR ◉  NIGHTSHOT':LENS==='thermal'?'THERMAL·SIM':'COLOR',W-m-14,top+8);
+  cx.fillText(BAT?`BAT ${Math.round(BAT.level*100)}%`:'',W-m-14,top+26);
+  cx.fillText(TEMP.v!=null?`${TEMP.v.toFixed(1)}°C`:'TEMP --',W-m-14,top+44);
+  if(TEMP.v!=null&&TEMP.v<TEMP.base-3){cx.fillStyle='#7fd8ff';cx.fillText('COLD SPOT',W-m-14,top+62)}
+  else if(MODE==='real'&&RD.r&&RD.r.lt!=null&&radarLive()){cx.fillText(`LIGHT ${RD.r.lt}`,W-m-14,top+62)}
+  // mini K-II on screen
+  const lv=ledCount(level);for(let i=0;i<5;i++){cx.fillStyle=i<lv?LEDC[i]:'rgba(255,255,255,.15)';cx.beginPath();cx.arc(W-m-14-(4-i)*14,top+86,5,0,7);cx.fill()}
+  // ticker + status
+  cx.textAlign='center';cx.font='15px ui-monospace,Menlo,monospace';
+  if(TK.msg&&performance.now()<TK.until){cx.fillStyle=TK.cls==='alert'?((t*6|0)%2?'#ff3b30':'#ff9a8f'):TK.cls==='warn'?'#ffb627':'#bfffd9';const words=TK.msg.split(' '),lines=[''];for(const w of words){const tl=(lines[lines.length-1]+' '+w).trim();if(cx.measureText(tl).width>W-40&&lines[lines.length-1])lines.push(w);else lines[lines.length-1]=tl}
+    lines.slice(-2).forEach((l,i,a)=>cx.fillText(l,W/2,H-74-(a.length-1-i)*19))}
+  cx.font='11px ui-monospace,Menlo,monospace';cx.fillStyle='rgba(255,255,255,.7)';cx.textAlign='left';cx.fillText(statusText(),m+14,H-40);
+  cx.restore();
+}
+function drawTape(){  // compass tape along the bottom
+  const y=H-14,span=HFOV()*1.3;cx.save();cx.font='10px ui-monospace,monospace';cx.textAlign='center';
+  for(let a=Math.ceil((O.h-span)/5)*5;a<=O.h+span;a+=5){const x=xOfBear(a),n=((a%360)+360)%360,big=n%45===0;
+    cx.strokeStyle=big?'rgba(255,255,255,.8)':'rgba(255,255,255,.3)';cx.beginPath();cx.moveTo(x,y-(big?9:4));cx.lineTo(x,y);cx.stroke();
+    if(big){cx.fillStyle='#fff';cx.fillText({0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW'}[n],x,y-20)}}
+  cx.fillStyle='#ffb627';cx.beginPath();cx.moveTo(W/2,y-10);cx.lineTo(W/2-4,y-16);cx.lineTo(W/2+4,y-16);cx.fill();cx.restore();
+}
 function edgeArrow(bear,col,label){
-  const d=wrap(bear-O.h);if(Math.abs(d)<HFOV()/2)return;const left=d<0,x=left?26:W-26,y=H*.46;cx.save();cx.fillStyle=col;cx.globalAlpha=.6+.4*Math.sin(performance.now()/180);
-  cx.beginPath();if(left){cx.moveTo(x-14,y);cx.lineTo(x+6,y-14);cx.lineTo(x+6,y+14)}else{cx.moveTo(x+14,y);cx.lineTo(x-6,y-14);cx.lineTo(x-6,y+14)}cx.fill();
-  if(label){cx.globalAlpha=1;cx.font='12px ui-monospace,monospace';cx.textAlign=left?'left':'right';cx.fillText(label,left?x+12:x-12,y+30)}cx.restore()}
+  const d=wrap(bear-O.h);if(Math.abs(d)<HFOV()/2)return;const left=d<0,x=left?24:W-24,y=H*.5;cx.save();cx.fillStyle=col;cx.globalAlpha=.6+.4*Math.sin(performance.now()/180);
+  cx.beginPath();if(left){cx.moveTo(x-12,y);cx.lineTo(x+6,y-12);cx.lineTo(x+6,y+12)}else{cx.moveTo(x+12,y);cx.lineTo(x-6,y-12);cx.lineTo(x-6,y+12)}cx.fill();
+  if(label){cx.globalAlpha=1;cx.font='12px ui-monospace,monospace';cx.textAlign=left?'left':'right';cx.fillText(label,left?x+10:x-10,y+28)}cx.restore()}
+function crosshair(){cx.save();cx.strokeStyle='rgba(255,255,255,.5)';cx.lineWidth=1;const x=W/2,y=H*.5;cx.beginPath();cx.moveTo(x-14,y);cx.lineTo(x-4,y);cx.moveTo(x+4,y);cx.lineTo(x+14,y);cx.moveTo(x,y-14);cx.lineTo(x,y-4);cx.moveTo(x,y+4);cx.lineTo(x,y+14);cx.stroke();cx.restore()}
+
 function drawCam(t,level){
-  if(!camOn()){cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(0,0,W,H);drawHorizon()}
-  // faint scanlines + vignette
-  cx.fillStyle='rgba(56,255,156,.035)';for(let y=(t*30)%4;y<H;y+=4)cx.fillRect(0,y,W,1);
-  const vg=cx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.55)');cx.fillStyle=vg;cx.fillRect(0,0,W,H);
+  updateCamFrame(t);
+  cx.imageSmoothingEnabled=true;cx.drawImage(camC,0,0,W,H);
+  if(LENS==='nv'){cx.save();cx.globalAlpha=.16;cx.globalCompositeOperation='overlay';cx.translate(rand(-64,0),rand(-64,0));cx.fillStyle=cx.createPattern(GRAIN[(t*24|0)%3],'repeat');cx.fillRect(0,0,W+64,H+64);cx.restore()}
   if(MODE==='real')drawRealCam(t);
   else{
-    if(MODE==='hunt'&&G.state==='idle'&&hunt.dist!=null){const p=screenOf(hunt.bear,2),inV=Math.abs(wrap(hunt.bear-O.h))<HFOV()/2;
-      if(inV){drawGhost(p.x,p.y,clamp(260/hunt.dist,8,36),.35+.3*Math.sin(t*3),t,false);cx.fillStyle='#38ff9c';cx.font='12px ui-monospace,monospace';cx.textAlign='center';cx.fillText(Math.round(hunt.dist)+' m',p.x,p.y+34)}
-      else edgeArrow(hunt.bear,'#38ff9c',Math.round(hunt.dist)+' m')}
-    if(G.state==='near'||G.state==='charge'){const p=screenOf(G.b,G.el),s=clamp(H*.42/G.d,10,H*3),fl=.75+.25*Math.sin(t*23)*Math.sin(t*7.3);
-      drawGhost(p.x,p.y,s,G.vis*fl,t,G.state==='charge');
+    if(MODE==='hunt'&&G.state==='idle'&&hunt.dist!=null){const inV=Math.abs(wrap(hunt.bear-O.h))<HFOV()/2;
+      if(inV){const x=xOfBear(hunt.bear),y=yOfEl(1);cx.save();cx.globalCompositeOperation='lighter';const r=clamp(500/hunt.dist,4,14),a=.35+.25*Math.sin(t*2.4);
+        const g=cx.createRadialGradient(x,y,0,x,y,r*3);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r*3,0,7);cx.fill();cx.restore();
+        cx.fillStyle='#bfffd9';cx.font='12px ui-monospace,monospace';cx.textAlign='center';cx.fillText(Math.round(hunt.dist)+' m',x,y+r*3+12)}
+      else edgeArrow(hunt.bear,'#bfffd9',Math.round(hunt.dist)+' m')}
+    if(G.state==='near'||G.state==='charge'){
+      const far=clamp((G.d-4.2)/1.5,0,1);drawOrbs(t,G.vis*(G.state==='charge'?.3:Math.max(.25,far)));
+      if(G.state==='charge'&&G.d<.9)drawFace(clamp(1.1/G.d,.6,4),clamp((1-G.d)/.6,0,1));else drawFigure(t,G.vis*(1-far*.85));
       if(G.state==='near'&&level>.25)edgeArrow(G.b,'#ffb627','')}
-    if(G.state==='trapped'){const k=G.trapT/1.3,p=screenOf(G.b,G.el),tx=W/2,ty=H+10;
-      cx.save();cx.strokeStyle='rgba(255,182,39,.8)';cx.lineWidth=3;for(let i=0;i<4;i++){cx.beginPath();cx.moveTo(tx+rand(-30,30),ty);cx.quadraticCurveTo(rand(0,W),rand(0,H),p.x+(tx-p.x)*k,p.y+(ty-p.y)*k);cx.stroke()}cx.restore();
-      drawGhost(p.x+(tx-p.x)*k,p.y+(ty-p.y)*k,Math.max(4,120*(1-k)),1-k*.6,t,false)}
+    if(G.state==='trapped'){const k=G.trapT/1.3,f=figRect(G.b,Math.max(G.d,2)),tx=W/2,ty=H+10;
+      cx.save();cx.strokeStyle='rgba(255,210,120,.85)';cx.lineWidth=2.5;cx.globalCompositeOperation='lighter';for(let i=0;i<5;i++){cx.beginPath();cx.moveTo(tx+rand(-30,30),ty);cx.quadraticCurveTo(rand(0,W),rand(0,H),f.x+(tx-f.x)*k,f.top+f.h*.4+(ty-f.top-f.h*.4)*k);cx.stroke()}cx.restore();
+      G.vis=1-k;drawFigure(t,1-k)}
   }
-  reticle(level);drawTape();
-  if(G.scareT>0){const k=G.scareT/.55;drawGhost(W/2,H*.5,Math.max(W,H)*1.4,k,t,true)}
+  interference(level,t);
+  crosshair();
+  if(G.scareT>0)drawFace(1.25+(.6-G.scareT)*1.2,clamp(G.scareT/.6,0,1));
+  drawHUD(t,level);drawTape();
 }
-function drawHorizon(){const y=H*.46+O.pitch/VFOV()*H;cx.save();cx.strokeStyle='rgba(56,255,156,.12)';for(let i=1;i<9;i++){const yy=y+i*i*7;if(yy>H)break;cx.beginPath();cx.moveTo(0,yy);cx.lineTo(W,yy);cx.stroke()}
-  for(let a=-90;a<=90;a+=15){const x=W/2+wrap(Math.round(O.h/15)*15+a-O.h)/HFOV()*W;cx.beginPath();cx.moveTo(x,y);cx.lineTo(W/2+(x-W/2)*4,H);cx.stroke()}cx.restore()}
 function drawRealCam(t){
-  const now=Date.now();
-  for(const b of RD.blips){const age=(now-b.t)/1000;if(age>25)continue;const p=screenOf(b.b,-2+8/Math.max(b.d,.5)),a=(1-age/25)*clamp(b.e/80,.15,1)*.35;
-    if(p.x<-40||p.x>W+40)continue;cx.save();cx.globalAlpha=a;const g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,clamp(90/b.d,10,90));
-    g.addColorStop(0,b.mv?'rgba(255,140,60,1)':'rgba(80,170,255,1)');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fillRect(p.x-100,p.y-100,200,200);cx.restore()}
-  const r=RD.r;cx.save();cx.textAlign='center';cx.font='14px ui-monospace,monospace';
-  if(!radarLive()){cx.fillStyle='#ffb627';cx.fillText(canUSB?'Radar not connected — tap USB':'Radar not connected',W/2,H*.46+70)}
-  else if(r.s){const mv=r.s&1,d=((mv?r.md:r.sd)||r.dd)/100,pul=1+.12*Math.sin(t*8);cx.strokeStyle=mv?'#ff8c3c':'#50aaff';cx.lineWidth=3;cx.beginPath();cx.arc(W/2,H*.46,clamp(110/d,26,120)*pul,0,7);cx.stroke();
-    cx.fillStyle=cx.strokeStyle;cx.fillText(`${d.toFixed(2)} m · ${mv?'moving':'still'}${r.s===3?' + still':''}`,W/2,H*.46+clamp(110/d,26,120)+24)}
-  else{cx.fillStyle='#6fa88a';cx.fillText('Nothing in front of the radar',W/2,H*.46+70)}
+  const now=Date.now();cx.save();cx.globalCompositeOperation='lighter';
+  for(const b of RD.blips){const age=(now-b.t)/1000;if(age>25)continue;const x=xOfBear(b.b),y=yOfEl(Math.atan2(-.3,b.d)/D2R),a=(1-age/25)*clamp(b.e/80,.15,1)*.28;
+    if(x<-40||x>W+40)continue;const r=clamp(70/b.d,8,70),g=cx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,b.mv?`rgba(255,140,60,${a})`:`rgba(80,170,255,${a})`);g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fillRect(x-r,y-r,r*2,r*2)}
+  cx.restore();
+  const tg=radarTarget();cx.save();cx.textAlign='center';cx.font='14px ui-monospace,monospace';cx.shadowColor='#000';cx.shadowBlur=4;
+  if(!radarLive()){cx.fillStyle='#ffb627';cx.fillText(canUSB?'Radar not connected: tap USB':'Radar not connected',W/2,H*.5+60)}
+  else if(tg){const pul=1+.1*Math.sin(t*8),r=clamp(110/tg.d,26,120)*pul;cx.strokeStyle=tg.mv?'#ff8c3c':'#50aaff';cx.lineWidth=2.5;
+    cx.strokeRect(W/2-r*.6,H*.5-r,r*1.2,r*2);cx.fillStyle=cx.strokeStyle;cx.fillText(`${tg.d.toFixed(2)} m · ${tg.mv?'MOVING':'STILL'}`,W/2,H*.5+r+18)}
+  else{cx.fillStyle='rgba(255,255,255,.6)';cx.fillText('No target in front of the radar',W/2,H*.5+60)}
   cx.restore();
 }
 const scope=document.createElement('canvas'),sx=scope.getContext('2d');let sweep=0;
 function drawScope(t,dt,level){
-  const R=Math.min(W,H*.9)/2-18,X=W/2,Y=H*.52,range=MODE==='real'?6:MODE==='hunt'&&G.state==='idle'?120:9;
+  cx.fillStyle='#000';cx.fillRect(0,0,W,H);
+  const R=Math.min(W,H*.8)/2-18,X=W/2,Y=H*.5,range=MODE==='real'?6:MODE==='hunt'&&G.state==='idle'?120:9;
   if(scope.width!==Math.round(W)||scope.height!==Math.round(H)){scope.width=W;scope.height=H}
-  sx.fillStyle='rgba(0,8,4,.12)';sx.fillRect(0,0,W,H);  // phosphor fade
+  sx.fillStyle='rgba(0,8,4,.12)';sx.fillRect(0,0,W,H);
   const prev=sweep;sweep=(sweep+dt*140)%360;
   const plot=(rel,dist,col,size)=>{const a=(rel-90)*D2R,rr=clamp(dist/range,0,1)*R;sx.fillStyle=col;sx.shadowColor=col;sx.shadowBlur=12;sx.beginPath();sx.arc(X+Math.cos(a)*rr,Y+Math.sin(a)*rr,size,0,7);sx.fill();sx.shadowBlur=0};
   const crossed=rel=>{const r=(rel+360)%360;return prev<=sweep?r>=prev&&r<sweep:r>=prev||r<sweep};
   if(MODE==='real'){const now=Date.now();for(const b of RD.blips){const rel=wrap(b.b-O.h);if(now-b.t<25000&&crossed(rel))plot(rel,b.d,b.mv?'#ff8c3c':'#50aaff',3+b.e/30)}
-    if(radarLive()&&RD.r&&RD.r.s&&crossed(0)){const r=RD.r,mv=r.s&1;plot(0,((mv?r.md:r.sd)||r.dd)/100,'#ffffff',6)}}
+    const tg=radarTarget();if(tg&&crossed(0))plot(0,tg.d,'#ffffff',6)}
   else if(G.state==='near'||G.state==='charge'){const rel=wrap(G.b-O.h);if(crossed(rel)&&level>.12)plot(rel,G.d,G.state==='charge'?'#ff3b30':'#38ff9c',4+level*6)}
   else if(MODE==='hunt'&&hunt.dist!=null){const rel=wrap(hunt.bear-O.h);if(crossed(rel))plot(rel,hunt.dist,'#38ff9c',6)}
   cx.drawImage(scope,0,0,W,H);
@@ -389,81 +632,96 @@ function drawScope(t,dt,level){
   for(let i=1;i<=4;i++){cx.beginPath();cx.arc(X,Y,R*i/4,0,7);cx.stroke();cx.fillText((range*i/4).toFixed(range>20?0:1)+' m',X+4,Y-R*i/4+12)}
   cx.beginPath();cx.moveTo(X-R,Y);cx.lineTo(X+R,Y);cx.moveTo(X,Y-R);cx.lineTo(X,Y+R);cx.stroke();
   const fov=(MODE==='real'?60:HFOV()/2)*D2R;cx.fillStyle='rgba(56,255,156,.07)';cx.beginPath();cx.moveTo(X,Y);cx.arc(X,Y,R,-Math.PI/2-fov,-Math.PI/2+fov);cx.fill();
-  const sa=(sweep-90)*D2R,sg=cx.createLinearGradient(X,Y,X+Math.cos(sa)*R,Y+Math.sin(sa)*R);sg.addColorStop(0,'rgba(56,255,156,.0)');sg.addColorStop(1,'rgba(56,255,156,.9)');
+  const sa=(sweep-90)*D2R,sg=cx.createLinearGradient(X,Y,X+Math.cos(sa)*R,Y+Math.sin(sa)*R);sg.addColorStop(0,'rgba(56,255,156,0)');sg.addColorStop(1,'rgba(56,255,156,.9)');
   cx.strokeStyle=sg;cx.lineWidth=2;cx.beginPath();cx.moveTo(X,Y);cx.lineTo(X+Math.cos(sa)*R,Y+Math.sin(sa)*R);cx.stroke();
-  // north marker (scope is heading-up)
   const na=(wrap(0-O.h)-90)*D2R;cx.fillStyle='#ffb627';cx.font='bold 12px ui-monospace,monospace';cx.textAlign='center';cx.fillText('N',X+Math.cos(na)*(R+10),Y+Math.sin(na)*(R+10)+4);
   cx.restore();
   if(MODE==='hunt'&&G.state==='idle'&&hunt.dist!=null){const a=(wrap(hunt.bear-O.h)-90)*D2R;cx.save();cx.translate(X,Y);cx.rotate(a+Math.PI/2);cx.fillStyle='rgba(255,182,39,.85)';
     cx.beginPath();cx.moveTo(0,-R*.55);cx.lineTo(16,-R*.3);cx.lineTo(5,-R*.3);cx.lineTo(5,0);cx.lineTo(-5,0);cx.lineTo(-5,-R*.3);cx.lineTo(-16,-R*.3);cx.fill();cx.restore()}
-  if(G.scareT>0)drawGhost(W/2,H*.5,Math.max(W,H)*1.4,G.scareT/.55,t,true);
+  if(G.scareT>0)drawFace(1.25+(.6-G.scareT)*1.2,clamp(G.scareT/.6,0,1));
+  drawHUD(t,level);
 }
-function drawPKE(level,t){
-  const w=PW,h=PH,n=22,gap=3,bw=(w-40-(n-1)*gap)/n,on=Math.round(level*n);
-  px.clearRect(0,0,w,h);
-  for(let i=0;i<n;i++){const x=20+i*(bw+gap),f=i/(n-1),col=f<.55?'56,255,156':f<.8?'255,182,39':'255,59,48',lit=i<on;
-    px.fillStyle=`rgba(${col},${lit?.95:.12})`;if(lit){px.shadowColor=`rgba(${col},.9)`;px.shadowBlur=8}px.fillRect(x,h*.45,bw,h*.32);px.shadowBlur=0}
-  // the two "wings" open as the reading climbs
-  const ang=(-.15-level*1.2)+Math.sin(t*30)*level*.05;
-  for(const s of[-1,1]){px.save();px.translate(s<0?12:w-12,h*.62);px.rotate(s*ang);px.fillStyle=level>.75?'#ff3b30':'#2d6b4b';px.fillRect(s<0?-4:-4,-h*.5,8,h*.5);
-    px.fillStyle='rgba(255,255,255,.6)';px.fillRect(-2,-h*.5,4,6);px.restore()}
-  px.fillStyle='#6fa88a';px.font='10px ui-monospace,monospace';px.textAlign='left';px.fillText('P.K.E.',20,h*.3);px.textAlign='right';px.fillText(MODE.toUpperCase(),w-20,h*.3);
+
+// ================================================================ K-II style EMF meter (panel)
+const LEDC=['#2bff5e','#a6ff2b','#ffe32b','#ff9a2b','#ff2b2b'],LEDTH=[0,1.5,5,10,20];
+const ledCount=lv=>{const v=mG(lv);let n=0;for(const th of LEDTH)if(v>=th)n++;return n};
+const EMFH=[];
+function drawEMF(level){
+  const c=$('#emf'),x=c.getContext('2d'),w=c.width/DPR,h=c.height/DPR;if(!w)return;x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,w,h);
+  const v=mG(level),n=ledCount(level);EMFH.push(v);if(EMFH.length>240)EMFH.shift();
+  const r=Math.min(14,(w-60)/12),gap=(w-24-r*2*5)/4;
+  for(let i=0;i<5;i++){const cxp=12+r+i*(r*2+gap),cy=24,on=i<n;x.fillStyle=on?LEDC[i]:'#1a1f1c';if(on){x.shadowColor=LEDC[i];x.shadowBlur=18}x.beginPath();x.arc(cxp,cy,r,0,7);x.fill();x.shadowBlur=0;
+    x.fillStyle='#6b7d72';x.font='10px ui-monospace,monospace';x.textAlign='center';x.fillText(['0.5','1.5','5','10','20+'][i],cxp,cy+r+12)}
+  x.textAlign='left';x.fillStyle='#dfe9e2';x.font='bold 20px ui-monospace,monospace';x.fillText(v.toFixed(1),12,h-14);const vw=x.measureText(v.toFixed(1)).width;x.font='11px ui-monospace,monospace';x.fillStyle='#7d9486';x.fillText('mG',18+vw,h-14);
+  // history
+  const gx=90,gw=w-gx-8,gy=h-46,gh=38;x.strokeStyle='rgba(56,255,156,.2)';x.strokeRect(gx,gy,gw,gh);x.strokeStyle='#38ff9c';x.beginPath();
+  EMFH.forEach((e,i)=>{const xx=gx+i/239*gw,yy=gy+gh-clamp(Math.log10(1+e)/Math.log10(31),0,1)*gh;i?x.lineTo(xx,yy):x.moveTo(xx,yy)});x.stroke();
+  x.fillStyle='#4a5e52';x.font='9px ui-monospace,monospace';x.fillText(MODE==='real'?'source: radar return':'source: staged',gx+4,gy+10);
 }
+
+// ================================================================ evidence video recording
+const REC={mr:null,t0:0,chunks:[],mic:null};
+async function recToggle(){
+  if(REC.mr){REC.mr.stop();return}
+  if(!cv.captureStream||!window.MediaRecorder){say('Recording isn\'t supported in this browser.','warn');return}
+  auInit();if(!AU.recDest){AU.recDest=AU.ctx.createMediaStreamDestination();AU.master.connect(AU.recDest)}
+  if(!REC.mic){try{REC.mic=await navigator.mediaDevices.getUserMedia({audio:true});AU.ctx.createMediaStreamSource(REC.mic).connect(AU.recDest)}catch(e){}}  // room sound, recording only
+  const tracks=[...cv.captureStream(30).getVideoTracks(),...AU.recDest.stream.getAudioTracks()];
+  const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m));
+  REC.chunks=[];REC.mr=new MediaRecorder(new MediaStream(tracks),mime?{mimeType:mime,videoBitsPerSecond:4e6}:{});
+  REC.mr.ondataavailable=e=>e.data.size&&REC.chunks.push(e.data);
+  REC.mr.onstop=()=>{const type=REC.mr.mimeType||'video/webm',blob=new Blob(REC.chunks,{type});REC.mr=null;$('#recBtn').classList.remove('on');$('#recBtn').textContent='● REC';
+    download(blob,`ghost-evidence-${stamp()}.${type.includes('mp4')?'mp4':'webm'}`);logEv('Evidence video saved')};
+  REC.mr.start(1000);REC.t0=performance.now();$('#recBtn').classList.add('on');$('#recBtn').textContent='■ STOP';logEv('Evidence recording started');
+}
+$('#recBtn').onclick=recToggle;
 
 // ================================================================ HUD text
-let tick=null;
-function say(msg,cls){const el=$('#ticker');el.textContent=msg;el.className=cls||'';clearTimeout(tick);tick=setTimeout(()=>{el.textContent='';el.className=''},cls==='alert'?2500:5000)}
-function hudStatus(){
-  const parts=[`HDG ${Math.round(O.h).toString().padStart(3,'0')}°${O.ok?(O.abs?'':' (relative)'):O.dragged?' (drag)':' (no compass)'}`];
-  if(MODE==='real')parts.push(radarLive()?'RADAR LIVE':'RADAR OFFLINE');
-  if(MODE==='hunt')parts.push(GPS.ok?`GPS ±${Math.round(GPS.acc)} m`:GPS.err?'GPS: '+GPS.err:'GPS: waiting for a fix…');
-  if(MODE!=='real'&&radarLive())parts.push('radar ✓');
-  $('#status').textContent=parts.join(' · ');
-  let dist='–';
-  if(MODE==='real'&&radarLive()&&RD.r&&RD.r.s){const r=RD.r;dist=(((r.s&1?r.md:r.sd)||r.dd)/100).toFixed(2)+' m'}
-  else if(G.state==='near'||G.state==='charge')dist=G.d.toFixed(1)+' m';
-  else if(MODE==='hunt'&&hunt.dist!=null)dist=Math.round(hunt.dist)+' m';
-  $('#distV').textContent=dist;$('#pkeV').textContent=(L*10).toFixed(1);
+const TK={msg:'',cls:'',until:0};
+function say(msg,cls){TK.msg=msg;TK.cls=cls||'';TK.until=performance.now()+(cls==='alert'?2500:5000)}
+function statusText(){
+  const p=[`HDG ${pad(Math.round(O.h),3)}°${O.ok?(O.abs?'':' REL'):O.dragged?' DRAG':' NO COMPASS'}`];
+  if(MODE==='real')p.push(radarLive()?'RADAR LIVE':'RADAR OFF');else if(radarLive())p.push('RADAR ✓');
+  if(MODE==='hunt')p.push(GPS.ok?`GPS ±${Math.round(GPS.acc)}m`:GPS.err?'GPS ERR':'GPS …');
+  const tg=MODE==='real'&&radarTarget();
+  if(tg)p.push(tg.d.toFixed(2)+'m');else if(G.state==='near'||G.state==='charge')p.push(G.d.toFixed(1)+'m');else if(MODE==='hunt'&&hunt.dist!=null)p.push(Math.round(hunt.dist)+'m');
+  p.push(`CONTAINED ${caps}`);return p.join(' · ');
 }
-
-// ================================================================ camera
-const cam={ok:false,stream:null};
-async function startCam(){
-  if(cam.stream||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
-  try{cam.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});const v=$('#cam');v.srcObject=cam.stream;await v.play().catch(()=>{});cam.ok=true}
-  catch(e){cam.ok=false;say('Camera not available, using the scope.','warn');VIEW='scope';uiSync()}
-}
-function stopCam(){if(cam.stream){for(const t of cam.stream.getTracks())t.stop();cam.stream=null;cam.ok=false;$('#cam').srcObject=null}}
 
 // ================================================================ UI
 function uiSync(){
   for(const b of document.querySelectorAll('#tabs button'))b.classList.toggle('on',b.dataset.mode===MODE);
-  $('#viewBtn').textContent=VIEW==='cam'?'Cam':'Scope';$('#cam').style.display=VIEW==='cam'&&cam.ok?'block':'none';
+  $('#viewBtn').textContent=VIEW==='cam'?'Cam':'Scope';$('#lensBtn').textContent={nv:'NV',thermal:'Therm',color:'Color'}[LENS];$('#lensBtn').hidden=VIEW!=='cam';
   $('#trap').hidden=MODE==='real';usbUI();
 }
 function setMode(m){
-  MODE=m;store.set('gh.mode',m);G.state='idle';G.wait=m==='ghost'?rand(2,5):1e9;G.scareT=0;hunt.respawn=true;
-  if(m==='hunt'){startGPS();if(started&&!O.abs&&O.ok)say('No true compass on this device; direction to the ghost may be off.','warn')}
+  MODE=m;store.set('gh.mode',m);G.state='idle';G.wait=m==='ghost'?rand(3,7):1e9;G.scareT=0;hunt.respawn=true;
+  if(m==='hunt'){startGPS();if(started&&!O.abs&&O.ok)say('No true compass on this device; direction to the target may be off.','warn')}
   if(m==='real')say(radarLive()?'Real radar. Turn slowly to map what\'s around you.':'Real mode needs the radar. Plug it in and tap USB.',radarLive()?'':'warn');
-  if(m==='ghost')say('Scanning for paranormal activity…');
+  if(m==='ghost')say('Baseline readings… monitoring.');
+  if(BOX.on)$('#boxNote').textContent=staged()?'Ask a question out loud, then listen.':'Real mode: pure radio static. Nothing is added.';
   uiSync();
 }
 for(const b of document.querySelectorAll('#tabs button'))b.onclick=()=>setMode(b.dataset.mode);
 $('#viewBtn').onclick=()=>{VIEW=VIEW==='cam'?'scope':'cam';store.set('gh.view',VIEW);if(VIEW==='cam')startCam().then(uiSync);else stopCam();uiSync()};
+$('#lensBtn').onclick=()=>{LENS={nv:'thermal',thermal:'color',color:'nv'}[LENS];store.set('gh.lens',LENS);uiSync()};
+for(const b of document.querySelectorAll('#ttabs button'))b.onclick=()=>{for(const o of document.querySelectorAll('#ttabs button'))o.classList.toggle('on',o===b);
+  for(const t of['emf','box','evp','log'])$('#t-'+t).hidden=t!==b.dataset.tool;resize()};
 let trapDown=false;
-$('#trap').addEventListener('pointerdown',e=>{e.preventDefault();trapDown=true;$('#trap').classList.add('hold');if(!(G.state==='near'||G.state==='charge'))say('Nothing in the trap\'s range.','warn')});
+$('#trap').addEventListener('pointerdown',e=>{e.preventDefault();trapDown=true;$('#trap').classList.add('hold');if(!(G.state==='near'||G.state==='charge'))say('Nothing in range.','warn')});
 for(const ev of['pointerup','pointercancel','pointerleave'])$('#trap').addEventListener(ev,()=>{trapDown=false;$('#trap').classList.remove('hold')});
 $('#gear').onclick=()=>{$('#go').textContent='RESUME';$('#start').hidden=false};
-$('#oScare').checked=CFG.scares;$('#oVol').value=CFG.vol;$('#oRadar').checked=CFG.radarTrig;
+$('#oScare').checked=CFG.scares;$('#oVol').value=CFG.vol;$('#oRadar').checked=CFG.radarTrig;$('#oVoices').checked=CFG.voices;
 $('#oScare').onchange=e=>{CFG.scares=e.target.checked;store.set('gh.scares',CFG.scares?'1':'0')};
 $('#oVol').oninput=e=>{CFG.vol=+e.target.value;store.set('gh.vol',CFG.vol)};
 $('#oRadar').onchange=e=>{CFG.radarTrig=e.target.checked;store.set('gh.radarTrig',CFG.radarTrig?'1':'0')};
+$('#oVoices').onchange=e=>{CFG.voices=e.target.checked;store.set('gh.voices',CFG.voices?'1':'0')};
 let wake=null;async function keepAwake(){try{if('wakeLock'in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&started)keepAwake()});
 $('#go').onclick=async()=>{
   $('#start').hidden=true;auInit();if(AU.ctx.state==='suspended')AU.ctx.resume();
   if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){try{await DeviceOrientationEvent.requestPermission()}catch(e){}}  // iOS
-  if(!started){started=true;if(VIEW==='cam')await startCam();setMode(MODE);usbAuto()}
+  if(!started){started=true;if(VIEW==='cam')await startCam();setMode(MODE);usbAuto();logEv(`Session started (${MODE})`)}
   keepAwake();uiSync();
 };
 
@@ -472,15 +730,14 @@ let lastT=performance.now();
 function frame(ts){
   const dt=Math.min(.1,(ts-lastT)/1000),t=ts/1000;lastT=ts;
   O.h=(O.h+wrap(O.raw-O.h)*Math.min(1,dt*(sensorsLive()?9:20))+360)%360;  // smooth the compass
-  if(started){if(MODE==='hunt')huntStep(dt);if(MODE!=='real')ghostStep(dt)}
-  Lt=started?targetLevel():0;const jitter=Lt>.05?(Math.random()-.5)*.06*Lt:0;L+=(Lt-L)*Math.min(1,dt*6);const shown=clamp(L+jitter,0,1);
-  auUpdate(started?shown:0,dt);
-  cx.clearRect(0,0,W,H);
+  if(started){if(MODE==='hunt')huntStep(dt);if(staged())ghostStep(dt);tempStep(dt)}
+  const Lt=started?targetLevel():0,jitter=Lt>.05?(Math.random()-.5)*.08*Lt:0;L+=(Lt-L)*Math.min(1,dt*6);const shown=clamp(L+jitter,0,1);
+  auUpdate(started?shown:0,dt);boxUpdate();
   if(VIEW==='scope')drawScope(t,dt,shown);else drawCam(t,shown);
-  drawPKE(shown,t);hudStatus();
+  if(!$('#t-emf').hidden)drawEMF(shown);if(!$('#t-evp').hidden)drawEVP();
   if(ts-(frame.u||0)>1000){frame.u=ts;usbUI()}
   requestAnimationFrame(frame);
 }
-resize();uiSync();pollHub();usbAuto();requestAnimationFrame(frame);
+resize();uiSync();renderLog();pollHub();usbAuto();requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
