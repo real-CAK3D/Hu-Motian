@@ -53,40 +53,70 @@ After that it reconnects by itself whenever you plug the board in with the app o
 
 **Publishing (one time):** in the repo's **Settings → Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` then publishes `pc/web` whenever it changes on `main`.
 
-## Ghost Hunter (paranormal investigation mode)
+## Ghost Hunter (paranormal investigation kit)
 
-`pc/web/ghost.html` turns the phone and radar into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
+`pc/web/ghost.html` (+ `pc/web/ghost/engine.js`, `view.js`) turns the phone, radar and kit modules into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
 
-**Camera**
-- Lenses: **NV** (night-vision green with film grain), **Therm** (a thermal-style view built from camera brightness; phones have no heat sensor) and **Color**.
-- Found-footage overlay: REC timer, date and time, battery, temperature, a mini EMF meter, compass tape, and signal interference that gets worse as readings climb (grain, tearing, frozen frames).
-- **● REC** saves the screen plus sound (the room mic and the app's audio) as an evidence video.
+**Devices** (pick one from the bar at the bottom)
 
-**Tools**
-- **EMF**: a K-II style 5-LED meter (0.5 / 1.5 / 5 / 10 / 20+ mG) with a history graph.
-- **Spirit box**: an FM sweep at 100, 200 or 300 ms per step, with static bursts and station fragments.
-- **EVP**: records 15 s from the mic with phone processing off. Play it back normally, reversed or slowed, and save it as WAV. It automatically marks anomalies (50 ms windows much louder than the session's median).
-- **Log**: timestamped evidence, exportable as text.
+| Device | What it does |
+|---|---|
+| Night vision | IR-style green image with grain |
+| Thermal | Thermal-style iron palette made from camera brightness, a centre spot temperature and a scale bar. Phones have no heat sensor. |
+| SLS camera | Dark depth image with an IR dot pattern; a stick figure is drawn wherever a "body" is detected |
+| Laser grid | Green dots fixed on the room around you; anything standing in the room blocks them |
+| K-II meter | 5-LED EMF meter |
+| EMF/temp meter | LCD with EMF and temperature, the RT-EMF alarm beep, and a red light |
+| REM pod | Proximity LEDs around an antenna dome, escalating alarm, cold/warm LEDs |
+| Spirit box | FM sweep (100/200/300 ms) with static chop |
+| Word box | Picks words from sensor changes, the way the real devices do, and says them |
+| EVP recorder | 15 s raw mic; reverse / slow playback, anomaly marks, WAV export |
+| Radar | Heading-up scope |
+
+The camera devices draw a found-footage overlay: REC, timestamp, battery, temperature and a mini K-II. The picture breaks up with interference as readings rise. **● REC** saves screen + sound as an evidence video, and **⚙ → Evidence log** exports every event.
+
+**It stays where it is.**
+- Orientation comes from the gyro, slowly corrected to true north by the compass. Magnetic glitches are ignored.
+- The staged apparition, its cold spots, drifting orbs and shadow figures have real positions in the room around you. They keep moving while you look away.
+- They're drawn in true perspective, standing on the floor, about 1.4 m below the phone.
+- With headphones, footsteps, knocks and whispers come from where they actually are.
+- If things slide against the real room as you turn, adjust **⚙ → Camera match**.
 
 **Modes**
 - **Real**: nothing is faked.
-  - Tape the radar to the back of the phone, gold antenna side facing out, so it points where the camera points.
-  - Radar hits are stamped with the compass heading and stay in view, so turning slowly maps who's around you.
-  - The EMF meter shows the radar return strength. On the thermal lens the live radar target shows up as a warm figure.
-  - Spirit box is pure static, EVP gets real analysis only, and temperature shows "--" because there's no sensor.
-- **Ghost**: a staged haunting, all made up by the app.
-  - It starts with an EMF fluctuation somewhere around you.
-  - From a distance it shows as drifting orbs. Closer, a shadow figure stands on the floor at true human scale for its distance. On thermal it's a cold spot, and the temperature drops (COLD SPOT).
-  - Knocks, spirit-box words ("behind you", "closer"…), and a whisper planted in EVP recordings.
-  - It creeps closer and relocates if you stare. Hold **TRAP** to contain it, or it rushes the camera and you get the jump scare.
-  - With the radar connected, someone actually walking up sets it off.
-- **Hunt**: an outdoor GPS chase that ends in a staged encounter. The ghost sometimes moves away when you get near.
+  - Radar hits are anchored where the radar (taped to the back of the phone, gold side out) was pointing.
+  - The SLS stick figure, the laser-grid shadow and the warm thermal body come from the live radar target.
+  - The EMF meters use the **Hall sensor** if one is set up (a real magnetic field), otherwise the radar return.
+  - Temperature comes from the **thermistor**. The REM pod is driven by radar proximity and the **vibration** sensor.
+  - The word box picks words from real sensor changes. The spirit box is static only.
+- **Ghost**: a staged haunting, made up by the app.
+  - EMF fluctuations, orbs, a human-scale shadow figure, cold spots (thermal + temperature drop) and knocks.
+  - Footsteps and whispers, spirit-box and word-box words, and a whisper planted in EVP recordings.
+  - It creeps closer and relocates when stared at. After a while it waits behind you until you turn around.
+  - Hold **TRAP** to contain it, or it rushes you (jump scare).
+- **Hunt**: an outdoor GPS chase that ends in a staged encounter.
 
-**Sensors and settings**
-- Direction comes from the compass and gyro, and the floor is assumed about 1.4 m below the phone.
-- GPS is only used by Hunt.
-- Settings (⚙): jump scares, volume, radar triggers, and spirit-box voices.
-- The exported log notes that Ghost and Hunt entries are staged.
+### Kit lights and sensors (optional)
+
+Set them up in **⚙ → Hardware** while the radar is connected; the board saves the pins. Module "−" goes to GND. **Sensors go on 3V3**, because the ESP32's analog pins can't take 5 V. Suggested pins (all free on a DevKit):
+
+| Module | Kit part | ESP32 pins |
+|---|---|---|
+| RGB LED | KY-016 / KY-009 | R GPIO32, G GPIO33, B GPIO27 |
+| 2-colour LED | KY-011 / KY-029 | red GPIO22, green GPIO23 |
+| 7-colour flash LED | KY-034 | GPIO19 |
+| Buzzer | KY-006 / KY-012 | GPIO25 (built in) |
+| Hall magnetic sensor | KY-035 / KY-024 (AO) | GPIO34 |
+| Thermistor | KY-013 | GPIO35 |
+| Sound sensor | KY-037 / KY-038 (AO) | GPIO39 (VN) |
+| Vibration / knock / tilt | KY-002 / KY-031 / KY-020 | GPIO18 |
+
+What they do:
+- **The lights follow the app.** The RGB LED shows the K-II colour, the REM pod gets a colour chase and two-tone alarm, there's a flicker when the ghost is near, a white strobe as it rushes you, and a scare blast.
+- **Without the app,** the RGB LED shows the radar's signal strength K-II style.
+- **The sensors feed Real mode** as described above.
+
+Firmware commands are listed in `firmware/src/fx.h`.
 
 ## Dashboard
 
@@ -142,12 +172,12 @@ range <moveGate> <stillGate> <idleSecs> | hold <ms> | eng <0|1> | factory
 ## Layout
 
 ```
-firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server, calibration
+firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server, calibration, kit modules (fx.h)
   src/ld2410.h   report + command protocol (engineering mode, params, sensitivity, range)
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
 pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
-pc/web/ghost.html  Ghost Hunter: NV/thermal camera, EMF, spirit box, EVP, evidence log/video (Real / Ghost / Hunt)
+pc/web/ghost.html, ghost/*.js  Ghost Hunter: 11 investigation devices, world-anchored AR, kit lights/sensors
 pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
 .github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic

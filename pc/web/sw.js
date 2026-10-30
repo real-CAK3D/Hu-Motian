@@ -1,9 +1,9 @@
 // Offline support for the installed phone app (GitHub Pages only; the hub and the ESP32 don't register it).
 // The dashboard itself is network-first so updates show up right away; three.js and the 3D characters
 // never change, so they're cache-first.
-const CACHE = 'humotion-v2';
+const CACHE = 'humotion-v3';
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'ghost.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'])).catch(() => {}));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'ghost.html', 'ghost/engine.js', 'ghost/view.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'])).catch(() => {}));
   self.skipWaiting();
 });
 self.addEventListener('activate', e => e.waitUntil(

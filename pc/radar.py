@@ -190,6 +190,12 @@ def make_handler(hub):
             path = u.path.rstrip("/").rsplit("/", 1)[-1] if u.path not in ("/", "") else ""
             if path in ("", "index.html", "radar"):
                 return self._send(200, WEB.read_bytes(), "text/html; charset=utf-8")
+            if "/ghost/" in u.path:  # Ghost Hunter scripts
+                name = u.path.rsplit("/", 1)[-1]
+                f = WEB.parent / "ghost" / name
+                if name.endswith(".js") and "\\" not in name and not name.startswith(".") and f.is_file():
+                    return self._send(200, f.read_bytes(), "text/javascript; charset=utf-8")
+                return self._send(404, '{"error":"not found"}')
             if path == "ghost.html":
                 return self._send(200, (WEB.parent / "ghost.html").read_bytes(), "text/html; charset=utf-8")
             if path == "data":
