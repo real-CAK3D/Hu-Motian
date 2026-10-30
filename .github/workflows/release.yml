@@ -1,9 +1,14 @@
-# Push a tag like v1.0.0 to publish a GitHub Release with the firmware and the phone app.
+# Push a tag like v1.0.0, or run this workflow by hand with a version, to publish a GitHub Release
+# with the firmware and the phone app.
 name: Release
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to create, e.g. v1.0.0'
+        required: true
 permissions:
   contents: write
 jobs:
@@ -30,6 +35,9 @@ jobs:
           ls -la dist
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Hu-Motian ${{ github.event.inputs.tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           files: dist/*
           body: |
             ## Install the phone app (Android, Chrome)
