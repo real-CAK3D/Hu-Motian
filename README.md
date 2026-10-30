@@ -85,16 +85,55 @@ The camera devices draw a found-footage overlay: REC, timestamp, battery, temper
 **Modes**
 - **Real**: nothing is faked.
   - Radar hits are anchored where the radar (taped to the back of the phone, gold side out) was pointing.
-  - The SLS stick figure, the laser-grid shadow and the warm thermal body come from the live radar target.
-  - The EMF meters use the **Hall sensor** if one is set up (a real magnetic field), otherwise the radar return.
-  - Temperature comes from the **thermistor**. The REM pod is driven by radar proximity and the **vibration** sensor.
-  - The word box picks words from real sensor changes. The spirit box is static only.
-- **Ghost**: a staged haunting, made up by the app.
-  - EMF fluctuations, orbs, a human-scale shadow figure, cold spots (thermal + temperature drop) and knocks.
-  - Footsteps and whispers, spirit-box and word-box words, and a whisper planted in EVP recordings.
-  - It creeps closer and relocates when stared at. After a while it waits behind you until you turn around.
-  - Hold **TRAP** to contain it, or it rushes you (jump scare).
-- **Hunt**: an outdoor GPS chase that ends in a staged encounter.
+  - The SLS figure, laser-grid shadow and warm thermal body come from the live radar target.
+  - The EMF meters use the **Hall sensor**; temperature comes from the **thermistor**.
+  - The REM pod is driven by radar proximity and the **touch antenna, IR tripwire and vibration** sensors.
+  - The word box picks words from real sensor changes; the spirit box is static only.
+- **Ghost**: a staged haunting with persistent, individual ghosts (below).
+- **Hunt**: follows the arrow to the nearest open lead or a haunt you haven't cleared; with nothing on the map, a fresh trail.
+
+**Ghosts.** 18 kinds, from common to legendary, each with its own look, habits, voice and temper:
+
+| Kind | Rarity | Look | Habits |
+|---|---|---|---|
+| Residual imprint | ★ | pale, faded | paces the same path, never notices you |
+| Spirit lights | ★ | orbs | float, circle, startle |
+| Wandering soul | ★ | pale | wanders, cries, may follow you |
+| Ectoplasmic mist | ★★ | fog column | drifts toward warmth, very cold |
+| Shadow person | ★★ | shadow | watches, peeks from doorways, vanishes when seen |
+| Lost child | ★★★ | small, pale | giggles, beckons "come here", hides, points |
+| Guide | ★★★ | glowing | **points the way to other spirits** |
+| Woman in white | ★★★ | gown, long hair | floats, weeps, beckons |
+| Poltergeist | ★★★ | invisible | knocks, throws things, flickers the lights |
+| Stalker | ★★★ | shadow | only moves when you look away |
+| Black dog | ★★★ | hound, red eyes | circles, growls, chases |
+| Trickster | ★★★ | shadow | erratic, teleports, mimics, **lies about directions** |
+| The Hat Man | ★★★★ | tall, hat, red eyes | stares, stalks, blinks closer |
+| Wraith | ★★★★ | ragged, floating | circles, then dives at you |
+| Revenant | ★★★★ | shadow, red eyes | hostile, runs at you |
+| Banshee | ★★★★ | gown, hair | screams (the wail), swoops |
+| Doppelgänger | ★★★★★ | looks like you | appears where you just looked |
+| Inhuman | ★★★★★ | dark, red eyes | crawls on all fours, chases; laughs when you try to calm it |
+
+Each ghost you meet:
+- **Its own identity**: a name and story (e.g. "Lived here and drowned in the river, 1882"), a **level** (1–10) and a **hostility** (0–100%, Passive → Enraged). Together these give a **threat** rating.
+- **A living mood**: its behaviour changes with its mood. Calm ones stand, wander, beckon and point. Angry ones stare you down, chase, dive and attack. Staring at a hostile one makes it angrier.
+- **Your actions**: **PROVOKE** raises its hostility. **CALM** may lower it, depending on the kind.
+- **Identification**: like a real investigation. Collect any **2 pieces of evidence** to reveal its name, kind and level:
+  - Apparition, EMF 5, freezing temps
+  - Spirit box, word box, EVP
+  - SLS figure, laser grid
+  The encounter card fills in as you go.
+- **Containment**: hold **TRAP** (or the kit's push button). Higher levels and angrier ghosts take longer, fight back, and can break free and attack.
+
+**The haunt map.** A ghost becomes real the first time you see it:
+- **It stays.** It's saved at that GPS spot with a 30–50 ft area. Leave and its readings fade. Come back into the area and the same ghost is there, unseen until you spot it again.
+- **Leads.** Guides, lost children and tricksters point. Their direction becomes a lead on the map 50–150 m away, and following it (Hunt) finds another ghost. A trickster's lead may be a lie.
+- **📖 Journal**:
+  - **Map**: OpenStreetMap, coloured by hostility, with open leads.
+  - **Codex**: which of the 18 kinds you've discovered, identified and contained.
+  - **Stats**: ghosts met, sightings, contained x of y, kinds discovered, attacks survived, escapes, provokes and calms, knocks, thrown objects, flickers, voices heard, EVP sessions and anomalies, leads, distance walked, time hunting, and the highest, angriest and rarest ghosts.
+  - **Contained**: everything you've caught, with a Release option (they go home angry).
 
 ### Kit lights and sensors (optional)
 
@@ -110,11 +149,15 @@ Set them up in **⚙ → Hardware** while the radar is connected; the board save
 | Thermistor | KY-013 | GPIO35 |
 | Sound sensor | KY-037 / KY-038 (AO) | GPIO39 (VN) |
 | Vibration / knock / tilt | KY-002 / KY-031 / KY-020 | GPIO18 |
+| Push button (physical TRAP) | KY-004 | GPIO13 |
+| Touch antenna (REM pod) | KY-036 (DO) | GPIO14 |
+| Light sensor | KY-018 | GPIO36 (VP) |
+| IR tripwire | KY-032 (OUT) | GPIO26 |
 
 What they do:
 - **The lights follow the app.** The RGB LED shows the K-II colour, the REM pod gets a colour chase and two-tone alarm, there's a flicker when the ghost is near, a white strobe as it rushes you, and a scare blast.
 - **Without the app,** the RGB LED shows the radar's signal strength K-II style.
-- **The sensors feed Real mode** as described above.
+- **The sensors feed Real mode** as described above. The push button works as a physical TRAP button.
 
 Firmware commands are listed in `firmware/src/fx.h`.
 
@@ -177,7 +220,7 @@ firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
 pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
-pc/web/ghost.html, ghost/*.js  Ghost Hunter: 11 investigation devices, world-anchored AR, kit lights/sensors
+pc/web/ghost.html, ghost/*.js  Ghost Hunter: engine (sensors, link, audio), spirits (bestiary, behaviour, haunt map, stats), view (devices, drawing, UI)
 pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
 .github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic

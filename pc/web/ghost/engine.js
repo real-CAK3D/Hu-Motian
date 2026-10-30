@@ -79,10 +79,14 @@ function geoMove(la,lo,bear,m){const R=6371000,d=m/R,b=bear*D2R,p1=la*D2R,l1=lo*
 
 // ================================================================ link to the ESP32 (USB cable, or the PC hub)
 // Reads radar + kit-sensor readings, and sends light/buzzer commands and hardware setup.
-const RD={last:0,r:null,ms:-1,blips:[],lastLog:0,st:null,hwc:null,vib:0,vibT:0};
+const RD={last:0,r:null,ms:-1,blips:[],lastLog:0,st:null,hwc:null,vib:0,vibT:0,tchT:0,irT:0,lux:null,luxT:0};
 function onReading(r){
   const was=RD.r&&RD.r.s;RD.r=r;RD.last=Date.now();
-  if(r.hw&&r.hw.vib){RD.vib+=r.hw.vib;RD.vibT=Date.now();if(MODE==='real')logEv(`Vibration sensor triggered (${r.hw.vib})`)}
+  const hw=r.hw;
+  if(hw&&hw.vib){RD.vib+=hw.vib;RD.vibT=Date.now();if(MODE==='real')logEv(`Vibration sensor triggered (${hw.vib})`)}
+  if(hw&&hw.tch){if(Date.now()-RD.tchT>3000&&MODE==='real')logEv('Touch antenna triggered');RD.tchT=Date.now()}
+  if(hw&&hw.ir){if(Date.now()-RD.irT>3000&&MODE==='real')logEv('IR tripwire broken');RD.irT=Date.now()}
+  if(hw&&hw.lux!=null){if(RD.lux==null)RD.lux=hw.lux;const ch=Math.abs(hw.lux-RD.lux)/Math.max(200,RD.lux);if(ch>.25&&MODE==='real'&&Date.now()-RD.luxT>4000){RD.luxT=Date.now();logEv(`Light level ${hw.lux>RD.lux?'rose':'dropped'} sharply`)}RD.lux+=(hw.lux-RD.lux)*.05}
   if(r.s&&r.ok!==false){const mv=!!(r.s&1),d=((mv?r.md:r.sd)||r.dd)/100,e=Math.max(mv?r.me:0,r.s&2?r.se:0);
     // anchor the hit in the world where the radar (and camera) pointed when it was detected
     RD.blips.push({p:O.F.map(v=>v*d),d,e,mv,t:Date.now()});
@@ -208,122 +212,15 @@ function zap(){const C=AU.ctx;if(!C)return;const t=C.currentTime,o=C.createOscil
   o.connect(g);g.connect(AU.master);o.start(t);o.stop(t+1.25);noiseHit(1.1,.35,'highpass',4000)}
 const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
-// ================================================================ world: the staged haunting
-// The apparition (G), cold spots, free orbs and shadow passes all have world positions and keep
-// moving whether or not you're looking at them.
-const WORLD={cold:[],orbs:[],shadows:[],nextOrb:8,nextShadow:rand(30,55)};
-const G={state:'idle',wait:3,p:[0,6,0],v:[0,0,0],vis:0,age:0,charge:0,aimT:0,hold:0,trapT:0,scareT:0,cool:0,warned:false,knocked:false,dart:null,coldT:0,stepT:0,whisperT:4,lurkT:0};
-const gDist=()=>len2(G.p),gBear=()=>headingOf(G.p);
-const active=()=>G.state==='near'||G.state==='charge'||G.state==='lurk';
-let inViewFn=()=>false;  // set by the view (depends on the camera's field of view)
-let say=()=>{};          // set by the view
-function spawnGhost(bear,dist){
-  Object.assign(G,{state:'near',p:atBearing(bear,dist),v:[0,0,0],vis:0,age:0,aimT:0,hold:0,warned:false,knocked:false,dart:null,coldT:1,stepT:0,whisperT:rand(4,9)});
-  say(MODE==='hunt'?'It\'s here. Look around…':'EMF fluctuation detected… sweep slowly.');logEv(`EMF spike detected at ${Math.round(bear%360+360)%360}°`);
-}
-function startCharge(why){if(!active()||G.state==='charge')return;G.state='charge';G.charge=0;say(why||'IT\'S COMING!','alert');growl(G.p);whoosh(1.1,G.p);logEv('Apparition approached rapidly')}
-const towardMe=(p,s)=>{const d=len2(p)||1;return[-p[0]/d*s,-p[1]/d*s,0]};
-function ghostStep(dt,trapDown){
-  const d=gDist(),seen=inViewFn([G.p[0],G.p[1],-.4]),sp=Math.hypot(G.v[0],G.v[1]);
-  if(G.state==='idle'){G.wait-=dt;if(G.wait<=0&&MODE==='ghost')spawnGhost(O.h+rand(-160,160),rand(6.5,8.5))}
-  else if(G.state==='near'||G.state==='lurk'){
-    G.age+=dt;
-    if(G.dart){  // relocating fast along a real path
-      const dx=G.dart[0]-G.p[0],dy=G.dart[1]-G.p[1],dd=Math.hypot(dx,dy);
-      if(dd<.2)G.dart=null;else{const s=3.4;G.v=[dx/dd*s,dy/dd*s,0]}
-    }else if(G.state==='lurk'){G.v=[0,0,0]}
-    else{const u=towardMe(G.p,.12+(seen?.24:0)),w=[-u[1]/(Math.hypot(u[0],u[1])||1),u[0]/(Math.hypot(u[0],u[1])||1)],lat=Math.sin(G.age*.55)*.35;G.v=[u[0]+w[0]*lat,u[1]+w[1]*lat,0]}
-    G.p[0]+=G.v[0]*dt;G.p[1]+=G.v[1]*dt;
-    if(len2(G.p)<1.3){const k=1.3/len2(G.p);G.p[0]*=k;G.p[1]*=k}
-    const tv=seen&&!G.dart?clamp(1.3-d/7,0,1):G.dart?.3:0;G.vis+=(tv-G.vis)*Math.min(1,dt*1.5);
-    G.aimT=seen?G.aimT+dt:0;
-    G.stepT-=dt;if(sp>.25&&G.stepT<=0){G.stepT=G.dart?.28:.62;footstep([G.p[0],G.p[1],-CAM_H],G.dart?.8:.5)}
-    G.coldT-=dt;if(G.coldT<=0&&!G.dart){G.coldT=rand(3,5);WORLD.cold.push({p:[G.p[0],G.p[1],-.5],r:rand(.6,.9),s:1,v:[rand(-.05,.05),rand(-.05,.05),0]});if(WORLD.cold.length>14)WORLD.cold.shift()}
-    G.whisperT-=dt;if(G.whisperT<=0&&d<6){G.whisperT=rand(7,13);whisper([G.p[0],G.p[1],.2])}
-    if(!G.knocked&&G.age>6&&Math.random()<dt*.15){G.knocked=true;const wall=atBearing(gBear(),d+1.2,-.2);knock(wall,3);say('Did you hear that?','warn');logEv(`Three knocks from ${Math.round(gBear())}°`)}
-    if(G.state==='near'){
-      if(G.aimT>3.5&&d>2.6&&!G.dart&&Math.random()<dt*.5){G.dart=atBearing(gBear()+(Math.random()<.5?-1:1)*rand(40,80),clamp(d+rand(-.5,1),2.5,8));G.aimT=0;whoosh(.7,G.p);say('It moved. Find it again.','warn');logEv('Apparition relocated')}
-      if(d<2.4&&seen)startCharge();
-      else if(G.age>50){if(seen)startCharge('Behind you…');else{G.state='lurk';G.lurkT=0;say('…behind you.','warn');whisper([G.p[0],G.p[1],.2],1.8)}}
-      else if(CFG.radarTrig&&radarLive()&&RD.r&&RD.r.s&1&&RD.r.md<300&&G.age>4)startCharge('Something moved!');
-      if(d<4.2&&!G.warned){G.warned=true;say('Strong readings. It\'s close…','warn');logEv('EMF 5/5, cold spot forming')}
-    }else{G.lurkT+=dt;if(seen||G.lurkT>20)startCharge(seen?'THERE!':null)}  // it waits behind you until you turn
-  }
-  else if(G.state==='charge'){
-    G.charge+=dt;const s=1+G.charge*G.charge*14;G.v=towardMe(G.p,s);G.p[0]+=G.v[0]*dt;G.p[1]+=G.v[1]*dt;G.vis=1;
-    G.stepT-=dt;if(G.stepT<=0){G.stepT=.16;footstep([G.p[0],G.p[1],-CAM_H],1)}
-    if(len2(G.p)<.35||G.charge>3){G.state='gone';G.cool=rand(8,16);G.warned=false;
-      if(CFG.scares){G.scareT=.6;scream();buzz([300,60,500,60,250]);if(window.scareFX)scareFX();hwOut('fx scare 1600',true)}
-      else whoosh(.8);
-      say('…it\'s gone.','warn');logEv('Contact. Readings dropped to zero')}
-  }
-  else if(G.state==='trapped'){G.trapT+=dt;if(G.trapT>1.3){G.state='gone';G.cool=rand(5,12)}}
-  else if(G.state==='gone'){G.cool-=dt;if(G.cool<=0){G.state='idle';G.wait=rand(3,8);if(MODE==='hunt')hunt.respawn=true;if(MODE==='ghost')say('Monitoring… quiet for now.')}}
-  if(G.scareT>0)G.scareT-=dt;
-  // trap: hold while it's in your sights and close
-  const can=(G.state==='near'||G.state==='lurk'||(G.state==='charge'&&G.charge<.5))&&seen&&d<5;
-  if(trapDown&&can){G.hold+=dt;if(G.hold>=1.3){G.state='trapped';G.trapT=0;G.hold=0;G.dart=null;caps++;store.set('gh.caps',caps);zap();buzz([60,40,60,40,200]);hwOut('fx pulse 1500 0 140 255',true);say(`Entity contained (${caps} total)`);logEv(`Entity contained (#${caps})`)}}
-  else G.hold=Math.max(0,G.hold-dt*2);
-}
-function worldStep(dt){
-  for(const c of WORLD.cold){c.p[0]+=c.v[0]*dt;c.p[1]+=c.v[1]*dt;c.s*=Math.exp(-dt/95)}
-  WORLD.cold=WORLD.cold.filter(c=>c.s>.05);
-  for(const o of WORLD.orbs){o.p[0]+=o.v[0]*dt;o.p[1]+=o.v[1]*dt;o.p[2]+=o.v[2]*dt;o.age+=dt}
-  WORLD.orbs=WORLD.orbs.filter(o=>o.age<o.life);
-  WORLD.shadows=WORLD.shadows.filter(s=>performance.now()-s.t0<s.dur*1000+200);
-  if(MODE!=='ghost'||G.state==='idle')return;
-  WORLD.nextOrb-=dt;if(WORLD.nextOrb<=0){WORLD.nextOrb=rand(7,16);const b=rand(0,360),dd=rand(1.5,4);
-    WORLD.orbs.push({p:atBearing(b,dd,rand(-.8,.9)),v:[rand(-.25,.25),rand(-.25,.25),rand(-.06,.08)],age:0,life:rand(5,11),r:rand(.025,.05)})}
-  WORLD.nextShadow-=dt;if(WORLD.nextShadow<=0&&G.state==='near'&&!G.dart){WORLD.nextShadow=rand(35,70);const b=rand(0,360),dd=rand(3,5),b2=b+(Math.random()<.5?-1:1)*rand(50,90);
-    const s={a:atBearing(b,dd),b:atBearing(b2,dd),t0:performance.now(),dur:rand(1.2,1.8),seen:false};WORLD.shadows.push(s);
-    for(let i=0;i<5;i++)setTimeout(()=>{const k=i/5;footstep([s.a[0]+(s.b[0]-s.a[0])*k,s.a[1]+(s.b[1]-s.a[1])*k,-CAM_H],.7)},i*s.dur*200)}
-}
-const shadowPos=s=>{const k=clamp((performance.now()-s.t0)/(s.dur*1000),0,1);return[s.a[0]+(s.b[0]-s.a[0])*k,s.a[1]+(s.b[1]-s.a[1])*k]};
-
-// ================================================================ hunt (GPS chase outdoors)
-const hunt={lat:null,lon:null,dir:0,fleeT:0,fled:false,respawn:true,dist:null,bear:null};
-function huntStep(dt){
-  if(!GPS.ok){hunt.dist=null;return}
-  if(hunt.respawn||hunt.lat==null){
-    if(GPS.acc>40)return;
-    const b=rand(0,360),m=rand(45,95);[hunt.lat,hunt.lon]=geoMove(GPS.lat,GPS.lon,b,m);hunt.dir=rand(0,360);hunt.fled=false;hunt.fleeT=0;hunt.respawn=false;
-    G.state='idle';G.wait=1e9;say(`Faint readings ${Math.round(m)} m away. Follow the arrow.`);logEv(`Hunt: readings ${Math.round(m)} m away`);
-  }
-  hunt.dist=geoDist(GPS.lat,GPS.lon,hunt.lat,hunt.lon);hunt.bear=geoBear(GPS.lat,GPS.lon,hunt.lat,hunt.lon);
-  if(G.state!=='idle')return;
-  if(hunt.fleeT>0){hunt.fleeT-=dt;hunt.dir=hunt.bear+rand(-20,20)}
-  else{hunt.dir+=rand(-40,40)*dt;if(!hunt.fled&&hunt.dist<28){hunt.fled=true;if(Math.random()<.5){hunt.fleeT=12;say('It\'s moving away! Follow it!','alert');whoosh(1.2);logEv('Hunt: target moving away')}}}
-  [hunt.lat,hunt.lon]=geoMove(hunt.lat,hunt.lon,hunt.dir,(hunt.fleeT>0?1.7:.35)*dt);
-  if(hunt.dist<9)spawnGhost(hunt.bear,Math.min(7,hunt.dist+2));
-}
-
-// ================================================================ readings: EMF level, temperature
-const beam=(diff,w)=>.15+.85*Math.exp(-((diff/w)**2));
-let L=0;  // smoothed 0-1 field strength the meters show
-function targetLevel(){
-  if(MODE==='real'){
-    const k=kit();if(k&&k.hd!=null)return clamp(Math.abs(k.hd)/120,0,1);  // real magnetic field from the Hall sensor
-    const t=radarTarget();if(!t)return .02;return clamp(t.e/100*1.25,0,1)*(.45+.55*clamp(1-t.d/6,0,1));
-  }
-  if(G.state==='charge')return 1;
-  if(G.state==='near'||G.state==='lurk')return clamp(Math.pow(clamp(1-gDist()/9,0,1),.8)*beam(Math.abs(wrap(gBear()-O.h)),38)*1.15,0,1);
-  if(MODE==='hunt'&&hunt.dist!=null)return clamp(Math.pow(clamp(1-hunt.dist/130,0,1),1.4)*beam(Math.abs(wrap(hunt.bear-O.h)),55),0,.9);
-  return .03;
-}
-const levelSource=()=>MODE!=='real'?'staged':kit()&&kit().hd!=null?'Hall sensor':'radar return';
-const mG=lv=>.1+Math.pow(lv,1.6)*26;
-const TEMP={base:rand(20.4,21.8),amb:null};
-function tempAt(p){  // staged temperature field: room temperature minus cold spots and the apparition itself
-  let t=TEMP.base;for(const c of WORLD.cold){const dx=p[0]-c.p[0],dy=p[1]-c.p[1],dz=p[2]-c.p[2];t-=c.s*7*Math.exp(-(dx*dx+dy*dy+dz*dz)/(c.r*c.r))}
-  if(active()){const dx=p[0]-G.p[0],dy=p[1]-G.p[1],dz=p[2]+.4;t-=G.vis*5*Math.exp(-(dx*dx+dy*dy)/.25-dz*dz/1.2)}
-  return t;
-}
-function realTemp(){const k=kit();return k&&k.tc!=null?k.tc:null}
-function tempStep(dt){
-  if(!staged()){TEMP.amb=realTemp();return}
-  TEMP.base+=(Math.random()-.5)*.02*dt;const tgt=tempAt([0,0,0])+(Math.random()-.5)*.06;TEMP.amb=TEMP.amb==null?tgt:TEMP.amb+(tgt-TEMP.amb)*Math.min(1,dt*.8);
-}
-function spotTemp(){  // what an IR thermometer aimed straight ahead reads: the coldest surface along the line of sight
-  if(!staged())return realTemp();let m=99;for(let k=.6;k<=7;k+=.3)m=Math.min(m,tempAt(O.F.map(v=>v*k)));return m;
-}
-const fmtT=c=>c==null?'--':CFG.units==='F'?(c*9/5+32).toFixed(1)+'°F':c.toFixed(1)+'°C';
+function giggle(p){const C=AU.ctx;if(!C)return;const dst=at(p);let t=C.currentTime;for(let i=0;i<rand(4,7);i++){const d=rand(.07,.11),o=C.createOscillator(),f=C.createBiquadFilter(),g=C.createGain();
+  o.type='sawtooth';const f0=rand(420,560);o.frequency.setValueAtTime(f0,t);o.frequency.linearRampToValueAtTime(f0*rand(.85,1.1),t+d);f.type='bandpass';f.frequency.value=rand(1100,1800);f.Q.value=4;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.01);g.gain.linearRampToValueAtTime(0,t+d);o.connect(f);f.connect(g);g.connect(dst);o.start(t);o.stop(t+d+.01);noiseHit(d*.6,.12,'highpass',3000,t,false,dst);t+=d+rand(.03,.07)}}
+function sob(p){const C=AU.ctx;if(!C)return;const dst=at(p);let t=C.currentTime;for(let i=0;i<rand(3,5);i++){const d=rand(.35,.6),o=C.createOscillator(),f=C.createBiquadFilter(),g=C.createGain();
+  o.type='triangle';o.frequency.setValueAtTime(rand(330,380),t);o.frequency.exponentialRampToValueAtTime(rand(220,260),t+d);f.type='bandpass';f.frequency.value=900;f.Q.value=2;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+.05);g.gain.linearRampToValueAtTime(0,t+d);o.connect(f);f.connect(g);g.connect(dst);o.start(t);o.stop(t+d+.01);noiseHit(.15,.18,'bandpass',1200,t+d,false,dst);t+=d+rand(.2,.4)}}
+function wail(p){const C=AU.ctx;if(!C)return;const dst=p?at(p):AU.master,t=C.currentTime;
+  for(const det of[0,7]){const o=C.createOscillator(),g=C.createGain(),f=C.createBiquadFilter();o.type='sawtooth';o.frequency.setValueAtTime(900+det,t);o.frequency.linearRampToValueAtTime(1500+det,t+.6);o.frequency.exponentialRampToValueAtTime(380,t+2.6);
+    const v=C.createOscillator(),vg=C.createGain();v.frequency.value=6;vg.gain.value=40;v.connect(vg);vg.connect(o.frequency);f.type='bandpass';f.frequency.value=1600;f.Q.value=1.5;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.3,t+.3);g.gain.linearRampToValueAtTime(0,t+2.7);o.connect(f);f.connect(g);g.connect(dst);o.start(t);v.start(t);o.stop(t+2.8);v.stop(t+2.8)}}
+function crash(p){const C=AU.ctx;if(!C)return;const dst=at(p),t=C.currentTime;noiseHit(.5,1,'lowpass',2500,t,false,dst);for(let i=0;i<6;i++)tone(rand(1800,5200),rand(.05,.2),.12,'triangle',t+rand(0,.25),dst);noiseHit(.12,.8,'lowpass',180,t,false,dst)}
+function bang(p){const C=AU.ctx;if(!C)return;const dst=at(p),t=C.currentTime,o=C.createOscillator(),g=C.createGain();o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(40,t+.25);g.gain.setValueAtTime(1.4,t);g.gain.exponentialRampToValueAtTime(.001,t+.35);o.connect(g);g.connect(dst);o.start(t);o.stop(t+.4);noiseHit(.2,.9,'lowpass',700,t,false,dst)}

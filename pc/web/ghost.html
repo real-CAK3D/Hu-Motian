@@ -46,6 +46,14 @@ button.on{border-color:var(--glow);color:var(--glow)}button:disabled{opacity:.4}
 .row input[type=number]{width:52px;font:inherit;font-size:12px;color:var(--ink);background:#0a120d;border:1px solid var(--line);border-radius:6px;padding:4px}
 .hw{border-top:1px solid rgba(56,255,156,.1);padding:8px 0}.hwh{display:flex;justify-content:space-between;gap:8px}.hwst{font-size:12px}.hwv{font-size:12px;color:var(--amber)}
 .row button{padding:4px 9px;font-size:12px}
+.act{position:absolute;right:16px;z-index:3;width:72px;padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.05em;border-radius:999px}
+#provBtn{bottom:144px;color:#ff8a80;border-color:rgba(255,59,48,.5)}#calmBtn{bottom:106px;color:#9fd0ff;border-color:rgba(74,160,255,.5)}
+.box.wide{max-width:720px}#map{height:58vh;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#071009}
+.gl,.cx{border-top:1px solid rgba(56,255,156,.12);padding:8px 0}.gh{display:flex;justify-content:space-between;gap:8px}.cx.unk b{color:var(--dim)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tile{border:1px solid var(--line);border-radius:10px;padding:8px}.tile b{font-size:20px;color:var(--ink)}
+.box h3{font-size:13px;color:var(--glow);margin:14px 0 4px}.bar2{display:grid;grid-template-columns:130px 1fr 60px;gap:6px;align-items:center;font-size:11px;color:var(--dim);margin:3px 0}
+.bar2 i{display:block;height:8px;background:var(--glow);border-radius:4px;min-width:2px}.bar2 em{font-style:normal;text-align:right}
+button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6px}
 #logList{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;font-size:11px}#logList li{padding:2px 0;border-bottom:1px solid rgba(56,255,156,.08);color:var(--dim)}#logList li b{color:var(--ink);font-weight:400}
 </style></head><body>
 <div id="app">
@@ -57,16 +65,25 @@ button.on{border-color:var(--glow);color:var(--glow)}button:disabled{opacity:.4}
       <span class="sp"></span>
       <button id="recBtn" title="Record evidence video">● REC</button>
       <button id="usbBtn" title="Connect the radar over USB" hidden>USB</button>
+      <button id="jBtn" title="Journal: haunt map, codex, stats, contained ghosts">📖</button>
       <button id="gear" title="Settings, hardware and evidence log">⚙</button>
     </header>
     <div id="devctl" hidden><span id="ctlDyn" style="display:contents"></span>
       <select id="boxRate" title="Sweep speed" hidden><option value="100">100 ms</option><option value="200" selected>200 ms</option><option value="300">300 ms</option></select></div>
+    <button id="provBtn" class="act" title="Provoke it: raises its hostility">PROVOKE</button>
+    <button id="calmBtn" class="act" title="Speak calmly: may lower its hostility">CALM</button>
     <button id="trap">TRAP</button>
   </div>
   <div id="dock"></div>
 </div>
 <span id="boxWord" hidden></span><span id="evpTxt" hidden>Record in silence, then listen back.</span>
 <div id="flash"></div>
+<div class="overlay" id="journal" hidden>
+  <div class="box wide">
+    <div class="row" id="jtabs" style="margin:0 0 8px"><button data-j="map" class="on">Map</button><button data-j="codex">Codex</button><button data-j="stats">Stats</button><button data-j="vault">Contained</button><span class="sp"></span><button id="jClose">✕</button></div>
+    <div id="jBody"></div>
+  </div>
+</div>
 <div class="overlay" id="start">
   <div class="box">
     <h1>GHOST HUNTER</h1>
@@ -95,5 +112,6 @@ button.on{border-color:var(--glow);color:var(--glow)}button:disabled{opacity:.4}
   </div>
 </div>
 <script src="ghost/engine.js"></script>
+<script src="ghost/spirits.js"></script>
 <script src="ghost/view.js"></script>
 </body></html>
