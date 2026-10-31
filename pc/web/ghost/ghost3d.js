@@ -4,7 +4,7 @@
 'use strict';
 const G3=(()=>{
   const has=()=>!!(window.THREE&&THREE.GLTFLoader&&THREE.SkeletonUtils);
-  let R=null,cnv=null,scene=null,camera=null,failed=false,glowC=null,glowX=null,trailC=null,trailX=null;
+  let room=1,R=null,cnv=null,scene=null,camera=null,failed=false,glowC=null,glowX=null,trailC=null,trailX=null;
   const models={},loading={},actors={};
   // which body each kind of ghost wears; a ghost keeps the same one every time you meet it
   const RIG={
@@ -204,7 +204,7 @@ void main(){
   function flush(lens,t){
     if(!R)return;let any=false,pale=false,fast=false;
     for(const k in actors){const a=actors[k];a.root.visible=a.used&&a.vis>.01&&lens!=='sls';if(a.root.visible){any=true;if(a.kind==='pale')pale=true;if(a.spd>2.2)fast=true;
-      if(a.lens!==lens)restyle(a,lens);a.shared.uVis.value=a.vis;a.shared.uTime.value=t}a.used=false}
+      if(a.lens!==lens)restyle(a,lens);a.shared.uVis.value=Math.min(1,a.vis*(a.kind==='pale'?room:1));a.shared.uTime.value=t}a.used=false}
     if(!any)return;
     const pr=Math.min(DPR,1.25),w=Math.round(W*pr),h=Math.round(H*pr);if(cnv.width!==w||cnv.height!==h)R.setSize(w,h,false);
     camera.position.set(0,0,0);camera.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(toT(O.R),toT(O.U),toT(O.F).negate()));
@@ -214,7 +214,7 @@ void main(){
     if(fast&&trailC.width){cx.globalAlpha=.32;cx.drawImage(trailC,0,0,W,H)}  // smear behind something fast
     cx.globalAlpha=1;if(pale&&lens!=='thermal')cx.filter='blur(.7px)';cx.drawImage(cnv,0,0,W,H);cx.filter='none';
     if(pale){const gw=Math.max(8,W/6|0),gh=Math.max(8,H/6|0);if(glowC.width!==gw){glowC.width=gw;glowC.height=gh}glowX.clearRect(0,0,gw,gh);glowX.drawImage(cnv,0,0,gw,gh);
-      cx.globalCompositeOperation='lighter';cx.globalAlpha=lens==='thermal'?0:.55;cx.drawImage(glowC,0,0,W,H)}
+      cx.globalCompositeOperation='lighter';cx.globalAlpha=lens==='thermal'?0:clamp(.55*room,.2,.7);cx.drawImage(glowC,0,0,W,H)}
     cx.restore();
     if(fast){const tw=W/2|0,th=H/2|0;if(trailC.width!==tw){trailC.width=tw;trailC.height=th}trailX.clearRect(0,0,tw,th);trailX.drawImage(cnv,0,0,tw,th)}else if(trailC.width)trailC.width=0;
     // its eyes: glowing for some, deep black holes for the pale ones (only while it faces you)
@@ -243,5 +243,5 @@ void main(){
     cx.restore();return true;
   }
   function forget(key){if(key)drop(key);else for(const k in actors)drop(k)}
-  return{RIG,init,load,pose,flush,bones,forget,_a:actors,get ready(){return!!R}};
+  return{RIG,init,load,pose,flush,bones,forget,_a:actors,get ready(){return!!R},get room(){return room},set room(v){room=v}};
 })();
