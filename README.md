@@ -55,7 +55,7 @@ After that it reconnects by itself whenever you plug the board in with the app o
 
 ## Ghost Hunter (paranormal investigation kit)
 
-`pc/web/ghost.html` (+ `pc/web/ghost/engine.js`, `view.js`) turns the phone, radar and kit modules into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
+`pc/web/ghost.html` (+ `pc/web/ghost/*.js`) turns the phone, radar and kit modules into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
 
 **Devices** (pick one from the bar at the bottom)
 
@@ -66,6 +66,7 @@ After that it reconnects by itself whenever you plug the board in with the app o
 | SLS camera | Dark depth image with an IR dot pattern; a stick figure is drawn wherever a "body" is detected |
 | Laser grid | Green dots fixed on the room around you; anything standing in the room blocks them |
 | K-II meter | 5-LED EMF meter |
+| Ghost meter | Arms that rise with the field, a 12-bar graph, a needle toward the entity (or its slime trail), and a whine that climbs |
 | EMF/temp meter | LCD with EMF and temperature, the RT-EMF alarm beep, and a red light |
 | REM pod | Proximity LEDs around an antenna dome, escalating alarm, cold/warm LEDs |
 | Spirit box | FM sweep (100/200/300 ms) with static chop |
@@ -101,6 +102,7 @@ The camera devices draw a found-footage overlay: REC, timestamp, battery, temper
   - The word box picks words from real sensor changes; the spirit box is static only.
 - **Ghost**: a staged haunting with persistent, individual ghosts (below).
 - **Hunt**: follows the arrow to the nearest open lead or a haunt you haven't cleared; with nothing on the map, a fresh trail.
+- **Bust**: be the exterminator: beam, trap, get paid (below).
 
 **Ghosts.** 18 kinds, from common to legendary, each with its own look, habits, voice and temper:
 
@@ -144,6 +146,40 @@ Each ghost you meet:
   - **Codex**: which of the 18 kinds you've discovered, identified and contained.
   - **Stats**: ghosts met, sightings, contained x of y, kinds discovered, attacks survived, escapes, provokes and calms, knocks, thrown objects, flickers, voices heard, EVP sessions and anomalies, leads, distance walked, time hunting, and the highest, angriest and rarest ghosts.
   - **Contained**: everything you've caught, with a Release option (they go home angry).
+  - **Review**: the session's EMF and temperature charted second by second, with every logged event marked. Drag across the chart to scrub through what happened when.
+  - **HQ**: Bust mode's bank, rank, containment unit, callouts and pay slips.
+
+### Bust mode (be the exterminator)
+
+1. **Find it** with the ghost meter, or follow the green slime trail it leaves on the floor.
+2. **Hold FIRE** with it in your sights. The particle-thrower beam locks on and the ghost thrashes, so keep the phone on it.
+   - Watch the heat bar. If it overheats, the pack vents for 3 s and the ghost gets away. **VENT** cools it early.
+   - Shots that miss scorch the walls, and the damage comes off your pay.
+3. **Weaken it.** Its strength bar drains while it's held. Bigger, angrier ghosts take longer.
+4. **THROW TRAP.** Aim at the floor to choose where it lands. Keep firing and point at the trap: a weakened ghost goes where the beam points. When it's over the trap, the doors open and a cone of light pulls it in. The trap shuts, shakes and smokes.
+5. **Get paid.** Tap the trap button to empty it into containment.
+   - With GPS on, up to three **callouts** appear within about 400 m. Walk there and its ghost is waiting. Callouts pay a bonus.
+   - Rank goes up with captures: Trainee, Rookie, Buster, Senior Buster, Spook Specialist, Chief of Containment.
+
+Angry ghosts spit slime at you. Turn away to dodge it. Most of them slime you rather than scare you when they reach you; the Inhuman, Hat Man, Revenant, Wraith and Banshee still go for the scare.
+
+**Kit:**
+- The RGB LED cycles red like a power cell, and goes white-hot while firing.
+- The buzzer hums while firing and beeps fast near overheat.
+- The push button (TRAP) is the trigger.
+- The phone vibrates while you're wrangling.
+
+### More realism
+
+- **Walk-around AR (Android Chrome with ARCore):** tap **AR**. The phone tracks where it is in the room, not just which way it's pointing.
+  - Walk up to a ghost, round it, or away from it. Things sit on the real floor, at your real height.
+  - The camera picture comes from ARCore, so the night-vision, thermal and SLS lenses become tints over it.
+  - iPhones can't do this in the browser, so they keep the turn-in-place view.
+- **Room light:** pale ghosts glow in a dark room and wash out in a bright one, like the real thing would.
+- **Flashlight:** shadow people recoil from it and slip away. The Inhuman just gets angrier. Phones without a torch get an on-screen flashlight beam.
+- **Mist** pools on the floor around the cold ones, and in a cold spot your **breath fogs**.
+- **Thrown objects:** a poltergeist's throws are objects (a book, a box, a tin) that fly, bounce and then lie where they landed.
+- **Sound:** ghost sounds carry a room's echo. The spirit box sweep now passes whistles between stations, scraps of music and chopped broadcast voices.
 
 ### Kit lights and sensors (optional)
 
@@ -232,7 +268,8 @@ firmware/        ESP32 firmware (PlatformIO, Arduino): LD2410 driver, web server
   embed_web.py   pre-build step: gzips the dashboard into the firmware
 pc/radar.py      PC hub (USB serial -> HTTP API + dashboard, history, alerts)
 pc/web/index.html  the dashboard (single file, three.js 3D view; also the phone app, with USB support)
-pc/web/ghost.html, ghost/*.js  Ghost Hunter: engine (sensors, link, audio), spirits (bestiary, behaviour, haunt map, stats), view (devices, drawing, UI)
+pc/web/ghost.html, ghost/*.js  Ghost Hunter: engine (sensors, link, audio), spirits (bestiary, behaviour, haunt map, stats), ghost3d (3D apparitions),
+                 bust (Bust mode), ambient (room light, flashlight, mist, breath, thrown objects), review (evidence timeline), xr (walk-around AR), view (devices, drawing, UI)
 pc/web/manifest.webmanifest, sw.js, icon-*.png  phone app install + offline files
 .github/workflows/pages.yml  publishes pc/web to GitHub Pages
 pc/status.py     serial diagnostic

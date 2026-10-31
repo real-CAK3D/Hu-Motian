@@ -7,7 +7,7 @@ const wrap=a=>((a%360)+540)%360-180;  // -> [-180,180)
 const pad=(n,w=2)=>String(n).padStart(w,'0');
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 // World frame: x = east, y = north, z = up, metres, origin at the phone. The floor is CAM_H below it.
-const CAM_H=1.4;
+let CAM_H=1.4;  // walk-around AR measures it
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],len2=v=>Math.hypot(v[0],v[1]);
 const headingOf=v=>(Math.atan2(v[0],v[1])/D2R+360)%360;
 const atBearing=(b,d,z=0)=>[Math.sin(b*D2R)*d,Math.cos(b*D2R)*d,z];
@@ -53,6 +53,7 @@ function onAbs(e){
 addEventListener('deviceorientation',e=>e.absolute?onAbs(e):onRel(e));
 addEventListener('deviceorientationabsolute',onAbs);
 function orientStep(){
+  if(typeof XRS!=='undefined'&&XRS.on){O.R=XRS.R;O.U=XRS.U;O.F=XRS.F;O.ok=O.abs=true;O.h=camHeading({F:O.F,U:O.U});O.pitch=Math.asin(clamp(O.F[2],-1,1))/D2R;return}  // pose from ARCore
   const now=performance.now(),live=O.relB&&now-Math.max(O.relLast,O.absLast)<1500;let R,U,F;
   if(live){const o=O.off||0;R=rotZ(O.relB.R,o);U=rotZ(O.relB.U,o);F=rotZ(O.relB.F,o);O.ok=true}
   else{O.ok=false;const h=O.drag*D2R,p=O.dragP*D2R;F=[Math.sin(h)*Math.cos(p),Math.cos(h)*Math.cos(p),Math.sin(p)];R=[Math.cos(h),-Math.sin(h),0];U=[-Math.sin(h)*Math.sin(p),-Math.cos(h)*Math.sin(p),Math.cos(p)]}
@@ -167,6 +168,9 @@ function auInit(){
   for(const f of[55,55.8,82.6]){const o=C.createOscillator();o.type='sawtooth';o.frequency.value=f;const g=C.createGain();g.gain.value=.33;o.connect(g);g.connect(AU.lp);o.start()}
   const lfo=C.createOscillator(),lg=C.createGain();lfo.frequency.value=.31;lg.gain.value=120;lfo.connect(lg);lg.connect(AU.lp.frequency);lfo.start();
   const n=C.sampleRate*2,buf=C.createBuffer(1,n,C.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;AU.noise=buf;
+  // a room: ghost sounds get early reflections and a short tail, so they sound like they're in here with you
+  try{const ir=C.createBuffer(2,C.sampleRate*1.8|0,C.sampleRate);for(let ch=0;ch<2;ch++){const x=ir.getChannelData(ch);for(let i=0;i<x.length;i++){const t=i/C.sampleRate;x[i]=(Math.random()*2-1)*Math.pow(1-t/1.8,3)*(t<.03?.2:1)*(t<.09&&Math.random()<.01?6:1)}}
+    AU.rev=C.createConvolver();AU.rev.buffer=ir;const rg=C.createGain();rg.gain.value=.28;AU.rev.connect(rg);rg.connect(AU.master)}catch(e){AU.rev=null}
 }
 // world (east, north, up) -> Web Audio (x right, y up, z towards the listener)
 const toAudio=p=>[p[0],p[2],-p[1]];
@@ -179,7 +183,7 @@ function listenerStep(){
 function at(p){  // a panner at a world position; connect a sound into it
   const C=AU.ctx,pn=C.createPanner();pn.panningModel='HRTF';pn.distanceModel='inverse';pn.refDistance=1.2;pn.rolloffFactor=1;const a=toAudio(p);
   if(pn.positionX){pn.positionX.value=a[0];pn.positionY.value=a[1];pn.positionZ.value=a[2]}else pn.setPosition(a[0],a[1],a[2]);
-  pn.connect(AU.master);return pn;
+  pn.connect(AU.master);if(AU.rev)pn.connect(AU.rev);return pn;
 }
 function noiseHit(dur,gain,type,freq,when,flat,dest){const C=AU.ctx;if(!C)return;const t=when||C.currentTime,s=C.createBufferSource(),f=C.createBiquadFilter(),g=C.createGain();
   s.buffer=AU.noise;s.loop=true;f.type=type;f.frequency.value=freq;

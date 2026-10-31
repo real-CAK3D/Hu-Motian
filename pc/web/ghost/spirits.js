@@ -96,7 +96,7 @@ const T_=()=>typeOf(G.spec);
 const visibleKind=()=>T_().look.kind!=='none';
 function summon(spec,bear,dist,resident){
   Object.assign(G,{state:'active',spec,p:atBearing(bear,dist),v:[0,0,0],lift:0,vis:0,age:0,beh:'still',behT:0,bs:{},pose:'stand',anger:spec.anger,aimT:0,hold:0,seen:false,warned:false,
-    dart:null,coldT:1,stepT:0,evT:rand(4,9),resident:!!resident,pointBear:null,lookT:0,lookHist:[],at:GPS.ok?[GPS.lat,GPS.lon]:null});
+    dart:null,coldT:1,stepT:0,evT:rand(4,9),resident:!!resident,pointBear:null,lookT:0,lookHist:[],at:GPS.ok?[GPS.lat,GPS.lon]:null,job:null});
   G.anchor=[G.p[0],G.p[1]];pickBehavior();
   say(resident?'Readings… something lives here.':MODE==='hunt'?'It\'s here. Look around…':'EMF fluctuation detected… sweep slowly.');
   const deg=Math.round(((bear%360)+360)%360);logEv(resident?`Back at the haunt of ${spec.identified?spec.name:'an unknown entity'} (${deg}°)`:`EMF spike detected at ${deg}°`);
@@ -130,7 +130,8 @@ const towardMe=s=>{const d=gDist()||1;return[-G.p[0]/d*s,-G.p[1]/d*s,0]};
 function attackStart(){if(G.state!=='active')return;G.state='charge';G.bs.c=0;say(pick(['IT\'S COMING!','THERE!','LOOK OUT!']),'alert');growl(G.p);whoosh(1.1,G.p);logEv(`${nm()} attacked`);stat('attacks')}
 function contact(){
   G.state='gone';G.cool=rand(8,16);G.anger=Math.max(G.spec.baseAnger,G.anger-25);G.spec.attacks++;
-  if(CFG.scares){G.scareT=.9;scream();buzz([300,60,500,60,250]);if(window.scareFX)scareFX();hwOut('fx scare 1600',true)}else whoosh(.8);
+  if(MODE==='bust'&&typeof BUST!=='undefined'&&BUST.contact()){}  // slimed instead
+  else if(CFG.scares){G.scareT=.9;scream();buzz([300,60,500,60,250]);if(window.scareFX)scareFX();hwOut('fx scare 1600',true)}else whoosh(.8);
   say('…it\'s gone.','warn');logEv('Contact. Readings dropped to zero');stat('scares');
 }
 const nm=()=>G.spec&&G.spec.identified?G.spec.name:'Unknown entity';
@@ -179,7 +180,7 @@ function eventStep(dt,seen,d){
     case'scream':wail(p);say('THE WAIL…','alert');hwOut('fx strobe 1500 200 220 255',true);logEv(`${nm()} screamed`);break;
     case'knock':knock(atBearing(gBear(),d+1.2,-.2),Math.random()<.5?3:2);say('Knocking…','warn');logEv('Knocks heard');stat('knocks');hwOut('beep 120 80');break;
     case'bang':bang(atBearing(gBear()+rand(-40,40),d+1,-.5));logEv('A loud bang');break;
-    case'throw':{const from=atBearing(gBear()+rand(-30,30),rand(1.5,3),-.3),to=atBearing(O.h+rand(-30,30),2,-.3);whoosh(.6,from);setTimeout(()=>{crash(to);if(window.shakeFX)shakeFX()},500);say('Something was thrown!','alert');logEv('Object moved / thrown');stat('throws');break}
+    case'throw':{const from=atBearing(gBear()+rand(-30,30),rand(1.5,3),-.3),to=atBearing(O.h+rand(-30,30),2,-.3);whoosh(.6,from);if(typeof AMB!=='undefined')AMB.throwProp(from,to);setTimeout(()=>{crash(to);if(window.shakeFX)shakeFX()},500);say('Something was thrown!','alert');logEv('Object moved / thrown');stat('throws');break}
     case'flicker':if(window.flickerFX)flickerFX();hwOut('fx flicker 1800 255 230 180',true);say('The lights…','warn');logEv('Lights flickered');stat('flickers');break;
   }
 }
@@ -211,7 +212,7 @@ function onSeen(){
 // ---- the main ghost update
 function ghostStep(dt,trapDown){
   if(G.scareT>0)G.scareT=Math.max(0,G.scareT-dt);
-  if(G.state==='idle'){G.wait-=dt;if(G.wait<=0&&MODE==='ghost'&&!insideHaunt())spawnNew(O.h+rand(-160,160),rand(6,8.5));return}
+  if(G.state==='idle'){G.wait-=dt;if(G.wait<=0&&(MODE==='ghost'||MODE==='bust')&&!insideHaunt())spawnNew(O.h+rand(-160,160),rand(6,8.5));return}
   if(G.state==='gone'){G.cool-=dt;if(G.cool<=0){if(G.spec&&G.spec.state==='free'&&insideHauntOf(G.spec)){summon(G.spec,O.h+rand(-170,170),rand(5,8),true)}else{G.state='idle';G.spec=null;G.wait=rand(8,20);if(MODE==='ghost')say('Monitoring… quiet for now.')}}return}
   if(G.state==='trapped'){G.trapT+=dt;if(G.trapT>1.4){G.state='idle';G.spec=null;G.wait=rand(10,25)}return}
   const T=T_(),d=gDist(),aimP=[G.p[0],G.p[1],G.lift-.4],seen=inViewFn(aimP),vis=visibleKind();
@@ -220,6 +221,7 @@ function ghostStep(dt,trapDown){
   if(!G.lookT||G.age-G.lookT>1){G.lookT=G.age;G.lookHist.push(atBearing(O.h,1));if(G.lookHist.length>8)G.lookHist.shift()}
   if(G.state==='charge'){G.bs.c+=dt;const v=towardMe(2+G.bs.c*G.bs.c*14);G.p[0]+=v[0]*dt;G.p[1]+=v[1]*dt;G.v=v;G.vis=1;G.pose=T.look.kind==='animal'?'walk':T.look.kind==='demon'?'crawl':'run';
     G.stepT-=dt;if(G.stepT<=0){G.stepT=.15;footstep([G.p[0],G.p[1],-CAM_H],1)}if(gDist()<.4||G.bs.c>3)contact()}
+  else if(typeof BUST!=='undefined'&&BUST.held())BUST.wrangle(dt);  // held in the beam (Bust mode)
   else{behaviorStep(dt,seen,d);eventStep(dt,seen,d)}
   {const l=len2(G.p);if(!(l>1e-6))G.p=atBearing(O.h,.9);else if(l<.9&&G.state==='active'){const k=.9/l;G.p[0]*=k;G.p[1]*=k}}
   const rushing=G.beh==='chase'||G.beh==='swoop'&&G.bs.phase==='dive'||G.state==='charge';
@@ -308,7 +310,7 @@ function worldStep(dt){
   for(const o of WORLD.orbs){o.p[0]+=o.v[0]*dt;o.p[1]+=o.v[1]*dt;o.p[2]+=o.v[2]*dt;o.age+=dt}
   WORLD.orbs=WORLD.orbs.filter(o=>o.age<o.life);
   WORLD.shadows=WORLD.shadows.filter(s=>performance.now()-s.t0<s.dur*1000+200);
-  if(MODE!=='ghost'||!active())return;
+  if(MODE!=='ghost'&&MODE!=='bust'||!active())return;
   WORLD.nextOrb-=dt;if(WORLD.nextOrb<=0){WORLD.nextOrb=T_().look.kind==='orbs'?rand(1.5,4):rand(7,16);const b=T_().look.kind==='orbs'?gBear()+rand(-20,20):rand(0,360),dd=T_().look.kind==='orbs'?gDist()+rand(-1,1):rand(1.5,4);
     WORLD.orbs.push({p:atBearing(b,Math.max(1.2,dd),rand(-.8,.9)),v:[rand(-.25,.25),rand(-.25,.25),rand(-.06,.08)],age:0,life:rand(5,11),r:rand(.025,.05)})}
   WORLD.nextShadow-=dt;if(WORLD.nextShadow<=0&&G.state==='active'){WORLD.nextShadow=rand(35,70);const b=rand(0,360),dd=rand(3,5),b2=b+(Math.random()<.5?-1:1)*rand(50,90);

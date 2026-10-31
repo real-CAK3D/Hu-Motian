@@ -47,6 +47,9 @@ button.on{border-color:var(--glow);color:var(--glow)}button:disabled{opacity:.4}
 .hw{border-top:1px solid rgba(56,255,156,.1);padding:8px 0}.hwh{display:flex;justify-content:space-between;gap:8px}.hwst{font-size:12px}.hwv{font-size:12px;color:var(--amber)}
 .row button{padding:4px 9px;font-size:12px}
 .act{position:absolute;right:16px;z-index:3;width:72px;padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.05em;border-radius:999px}
+#trap.fire{background:radial-gradient(circle at 50% 35%,#ff9a6b,#ff4a1a 55%,#8a1a00);border-color:#ffc0a0;color:#fff;box-shadow:0 0 0 4px rgba(255,74,26,.2)}
+#throwBtn{bottom:144px;color:#ffe08a;border-color:rgba(255,200,60,.55)}#ventBtn{bottom:106px;color:#ffb38a;border-color:rgba(255,140,60,.5)}
+body.xr,body.xr #app,body.xr #stage{background:transparent!important}html:has(body.xr){background:transparent}
 #provBtn{bottom:144px;color:#ff8a80;border-color:rgba(255,59,48,.5)}#calmBtn{bottom:106px;color:#9fd0ff;border-color:rgba(74,160,255,.5)}
 .box.wide{max-width:720px}#map{height:58vh;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#071009}
 .gl,.cx{border-top:1px solid rgba(56,255,156,.12);padding:8px 0}.gh{display:flex;justify-content:space-between;gap:8px}.cx.unk b{color:var(--dim)}
@@ -62,9 +65,10 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
     <video id="cam" playsinline muted autoplay></video>
     <canvas id="view"></canvas>
     <header>
-      <div class="seg" id="tabs"><button data-mode="real">Real</button><button data-mode="ghost">Ghost</button><button data-mode="hunt">Hunt</button></div>
+      <div class="seg" id="tabs"><button data-mode="real">Real</button><button data-mode="ghost">Ghost</button><button data-mode="hunt">Hunt</button><button data-mode="bust">Bust</button></div>
       <span class="sp"></span>
       <button id="recBtn" title="Record evidence video">● REC</button>
+      <button id="arBtn" title="Walk-around AR: walk up to things (Android)" hidden>AR</button>
       <button id="usbBtn" title="Connect the radar over USB" hidden>USB</button>
       <button id="jBtn" title="Journal: haunt map, codex, stats, contained ghosts">📖</button>
       <button id="gear" title="Settings, hardware and evidence log">⚙</button>
@@ -73,6 +77,8 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
       <select id="boxRate" title="Sweep speed" hidden><option value="100">100 ms</option><option value="200" selected>200 ms</option><option value="300">300 ms</option></select></div>
     <button id="provBtn" class="act" title="Provoke it: raises its hostility">PROVOKE</button>
     <button id="calmBtn" class="act" title="Speak calmly: may lower its hostility">CALM</button>
+    <button id="throwBtn" class="act" hidden>THROW TRAP</button>
+    <button id="ventBtn" class="act" hidden>VENT</button>
     <button id="trap">TRAP</button>
   </div>
   <div id="dock"></div>
@@ -81,7 +87,7 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
 <div id="flash"></div>
 <div class="overlay" id="journal" hidden>
   <div class="box wide">
-    <div class="row" id="jtabs" style="margin:0 0 8px"><button data-j="map" class="on">Map</button><button data-j="codex">Codex</button><button data-j="stats">Stats</button><button data-j="vault">Contained</button><span class="sp"></span><button id="jClose">✕</button></div>
+    <div class="row" id="jtabs" style="margin:0 0 8px"><button data-j="map" class="on">Map</button><button data-j="codex">Codex</button><button data-j="stats">Stats</button><button data-j="vault">Contained</button><button data-j="review">Review</button><button data-j="hq">HQ</button><span class="sp"></span><button id="jClose">✕</button></div>
     <div id="jBody"></div>
   </div>
 </div>
@@ -93,6 +99,7 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
       <li><b>Real</b>: nothing is faked. Only the radar and your kit sensors drive the devices. Tape the radar to the back of the phone, gold side out.</li>
       <li><b>Ghost</b>: a staged haunting, made up by the app. It moves around the room you're in and stays where it is when you look away. Find it, then hold <b>TRAP</b> before it comes for you.</li>
       <li><b>Hunt</b>: an outdoor GPS chase that ends in a staged encounter.</li>
+      <li><b>Bust</b>: be the exterminator. Find it with the ghost meter, hold <b>FIRE</b> to wrangle it in the beam, throw the trap, drag it in and get paid. Callouts show up on the map.</li>
     </ul>
     <p class="small">Headphones make it much better: footsteps, knocks and whispers come from where the apparition actually is.</p>
     <div class="opt"><label for="oScare">Jump scares</label><input type="checkbox" id="oScare"></div>
@@ -118,5 +125,9 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
 <script src="ghost/engine.js"></script>
 <script src="ghost/spirits.js"></script>
 <script src="ghost/ghost3d.js"></script>
+<script src="ghost/bust.js"></script>
+<script src="ghost/ambient.js"></script>
+<script src="ghost/review.js"></script>
+<script src="ghost/xr.js"></script>
 <script src="ghost/view.js"></script>
 </body></html>

@@ -3,7 +3,7 @@
 const cv=$('#view'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
 const DEVICES=[
   {id:'nv',name:'Night vision',kind:'cam'},{id:'thermal',name:'Thermal',kind:'cam'},{id:'sls',name:'SLS camera',kind:'cam'},{id:'laser',name:'Laser grid',kind:'cam'},
-  {id:'k2',name:'K-II meter',kind:'hand'},{id:'mel',name:'EMF/temp meter',kind:'hand'},{id:'rem',name:'REM pod',kind:'hand'},{id:'box',name:'Spirit box',kind:'hand'},
+  {id:'k2',name:'K-II meter',kind:'hand'},{id:'pke',name:'Ghost meter',kind:'hand'},{id:'mel',name:'EMF/temp meter',kind:'hand'},{id:'rem',name:'REM pod',kind:'hand'},{id:'box',name:'Spirit box',kind:'hand'},
   {id:'ovilus',name:'Word box',kind:'hand'},{id:'evp',name:'EVP recorder',kind:'hand'},{id:'radar',name:'Radar',kind:'scope'}];
 let DEV=store.get('gh.dev','nv');if(!DEVICES.find(d=>d.id===DEV))DEV='nv';
 const devKind=()=>DEVICES.find(d=>d.id===DEV).kind;
@@ -21,6 +21,7 @@ async function startCam(){
 async function setTorch(on){try{await cam.stream.getVideoTracks()[0].applyConstraints({advanced:[{torch:on}]});cam.torchOn=on}catch(e){}buildCtl()}
 // Focal length in screen pixels, so world points land where the real camera image shows them.
 function FPX(){
+  if(XRS.on&&XRS.fpx)return XRS.fpx;
   const v=$('#cam');let f;
   if(cam.ok&&v.videoWidth){const s=Math.max(W/v.videoWidth,H/v.videoHeight),long=Math.max(v.videoWidth,v.videoHeight);f=long/2/Math.tan(33*D2R)*s}  // ~66° across the sensor's long side
   else f=(W/2)/Math.tan(25*D2R);
@@ -246,7 +247,8 @@ function edgeArrow(p,col,label){
 
 // the scene through the camera, with everything in the world drawn where it is
 function drawScene(t,level,lens){
-  updateCamFrame(lens);cx.imageSmoothingEnabled=true;cx.drawImage(camC,0,0,W,H);
+  if(XRS.on){cx.clearRect(0,0,W,H);const wash={nv:'rgba(20,90,35,.32)',thermal:'rgba(40,0,90,.5)',sls:'rgba(0,12,40,.55)'}[lens];if(wash){cx.fillStyle=wash;cx.fillRect(0,0,W,H)}}  // ARCore draws the camera underneath
+  else{updateCamFrame(lens);cx.imageSmoothingEnabled=true;cx.drawImage(camC,0,0,W,H)}
   if(lens==='nv'||lens==='sls'){cx.save();cx.globalAlpha=lens==='sls'?.5:.16;cx.globalCompositeOperation=lens==='sls'?'screen':'overlay';cx.translate(rand(-64,0),rand(-64,0));cx.fillStyle=cx.createPattern(lens==='sls'?DOTS:GRAIN[(t*24|0)%3],'repeat');cx.fillRect(0,0,W+64,H+64);cx.restore()}
   const occ=[];
   if(MODE==='real'){
@@ -261,6 +263,7 @@ function drawScene(t,level,lens){
       if(f)occ.push({x:f.x,y:f.top+f.h*.5,rx:f.h*.16,ry:f.h*.5,k:.9})}
     else if(!radarLive()){cx.save();cx.textAlign='center';cx.font='14px ui-monospace,monospace';cx.fillStyle='#ffb627';cx.shadowColor='#000';cx.shadowBlur=4;cx.fillText(canUSB?'Radar not connected: tap USB':'Radar not connected',W/2,H*.5+60);cx.restore()}
   }else{
+    BUST.drawWorld(t,lens);AMB.drawWorld(t,lens);
     for(const o of WORLD.orbs)orbAt(o.p,o.r,(.35+.4*Math.max(0,Math.sin(t*1.7+o.r*90)))*clamp(Math.min(o.age,o.life-o.age),0,1));
     if(MODE==='hunt'&&G.state==='idle'&&hunt.dist!=null){const p=atBearing(hunt.bear,Math.min(hunt.dist,40),0),q=proj(p),lab=`${hunt.target==='lead'?'LEAD':hunt.target==='haunt'?'HAUNT':''} ${Math.round(hunt.dist)} m`;
       if(q&&q.x>0&&q.x<W){orbAt(p,.25,.3+.25*Math.sin(t*2.4));cx.save();cx.fillStyle='#bfffd9';cx.font='12px ui-monospace,monospace';cx.textAlign='center';cx.fillText(lab,q.x,q.y+22);cx.restore()}
@@ -272,8 +275,8 @@ function drawScene(t,level,lens){
       if(f&&T_().look.kind!=='none')occ.push({x:f.x,y:f.top+f.h*.5,rx:f.h*.16,ry:f.h*.5,k:clamp(G.vis*1.2,0,1)});
       if(G.state!=='charge'&&level>.25)edgeArrow([G.p[0],G.p[1],0],'#ffb627','')}
     if(G.state==='trapped'&&G.spec){const k=G.trapT/1.4,f=figRect();if(f){cx.save();cx.strokeStyle='rgba(255,210,120,.85)';cx.lineWidth=2.5;cx.globalCompositeOperation='lighter';
-      for(let i=0;i<6;i++){cx.beginPath();cx.moveTo(W/2+rand(-30,30),H+10);cx.quadraticCurveTo(rand(0,W),rand(0,H),f.x+(W/2-f.x)*k,f.top+f.h*.4+(H-f.top-f.h*.4)*k);cx.stroke()}cx.restore();
-      const T=T_(),cfg=G3.RIG[T.id],trap=O.F.map((v,i)=>v*.8-O.U[i]*.55);
+      if(MODE!=='bust')for(let i=0;i<6;i++){cx.beginPath();cx.moveTo(W/2+rand(-30,30),H+10);cx.quadraticCurveTo(rand(0,W),rand(0,H),f.x+(W/2-f.x)*k,f.top+f.h*.4+(H-f.top-f.h*.4)*k);cx.stroke()}cx.restore();
+      const T=T_(),cfg=G3.RIG[T.id],trap=BUST.trapPoint()||O.F.map((v,i)=>v*.8-O.U[i]*.55);
       if(!(cfg&&G3.pose('g',{body:cfg.body[hash(G.spec.id)%cfg.body.length],kind:T.look.kind,cfg,h:T.look.h||1.75,p:G.p,lift:G.lift,pose:'scream',vis:1-k*.6,tag:G.spec.id,face:'you',look:1,glitch:3,toward:{p:trap,k:k*k}},FDT))){
         const g=f;g.h*=Math.max(.05,1-k);g.x+=(W/2-g.x)*k;g.y+=(H-g.y)*k;if(T.look.kind!=='none')drawBody(g,poseJoints('scream',t),T.look,1-k*.7,t,lens)}}}
   }
@@ -297,7 +300,7 @@ function statusText(){
   const p=[`${pad(Math.round(O.h),3)}°${O.ok?(O.abs?'':' REL'):O.dragged?' DRAG':' NO GYRO'}`];
   if(MODE==='real')p.push(radarLive()?'RADAR LIVE':'RADAR OFF');else if(radarLive())p.push('RADAR ✓');
   if(MODE==='hunt')p.push(GPS.ok?`GPS ±${Math.round(GPS.acc)}m`:GPS.err?'GPS ERR':'GPS …');
-  p.push(`CONTAINED ${caps}`);return p.join(' · ');
+  p.push(MODE==='bust'?BUST.status():`CONTAINED ${caps}`);return p.join(' · ');
 }
 function drawHUD(t,level,full){
   const top=54,d=new Date(),m=10;cx.save();cx.textAlign='left';cx.font='13px ui-monospace,Menlo,monospace';cx.textBaseline='top';cx.shadowColor='#000';cx.shadowBlur=4;cx.fillStyle='#fff';
@@ -454,6 +457,11 @@ const BOX={on:false,freq:87.5,next:0,lastWord:0};
 function boxToggle(){auInit();BOX.on=!BOX.on;BOX.next=AU.ctx.currentTime+.05;if(BOX.on)logEv('Spirit box sweep started');buildCtl()}
 function boxStep(when,rate){
   const C=AU.ctx,dur=rate/1000*.8;noiseHit(dur,.32,'bandpass',rand(900,2200),when,true);  // AM static burst; the gaps between steps make the chop
+  const r=Math.random();
+  if(r<.12){const o=tone(rand(600,3000),dur*.9,.06,'sine',when);if(o)o.frequency.exponentialRampToValueAtTime(rand(300,4000),when+dur*.9)}  // a heterodyne whistle between stations
+  else if(r<.2){for(const f of pick([[262,330,392],[220,277,330],[196,247,294]]))tone(f*rand(.98,1.02),dur*.8,.035,'triangle',when)}  // a scrap of music
+  else if(r<.3){const n=C.createBufferSource(),f=C.createBiquadFilter(),g=C.createGain();n.buffer=AU.noise;f.type='bandpass';f.Q.value=6;f.frequency.setValueAtTime(pick([500,700,1100,1800]),when);f.frequency.linearRampToValueAtTime(pick([600,900,1300,2300]),when+dur);
+    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.35,when+.02);g.gain.linearRampToValueAtTime(0,when+dur);n.connect(f);f.connect(g);g.connect(AU.master);n.start(when,Math.random());n.stop(when+dur+.02)}  // a broadcaster's voice, chopped
   if(Math.random()<.32){const o=C.createOscillator(),f=C.createBiquadFilter(),g=C.createGain();o.type='sawtooth';o.frequency.setValueAtTime(rand(100,230),when);o.frequency.linearRampToValueAtTime(rand(100,260),when+dur*.6);
     f.type='bandpass';f.frequency.value=rand(500,1500);f.Q.value=5;g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(.18,when+.01);g.gain.linearRampToValueAtTime(0,when+dur*.6);
     o.connect(f);f.connect(g);g.connect(AU.master);o.start(when);o.stop(when+dur*.6+.02)}
@@ -562,6 +570,7 @@ function drawScope(t,dt,level){
 function hwStep(level){
   if(!canSend()||!started)return;
   if(G.scareT>0)return;  // the scare effect is already running on the board
+  if(BUST.hw())return;
   if(G.state==='charge'||G.beh==='chase'&&active())return hwOut('fx strobe 600 255 255 255');
   if(G.state==='trapped')return;
   if(DEV==='rem'&&DS.remN>0)return hwOut('fx alarm 700');
@@ -599,26 +608,27 @@ function buildCtl(){  // controls for the selected device
   if(DEV==='box')h=`<button id="cBox" class="${BOX.on?'on':''}">${BOX.on?'Stop':'Sweep'}</button>`;
   if(DEV==='evp')h=`<button id="cRec" class="${EVP.live?'on':''}">${EVP.live?'■ Stop':'● Rec 15 s'}</button><button id="cPlay" ${EVP.buf?'':'disabled'}>▶</button><button id="cRev" ${EVP.buf?'':'disabled'}>◀ Rev</button><button id="cSlow" ${EVP.buf?'':'disabled'}>Slow</button><button id="cSave" ${EVP.buf?'':'disabled'}>Save</button>`;
   if(DEV==='mel')h=`<button id="cLight" class="${DS.melLight?'on':''}">Red light</button><button id="cUnits">°${CFG.units==='F'?'C':'F'}</button>`;
-  if(devKind()==='cam'&&cam.torch)h+=`<button id="cTorch" class="${cam.torchOn?'on':''}">IR light</button>`;
+  if(devKind()==='cam')h+=cam.torch?`<button id="cTorch" class="${cam.torchOn?'on':''}">Light</button>`:`<button id="cFlash" class="${AMB.light?'on':''}">Flashlight</button>`;
   $('#ctlDyn').innerHTML=h;$('#boxRate').hidden=DEV!=='box';c.hidden=!h&&DEV!=='box';
   const on=(id,f)=>{const e=$('#'+id);if(e)e.onclick=f};
   on('cBox',boxToggle);on('cRec',evpRecord);on('cPlay',()=>evpPlay(false,1));on('cRev',()=>evpPlay(true,1));on('cSlow',()=>evpPlay(false,.6));on('cSave',evpSave);
-  on('cLight',()=>{DS.melLight=!DS.melLight;buildCtl()});on('cUnits',()=>{CFG.units=CFG.units==='F'?'C':'F';store.set('gh.units',CFG.units);buildCtl()});on('cTorch',()=>setTorch(!cam.torchOn));
+  on('cLight',()=>{DS.melLight=!DS.melLight;buildCtl()});on('cUnits',()=>{CFG.units=CFG.units==='F'?'C':'F';store.set('gh.units',CFG.units);buildCtl()});on('cTorch',()=>setTorch(!cam.torchOn));on('cFlash',()=>{AMB.toggleLight();buildCtl()});
 }
 window.usbUI=()=>{const b=$('#usbBtn');b.hidden=!canUSB&&!hubOK;b.classList.toggle('on',USB.on||radarLive());b.textContent=USB.on||radarLive()?'Radar ✓':'USB'};
 $('#usbBtn').onclick=usbConnect;
-function uiSync(){for(const b of document.querySelectorAll('#tabs button'))b.classList.toggle('on',b.dataset.mode===MODE);for(const id of['#trap','#provBtn','#calmBtn'])$(id).hidden=MODE==='real';usbUI()}
+function uiSync(){for(const b of document.querySelectorAll('#tabs button'))b.classList.toggle('on',b.dataset.mode===MODE);for(const id of['#trap','#provBtn','#calmBtn'])$(id).hidden=MODE==='real';$('#arBtn').hidden=!XRS.ok;$('#arBtn').classList.toggle('on',XRS.on);if(typeof BUST!=='undefined')BUST.ui();usbUI()}
 function setMode(m){
-  MODE=m;store.set('gh.mode',m);Object.assign(G,{state:'idle',spec:null,wait:m==='ghost'?rand(3,7):1e9,scareT:0});hunt.respawn=true;WORLD.cold=[];WORLD.orbs=[];WORLD.shadows=[];
+  MODE=m;store.set('gh.mode',m);Object.assign(G,{state:'idle',spec:null,wait:m==='ghost'||m==='bust'?rand(3,7):1e9,scareT:0});hunt.respawn=true;WORLD.cold=[];WORLD.orbs=[];WORLD.shadows=[];
   if(m==='hunt'){startGPS();if(started&&!O.abs&&O.ok)say('No compass on this device; direction to the target may be off.','warn')}
   if(m==='real')say(radarLive()?'Real sensors only. Turn slowly to map what\'s around you.':'Real mode needs the radar. Plug it in and tap USB.',radarLive()?'':'warn');
   if(m==='ghost')say('Baseline readings… monitoring.');
-  uiSync();
+  uiSync();if(m==='bust'){startGPS();BUST.enter()}
 }
 for(const b of document.querySelectorAll('#tabs button'))b.onclick=()=>setMode(b.dataset.mode);
 $('#recBtn').onclick=recToggle;
+$('#arBtn').onclick=()=>{auInit();XRS.toggle()};
 let trapDown=false;
-$('#trap').addEventListener('pointerdown',e=>{e.preventDefault();trapDown=true;if(!active())say('Nothing in range.','warn')});
+$('#trap').addEventListener('pointerdown',e=>{e.preventDefault();trapDown=true;auInit();if(!active()&&MODE!=='bust')say('Nothing in range.','warn')});
 for(const ev of['pointerup','pointercancel','pointerleave'])$('#trap').addEventListener(ev,()=>{trapDown=false});
 // desktop / no gyro: drag to look around
 {let px=null,py=null;cv.addEventListener('pointerdown',e=>{px=e.clientX;py=e.clientY;cv.setPointerCapture(e.pointerId)});
@@ -727,6 +737,8 @@ function renderJournal(){
       <h3>By kind</h3>${TYPES.map(T=>{const s=ST.types[T.id]||{seen:0,caught:0},mx=Math.max(1,...TYPES.map(t=>(ST.types[t.id]||{seen:0}).seen));return`<div class="bar2"><span>${s.ided?T.name:s.seen?'Unidentified':'???'}</span><i style="width:${s.seen/mx*100}%"></i><em>${s.seen} / ${s.caught}✓</em></div>`}).join('')}
       <div class="row"><button id="resetAll" class="danger">Reset all ghosts and stats</button></div>`;
     $('#resetAll').onclick=()=>{if(confirm('Erase every ghost, haunt, lead and stat?')){DB.ghosts=[];DB.leads=[];for(const k in ST)delete ST[k];ST.types={};caps=0;store.set('gh.caps',0);saveDB();store.set('gh.db',JSON.stringify(DB));renderJournal()}}}
+  if(JTAB==='hq')BUST.renderHQ(el);
+  if(JTAB==='review')REVIEW.render(el);
   if(JTAB==='vault'){const c=DB.ghosts.filter(g=>g.state==='captured'),f=DB.ghosts.filter(g=>g.state!=='captured');
     el.innerHTML=`<h3>Contained (${c.length})</h3>${c.map(ghostLine).join('')||'<p class="small">Nothing contained yet. Hold TRAP on an entity in your sights.</p>'}<h3>At large (${f.length})</h3>${f.map(ghostLine).join('')||'<p class="small">None.</p>'}`;
     for(const b of el.querySelectorAll('[data-rel]'))b.onclick=()=>{if(confirm('Release it? It will go back to its haunt, angry.')){release(b.dataset.rel);renderJournal()}}}
@@ -741,7 +753,7 @@ async function drawMap(){
   const haunts=DB.ghosts.filter(g=>g.home),leads=DB.leads.filter(l=>!l.done),note=$('#mapNote');
   if(!GPS.ok&&!haunts.length){note.textContent=GPS.err?'GPS: '+GPS.err:'Waiting for GPS… ghosts you find are saved where you found them.';return}
   note.textContent=`${haunts.length} haunt${haunts.length===1?'':'s'} · ${leads.length} open lead${leads.length===1?'':'s'}${GPS.ok?` · GPS ±${Math.round(GPS.acc)} m`:''}`;
-  const ok=await loadLeaflet(),box=$('#map'),Lf=window.L;  // window.L: Leaflet (plain L is the meter level)if(!box)return;
+  const ok=await loadLeaflet(),box=$("#map"),Lf=window.L;if(!box)return;  // window.L: Leaflet (plain L is the meter level)
   if(!ok)return drawMapFallback(box,haunts,leads);
   if(lmap){lmap.remove();lmap=null}
   const c=GPS.ok?[GPS.lat,GPS.lon]:[haunts[0].home.lat,haunts[0].home.lon];lmap=Lf.map(box,{zoomControl:true,attributionControl:true}).setView(c,18);
@@ -750,6 +762,7 @@ async function drawMap(){
   for(const g of haunts){const col=g.state==='captured'?'#888':hostCol(g.anger),T=typeOf(g);pts.push([g.home.lat,g.home.lon]);
     Lf.circle([g.home.lat,g.home.lon],{radius:g.home.r,color:col,weight:2,fillOpacity:.15}).addTo(lmap).bindPopup(`<b>${esc(g.identified?g.name:'Unknown entity')}</b><br>${g.identified?`${esc(T.name)} · lvl ${g.level} · ${hostility(g.anger)}`:'unidentified'}<br>${g.state==='captured'?'Contained':'At large'} · seen ${g.sightings}×`)}
   for(const l of leads){pts.push([l.lat,l.lon]);Lf.circleMarker([l.lat,l.lon],{radius:9,color:'#ffd36b',dashArray:'4 4',weight:2,fillOpacity:.05}).addTo(lmap).bindPopup(`Lead from ${esc(l.fromName)}<br>${fmtDate(l.ts)}`)}
+  BUST.mapMarks(Lf,lmap,pts);
   if(GPS.ok){Lf.circleMarker([GPS.lat,GPS.lon],{radius:7,color:'#4aa0ff',fillColor:'#4aa0ff',fillOpacity:.9}).addTo(lmap).bindPopup('You');pts.push([GPS.lat,GPS.lon])}
   if(pts.length>1)lmap.fitBounds(pts,{padding:[30,30],maxZoom:19});
 }
@@ -770,9 +783,9 @@ function drawMapFallback(box,haunts,leads){  // no map tiles (offline): plot aro
 let lastT=performance.now(),FDT=0;
 function frame(ts){
   const dt=Math.min(.1,(ts-lastT)/1000),t=ts/1000;lastT=ts;FDT=dt;
-  orientStep();fpx=FPX();listenerStep();
+  orientStep();fpx=FPX();listenerStep();AMB.step(dt);REVIEW.step(dt);
   const k=kit(),hwTrap=!!(k&&k.btn);
-  if(started){ST.time=(ST.time||0)+dt;hauntStep(dt);if(MODE==='hunt')huntStep(dt);if(staged())ghostStep(dt,trapDown||hwTrap);worldStep(dt);tempStep(dt);if(DEV==='ovilus')ovStep(t,dt)}
+  if(started){ST.time=(ST.time||0)+dt;hauntStep(dt);if(MODE==='hunt')huntStep(dt);if(staged())ghostStep(dt,MODE==='bust'?false:trapDown||hwTrap);BUST.step(dt,trapDown||hwTrap);worldStep(dt);tempStep(dt);if(DEV==='ovilus')ovStep(t,dt)}
   $('#trap').style.setProperty('--p',clamp(G.hold/(G.trapNeed||2),0,1));$('#trap').classList.toggle('hold',trapDown||hwTrap);
   const Lt=started?targetLevel():0,jitter=Lt>.05?(Math.random()-.5)*.08*Lt:0;L+=(Lt-L)*Math.min(1,dt*6);const level=clamp(L+jitter,0,1);
   if(AU.ctx){const C=AU.ctx;AU.master.gain.setTargetAtTime(CFG.vol,C.currentTime,.1);AU.dg.gain.setTargetAtTime(staged()?level*.2:0,C.currentTime,.15);AU.lp.frequency.setTargetAtTime(180+level*1300,C.currentTime,.2);
@@ -780,15 +793,15 @@ function frame(ts){
   boxUpdate();
   const kind=devKind(),lens=lensOf();
   if(kind==='scope'){drawScope(t,dt,level);drawHUD(t,level,false)}
-  else if(kind==='cam'){drawScene(t,level,lens);interference(level,t);crosshair(lens==='thermal'?spotTemp():undefined);if(lens==='thermal')thermalScale();
-    if(G.scareT>0)drawFace(1.15+(SCARE_T-G.scareT)*1.1,clamp(G.scareT/.25,0,1),lens);drawHUD(t,level,true);drawTape()}
+  else if(kind==='cam'){drawScene(t,level,lens);AMB.overlay(t,lens);interference(level,t);BUST.overlay(t);crosshair(lens==='thermal'?spotTemp():undefined);if(lens==='thermal')thermalScale();
+    if(G.scareT>0)drawFace(1.15+(SCARE_T-G.scareT)*1.1,clamp(G.scareT/.25,0,1),lens);drawHUD(t,level,true);BUST.hud(t);drawTape()}
   else{drawScene(t,level,'color');cx.fillStyle='rgba(0,0,0,.35)';cx.fillRect(0,0,W,H);if(DS.melLight&&DEV==='mel'){cx.save();cx.globalCompositeOperation='multiply';cx.fillStyle='#ff3030';cx.fillRect(0,0,W,H);cx.restore()}
     interference(level*.7,t);
-    ({k2:devK2,mel:devMel,rem:devRem,box:devBox_,ovilus:devOvilus,evp:devEVP}[DEV])(t,level,dt);
-    if(G.scareT>0)drawFace(1.15+(SCARE_T-G.scareT)*1.1,clamp(G.scareT/.25,0,1),'color');drawHUD(t,level,false)}
+    ({k2:devK2,pke:BUST.devPke,mel:devMel,rem:devRem,box:devBox_,ovilus:devOvilus,evp:devEVP}[DEV])(t,level,dt);
+    BUST.overlay(t);if(G.scareT>0)drawFace(1.15+(SCARE_T-G.scareT)*1.1,clamp(G.scareT/.25,0,1),'color');drawHUD(t,level,false);BUST.hud(t)}
   fxStep(dt);hwStep(level);
   if(ts-(frame.u||0)>1000){frame.u=ts;usbUI();if(!$('#start').hidden)renderHW()}
-  requestAnimationFrame(frame);
+  if(!XRS.on)requestAnimationFrame(frame);  // in walk-around AR, ARCore's frames drive it
 }
 resize();buildDock();buildCtl();uiSync();renderLog();pollHub();usbAuto();requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
