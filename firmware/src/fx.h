@@ -4,40 +4,45 @@
 //
 // Setup (pins are ESP32 GPIO numbers):
 //   hw rgb <r> <g> <b> [anode]   RGB LED, KY-016 / KY-009 (anode=1 for common-anode LEDs)
+//   hw rgb2 <r> <g> <b> [anode]  a second RGB LED; it shows the same colours as the first
 //   hw led2 <red> <green>        two-colour LED, KY-011 / KY-029
 //   hw flash <pin>               7-colour auto-flash LED, KY-034 (on/off only)
 //   hw hall <pin>                analog Hall magnetic sensor, KY-035 / KY-024 AO (ADC1 pin)
 //   hw temp <pin> [invert]       analog thermistor, KY-013 (ADC1 pin; invert=1 if it reads backwards)
+//   hw dht <pin>                 DHT11 temperature + humidity, KY-015 (takes over "tc" from the thermistor)
 //   hw sound <pin>               sound sensor analog out, KY-037 / KY-038 AO (ADC1 pin)
 //   hw vib <pin>                 vibration / knock / tilt switch, KY-002 / KY-031 / KY-020 (digital, not GPIO34-39)
 //   hw btn <pin>                 push button, KY-004 (to GND when pressed): a physical TRAP button (not GPIO34-39)
 //   hw touch <pin>               touch sensor digital out, KY-036: a REM-pod style antenna
 //   hw light <pin>               photoresistor, KY-018 (ADC1 pin)
-//   hw ir <pin>                  IR obstacle sensor, KY-032 (LOW when something's in front): a tripwire
+//   hw ir <pin>                  IR obstacle / reflection sensor, KY-032 or TCRT5000 line sensor (LOW when something's in front)
 //   hw off <name> | hw clear
 // Live control (the app drives the lights for 4 s after each command, then the radar does again):
 //   led <r> <g> <b> | led2 <red> <green> | flash <0|1> | beep <hz> <ms>
 //   fx <off|flicker|strobe|pulse|scare|alarm> [ms] [r g b]
-// Readings add "hw":{"hall","hd","tc","snd","vib","btn","tch","lux","ir"} to the radar JSON; status adds "hwc" (the setup).
+// Readings add "hw":{"hall","hd","tc","hum","snd","vib","btn","tch","lux","ir"} to the radar JSON; status adds "hwc" (the setup).
 #pragma once
 #include <Arduino.h>
 #include <Preferences.h>
 #include <cmath>
+#include <DHT.h>
 
 namespace fx {
 
 struct Cfg {
-  uint8_t ver = 2;
+  uint8_t ver = 3;
   int8_t r = -1, g = -1, b = -1, anode = 0;
   int8_t l2r = -1, l2g = -1;
   int8_t flash = -1;
   int8_t hall = -1, temp = -1, tempInv = 0, snd = -1, vib = -1;
   int8_t btn = -1, touch = -1, light = -1, ir = -1;
+  int8_t r2 = -1, g2 = -1, b2 = -1, anode2 = 0, dht = -1;
 };
 
 static Cfg cfg;
 // LEDC: channel 0 is the buzzer (its timer changes frequency), so the LEDs use channels 2-6.
 static const int CH_BUZZ = 0, CH_R = 2, CH_G = 3, CH_B = 4, CH_L2R = 5, CH_L2G = 6;
+static const int CH_R2 = 8, CH_G2 = 9, CH_B2 = 10;  // low-speed LEDC group, own timers
 
 enum Effect { E_NONE, E_FLICKER, E_STROBE, E_PULSE, E_SCARE, E_ALARM };
 static Effect eff = E_NONE;
@@ -52,6 +57,9 @@ static int sndMin = 4095, sndMax = 0, sndP2P = 0;
 static uint32_t sndT = 0, hallT = 0, tempT = 0, hallSince = 0;
 static volatile uint32_t vibCount = 0;
 static uint32_t vibSent = 0;
+static DHT *dht = nullptr;
+static float humidity = NAN;
+static uint32_t dhtT = 0;
 static bool touchLatch = false, irLatch = false;
 static int lightRaw = 0;
 
@@ -68,10 +76,13 @@ static bool okIn(int p) { return okOut(p) || okAdc(p); }
 // ---- outputs ----
 static void pwm(int8_t pin, int ch, uint8_t v) {
   if (pin < 0) return;
-  bool inv = cfg.anode && ch <= CH_B;
+  bool inv = (ch >= CH_R && ch <= CH_B && cfg.anode) || (ch >= CH_R2 && ch <= CH_B2 && cfg.anode2);
   ledcWrite(ch, inv ? 255 - v : v);
 }
-static void rgb(uint8_t r, uint8_t g, uint8_t b) { pwm(cfg.r, CH_R, r); pwm(cfg.g, CH_G, g); pwm(cfg.b, CH_B, b); }
+static void rgb(uint8_t r, uint8_t g, uint8_t b) {
+  pwm(cfg.r, CH_R, r); pwm(cfg.g, CH_G, g); pwm(cfg.b, CH_B, b);
+  pwm(cfg.r2, CH_R2, r); pwm(cfg.g2, CH_G2, g); pwm(cfg.b2, CH_B2, b);
+}
 static void led2(uint8_t r, uint8_t g) { pwm(cfg.l2r, CH_L2R, r); pwm(cfg.l2g, CH_L2G, g); }
 static void flashLed(bool on) { if (cfg.flash >= 0) digitalWrite(cfg.flash, on ? HIGH : LOW); }
 static void buzz(uint32_t hz) { ledcWriteTone(CH_BUZZ, hz); }
@@ -91,6 +102,8 @@ static void releasePin(int8_t pin, bool isPwm) {
 }
 static void release(const Cfg &c) {
   releasePin(c.r, true); releasePin(c.g, true); releasePin(c.b, true);
+  releasePin(c.r2, true); releasePin(c.g2, true); releasePin(c.b2, true); releasePin(c.dht, false);
+  if (dht) { delete dht; dht = nullptr; }
   releasePin(c.l2r, true); releasePin(c.l2g, true);
   releasePin(c.flash, false); releasePin(c.hall, false); releasePin(c.temp, false); releasePin(c.snd, false);
   releasePin(c.btn, false); releasePin(c.touch, false); releasePin(c.light, false); releasePin(c.ir, false);
@@ -98,6 +111,8 @@ static void release(const Cfg &c) {
 }
 static void apply() {
   attachPwm(cfg.r, CH_R); attachPwm(cfg.g, CH_G); attachPwm(cfg.b, CH_B);
+  attachPwm(cfg.r2, CH_R2); attachPwm(cfg.g2, CH_G2); attachPwm(cfg.b2, CH_B2);
+  if (cfg.dht >= 0) { dht = new DHT(cfg.dht, DHT11); dht->begin(); humidity = NAN; tempC = NAN; dhtT = millis(); }
   attachPwm(cfg.l2r, CH_L2R); attachPwm(cfg.l2g, CH_L2G);
   if (cfg.flash >= 0) { pinMode(cfg.flash, OUTPUT); digitalWrite(cfg.flash, LOW); }
   if (cfg.hall >= 0) { pinMode(cfg.hall, INPUT); hallBase = -1; hallSince = millis(); }
@@ -113,7 +128,7 @@ static void load(Preferences &prefs) {
   if (prefs.getBytesLength("hw") == sizeof(Cfg)) {
     Cfg c;
     prefs.getBytes("hw", &c, sizeof(Cfg));
-    if (c.ver == 2) cfg = c;
+    if (c.ver == 3) cfg = c;
   }
   apply();
 }
@@ -144,6 +159,8 @@ static int handle(const String &verb, const String &rest, String &msg, Preferenc
     else if (what == "off") {
       String w = n > 1 ? tok[1] : "";
       if (w == "rgb") c.r = c.g = c.b = -1;
+      else if (w == "rgb2") c.r2 = c.g2 = c.b2 = -1;
+      else if (w == "dht") c.dht = -1;
       else if (w == "led2") c.l2r = c.l2g = -1;
       else if (w == "flash") c.flash = -1;
       else if (w == "hall") c.hall = -1;
@@ -158,6 +175,12 @@ static int handle(const String &verb, const String &rest, String &msg, Preferenc
     } else if (what == "rgb") {
       if (n < 4 || !okOut(num(1, -1)) || !okOut(num(2, -1)) || !okOut(num(3, -1))) { msg = "hw rgb <r> <g> <b> [anode]: pins must be free output pins"; return 0; }
       c.r = num(1, -1); c.g = num(2, -1); c.b = num(3, -1); c.anode = num(4, 0) ? 1 : 0;
+    } else if (what == "rgb2") {
+      if (n < 4 || !okOut(num(1, -1)) || !okOut(num(2, -1)) || !okOut(num(3, -1))) { msg = "hw rgb2 <r> <g> <b> [anode]: pins must be free output pins"; return 0; }
+      c.r2 = num(1, -1); c.g2 = num(2, -1); c.b2 = num(3, -1); c.anode2 = num(4, 0) ? 1 : 0;
+    } else if (what == "dht") {
+      if (!okOut(num(1, -1))) { msg = "hw dht <pin>: needs a normal I/O pin (not 34-39)"; return 0; }
+      c.dht = num(1, -1);
     } else if (what == "led2") {
       if (n < 3 || !okOut(num(1, -1)) || !okOut(num(2, -1))) { msg = "hw led2 <red> <green>: pins must be free output pins"; return 0; }
       c.l2r = num(1, -1); c.l2g = num(2, -1);
@@ -181,7 +204,7 @@ static int handle(const String &verb, const String &rest, String &msg, Preferenc
       c.vib = num(1, -1);
     } else { msg = "unknown module"; return 0; }
     // the same pin can't do two jobs
-    int8_t used[] = {c.r, c.g, c.b, c.l2r, c.l2g, c.flash, c.hall, c.temp, c.snd, c.vib, c.btn, c.touch, c.light, c.ir};
+    int8_t used[] = {c.r, c.g, c.b, c.l2r, c.l2g, c.flash, c.hall, c.temp, c.snd, c.vib, c.btn, c.touch, c.light, c.ir, c.r2, c.g2, c.b2, c.dht};
     const int nUsed = sizeof(used) / sizeof(used[0]);
     for (int i = 0; i < nUsed; i++)
       for (int j = i + 1; j < nUsed; j++)
@@ -292,7 +315,14 @@ static void tick(bool present, int energy) {
     float k = now - hallSince < 2000 ? 0.2f : fabsf(hallRaw - hallBase) < 60 ? 0.002f : 0.0003f;
     hallBase = hallBase < 0 ? hallRaw : hallBase + (hallRaw - hallBase) * k;
   }
-  if (cfg.temp >= 0 && now - tempT >= 1000) {
+  // DHT11: temperature + humidity (one reading every 2 s is all it can do)
+  if (dht && now - dhtT >= 2000) {
+    dhtT = now;
+    float h = dht->readHumidity(), c = dht->readTemperature();
+    if (!std::isnan(h)) humidity = h;
+    if (!std::isnan(c)) tempC = c;
+  }
+  if (cfg.temp >= 0 && !dht && now - tempT >= 1000) {
     tempT = now;
     long sum = 0;
     for (int i = 0; i < 8; i++) sum += analogRead(cfg.temp);
@@ -327,7 +357,7 @@ static void quiet() {
   effBuzz = false;
 }
 
-static bool anySensor() { return cfg.hall >= 0 || cfg.temp >= 0 || cfg.snd >= 0 || cfg.vib >= 0 || cfg.btn >= 0 || cfg.touch >= 0 || cfg.light >= 0 || cfg.ir >= 0; }
+static bool anySensor() { return cfg.hall >= 0 || cfg.temp >= 0 || cfg.dht >= 0 || cfg.snd >= 0 || cfg.vib >= 0 || cfg.btn >= 0 || cfg.touch >= 0 || cfg.light >= 0 || cfg.ir >= 0; }
 
 static void appendReading(String &s, bool consume = true) {
   if (!anySensor()) return;
@@ -335,7 +365,8 @@ static void appendReading(String &s, bool consume = true) {
   bool first = true;
   auto key = [&](const char *k) { if (!first) s += ','; first = false; s += '"'; s += k; s += "\":"; };
   if (cfg.hall >= 0) { key("hall"); s += hallRaw; key("hd"); s += (int)(hallRaw - (hallBase < 0 ? hallRaw : hallBase)); }
-  if (cfg.temp >= 0) { key("tc"); if (std::isnan(tempC)) s += "null"; else s += String(tempC, 1); }
+  if (cfg.temp >= 0 || cfg.dht >= 0) { key("tc"); if (std::isnan(tempC)) s += "null"; else s += String(tempC, 1); }
+  if (cfg.dht >= 0) { key("hum"); if (std::isnan(humidity)) s += "null"; else s += String(humidity, 0); }
   if (cfg.snd >= 0) { key("snd"); s += sndP2P; }
   if (cfg.vib >= 0) { uint32_t v = vibCount; key("vib"); s += v - vibSent; if (consume) vibSent = v; }
   if (cfg.btn >= 0) { key("btn"); s += digitalRead(cfg.btn) == LOW ? 1 : 0; }
@@ -358,6 +389,8 @@ static void appendStatus(String &s) {
   s += ",\"touch\":"; s += cfg.touch;
   s += ",\"light\":"; s += cfg.light;
   s += ",\"ir\":"; s += cfg.ir;
+  s += ",\"rgb2\":["; s += cfg.r2; s += ','; s += cfg.g2; s += ','; s += cfg.b2; s += ','; s += cfg.anode2; s += ']';
+  s += ",\"dht\":"; s += cfg.dht;
   s += '}';
 }
 
