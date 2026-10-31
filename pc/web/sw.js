@@ -1,4 +1,4 @@
-// Offline support for the installed phone app (GitHub Pages only; the hub and the ESP32 don't register it).
+// Offline support for the installed phone app (GitHub Pages and Vercel only; the hub and the ESP32 don't register it).
 // The dashboard itself is network-first so updates show up right away; three.js and the 3D characters
 // never change, so they're cache-first.
 const CACHE = 'humotion-v6';
