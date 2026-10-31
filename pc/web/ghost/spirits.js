@@ -130,7 +130,7 @@ const towardMe=s=>{const d=gDist()||1;return[-G.p[0]/d*s,-G.p[1]/d*s,0]};
 function attackStart(){if(G.state!=='active')return;G.state='charge';G.bs.c=0;say(pick(['IT\'S COMING!','THERE!','LOOK OUT!']),'alert');growl(G.p);whoosh(1.1,G.p);logEv(`${nm()} attacked`);stat('attacks')}
 function contact(){
   G.state='gone';G.cool=rand(8,16);G.anger=Math.max(G.spec.baseAnger,G.anger-25);G.spec.attacks++;
-  if(CFG.scares){G.scareT=.6;scream();buzz([300,60,500,60,250]);if(window.scareFX)scareFX();hwOut('fx scare 1600',true)}else whoosh(.8);
+  if(CFG.scares){G.scareT=.9;scream();buzz([300,60,500,60,250]);if(window.scareFX)scareFX();hwOut('fx scare 1600',true)}else whoosh(.8);
   say('…it\'s gone.','warn');logEv('Contact. Readings dropped to zero');stat('scares');
 }
 const nm=()=>G.spec&&G.spec.identified?G.spec.name:'Unknown entity';
