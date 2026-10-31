@@ -804,4 +804,4 @@ function frame(ts){
   if(!XRS.on)requestAnimationFrame(frame);  // in walk-around AR, ARCore's frames drive it
 }
 resize();buildDock();buildCtl();uiSync();renderLog();pollHub();usbAuto();requestAnimationFrame(frame);
-if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.(github\.io|vercel\.app)$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});

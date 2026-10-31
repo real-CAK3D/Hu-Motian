@@ -351,7 +351,7 @@ function usbUI(){
   usbCardUI();
 }
 function usbCardUI(){
-  $('#ghostLink').hidden=!(S.hub||USB.on||/\.github\.io$/.test(location.hostname));  // the ESP32 itself doesn't serve ghost.html
+  $('#ghostLink').hidden=!(S.hub||USB.on||/\.(github\.io|vercel\.app)$/.test(location.hostname));  // the ESP32 itself doesn't serve ghost.html
   const show=!USB.on&&!S.ok&&(S.fails||0)>=3;if(!show){if(!USB.on&&S.ok)$('#usbCard').hidden=true;return}
   const el=$('#usbTxt');
   if(!el.dataset.err)el.innerHTML=canUSB
@@ -364,7 +364,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 $('#btnUsb').onclick=$('#btnUsb2').onclick=()=>{$('#usbTxt').dataset.err='';usbConnect()};
 if(canWebUSB){navigator.usb.addEventListener('connect',()=>setTimeout(usbAuto,600));navigator.usb.addEventListener('disconnect',e=>{if(e.device===USB.dev)usbLost()})}
 if(canSerial){navigator.serial.addEventListener('connect',()=>setTimeout(usbAuto,600));navigator.serial.addEventListener('disconnect',e=>{if(e.target===USB.port)usbLost()})}
-if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker'in navigator&&location.protocol==='https:'&&/\.(github\.io|vercel\.app)$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 // ================================================================ room model
 // Zone type: explicit (z.k) or guessed from the name. Drives furniture, poses and the location prior.

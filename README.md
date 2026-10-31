@@ -5,7 +5,7 @@ A human radar built on an **ESP32** and an **HLK-LD2410B** 24 GHz mmWave presenc
 It runs three ways, all showing the same dashboard:
 
 - **PC hub** (USB): `pc/radar.py` reads the board over USB, keeps a 24-hour activity history, beeps on arrival, and serves the dashboard. Put it behind Tailscale Serve to check it from your phone anywhere.
-- **Phone app** (USB cable): plug the ESP32 straight into an Android phone and open the app at https://real-cak3d.github.io/Hu-Motian/. No PC, no WiFi. See [Phone app](#phone-app-usb-cable).
+- **Phone app** (USB cable): plug the ESP32 straight into an Android phone and open the app at https://hu-motian.vercel.app/. No PC, no WiFi. See [Phone app](#phone-app-usb-cable).
 - **Standalone** (WiFi): the ESP32 serves the dashboard itself at `http://humanradar.local/`. The 3D view needs internet to load three.js; without it, the page falls back to a 2D floor plan.
 
 ## Hardware
@@ -35,7 +35,8 @@ Pin 1 is marked "1" on the radar's antenna side. TX/RX crossed the wrong way and
 
 The dashboard also works as an installable phone app that reads the radar straight from a USB cable. It uses the same JSON lines the PC hub reads, so the firmware doesn't change.
 
-1. Open **https://real-cak3d.github.io/Hu-Motian/** in **Chrome on Android**. Tap ⋮ → **Add to Home screen** (or **Install app**).
+1. Open **https://hu-motian.vercel.app/** in **Chrome on Android**. Tap ⋮ → **Add to Home screen** (or **Install app**).
+   (The same app is also at https://real-cak3d.github.io/Hu-Motian/. Both update automatically from this repo.)
 2. Plug the ESP32 into the phone. The phone powers the board and the radar.
    - Use a USB-C to USB-C cable, or an OTG adapter plus your normal USB cable.
    - If the board's red power light stays off with a USB-C to USB-C cable, use an OTG adapter with a USB-A to USB-C cable. Some DevKits' USB-C ports only take power from USB-A.
@@ -55,7 +56,7 @@ After that it reconnects by itself whenever you plug the board in with the app o
 
 ## Ghost Hunter (paranormal investigation kit)
 
-`pc/web/ghost.html` (+ `pc/web/ghost/*.js`) turns the phone, radar and kit modules into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://real-cak3d.github.io/Hu-Motian/ghost.html.
+`pc/web/ghost.html` (+ `pc/web/ghost/*.js`) turns the phone, radar and kit modules into a ghost-hunting kit. Open it from **👻 Ghost mode** in the dashboard, from the app icon's long-press shortcut, or at https://hu-motian.vercel.app/ghost.html.
 
 **Devices** (pick one from the bar at the bottom)
 
