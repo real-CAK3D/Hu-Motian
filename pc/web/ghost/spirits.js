@@ -99,7 +99,7 @@ function summon(spec,bear,dist,resident){
     dart:null,coldT:1,stepT:0,evT:rand(4,9),resident:!!resident,pointBear:null,lookT:0,lookHist:[],at:GPS.ok?[GPS.lat,GPS.lon]:null});
   G.anchor=[G.p[0],G.p[1]];pickBehavior();
   say(resident?'Readings… something lives here.':MODE==='hunt'?'It\'s here. Look around…':'EMF fluctuation detected… sweep slowly.');
-  logEv(`${resident?'Returned to the haunt of':'EMF spike'} ${resident&&spec.identified?spec.name:'an unknown entity'} at ${Math.round(((bear%360)+360)%360)}°`);
+  const deg=Math.round(((bear%360)+360)%360);logEv(resident?`Back at the haunt of ${spec.identified?spec.name:'an unknown entity'} (${deg}°)`:`EMF spike detected at ${deg}°`);
 }
 function dismiss(msg){if(!active()&&G.state!=='trapped')return;G.state='idle';G.wait=rand(15,40);G.spec=null;if(msg)say(msg)}
 function spawnNew(bear,dist){summon(makeGhost(),bear,dist,false)}

@@ -83,6 +83,9 @@ const RD={last:0,r:null,ms:-1,blips:[],lastLog:0,st:null,hwc:null,vib:0,vibT:0,t
 function onReading(r){
   const was=RD.r&&RD.r.s;RD.r=r;RD.last=Date.now();
   const hw=r.hw;
+  // real temperature drops (a cold spot is a classic sign) from the DHT11 or thermistor
+  if(hw&&hw.tc!=null){const now=Date.now();RD.tH=(RD.tH||[]).filter(e=>now-e.t<60000);RD.tH.push({t:now,c:hw.tc});const mx=Math.max(...RD.tH.map(e=>e.c));
+    if(MODE==='real'&&mx-hw.tc>=1.5&&now-(RD.tDropT||0)>60000){RD.tDropT=now;logEv(`Temperature fell ${(mx-hw.tc).toFixed(1)}°C in under a minute`)}}
   if(hw&&hw.vib){RD.vib+=hw.vib;RD.vibT=Date.now();if(MODE==='real')logEv(`Vibration sensor triggered (${hw.vib})`)}
   if(hw&&hw.tch){if(Date.now()-RD.tchT>3000&&MODE==='real')logEv('Touch antenna triggered');RD.tchT=Date.now()}
   if(hw&&hw.ir){if(Date.now()-RD.irT>3000&&MODE==='real')logEv('IR tripwire broken');RD.irT=Date.now()}

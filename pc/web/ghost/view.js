@@ -332,10 +332,11 @@ function devMel(t,level){
   cx.font=`bold ${Math.round(lh*.26)}px ui-monospace,monospace`;cx.textAlign='right';
   cx.fillText(realHall?String(Math.abs(k.hd)):MODE==='real'&&!realHall?(radarTarget()?v.toFixed(1):'0.0'):v.toFixed(1),lx+lw-46,ly+lh*.42);cx.font='12px ui-monospace,monospace';cx.fillText(realHall?'ADC':'mG',lx+lw-10,ly+lh*.42);
   const tc=TEMP.amb;cx.font=`bold ${Math.round(lh*.26)}px ui-monospace,monospace`;cx.fillText(tc==null?'--.-':(CFG.units==='F'?tc*9/5+32:tc).toFixed(1),lx+lw-46,ly+lh*.92);cx.font='12px ui-monospace,monospace';cx.fillText('°'+CFG.units,lx+lw-10,ly+lh*.92);
+  if(MODE==='real'&&k&&k.hum!=null){cx.textAlign='left';cx.font='11px ui-monospace,monospace';cx.fillStyle='#1d2a16';cx.fillText(`HUM ${Math.round(k.hum)}%`,lx+10,ly+lh-8)}
   const alarm=v>=2&&!realHall||realHall&&Math.abs(k.hd)>25;
   cx.textAlign='left';cx.font='10px ui-monospace,monospace';cx.fillStyle=alarm&&(t*4|0)%2?'#1d2a16':'rgba(29,42,22,.25)';cx.fillText('▲ RT-EMF ALARM',lx+10,ly+lh*.5-6);
   led(x+w-30,y+h*.62+10,7,'#ff2020',on);cx.fillStyle='#999';cx.font='10px ui-monospace,monospace';cx.textAlign='right';cx.fillText('RED LIGHT',x+w-44,y+h*.62+14);
-  cx.textAlign='center';cx.fillStyle='#ccc';cx.font='bold 15px ui-sans-serif,system-ui';cx.fillText('EMF · TEMP',x+w/2,y+h*.82);cx.font='10px ui-monospace,monospace';cx.fillStyle='#777';cx.fillText(staged()?'source: staged':'source: '+(realHall?'Hall sensor':'radar')+(realTemp()!=null?' + thermistor':''),x+w/2,y+h-12);
+  cx.textAlign='center';cx.fillStyle='#ccc';cx.font='bold 15px ui-sans-serif,system-ui';cx.fillText('EMF · TEMP',x+w/2,y+h*.82);cx.font='10px ui-monospace,monospace';cx.fillStyle='#777';cx.fillText(staged()?'source: staged':'source: '+(realHall?'Hall sensor':'radar')+(realTemp()!=null?(k&&k.hum!=null?' + DHT11':' + thermistor'):''),x+w/2,y+h-12);
   if(alarm&&AU.ctx&&t-DS.melBeep>Math.max(.12,.9-level)){DS.melBeep=t;tone(2900,.05,.12,'square')}
 }
 function devRem(t,level,dt){
@@ -592,20 +593,22 @@ $('#oVoices').onchange=e=>{CFG.voices=e.target.checked;store.set('gh.voices',CFG
 $('#oZoom').oninput=e=>{CFG.zoom=+e.target.value;store.set('gh.zoom',CFG.zoom)};
 // hardware setup (kit modules on the ESP32)
 const HWMODS=[
-  {k:'rgb',name:'RGB LED (3-colour)',hint:'KY-016 / KY-009. R, G, B pins; "−" to GND',pins:[['R',32],['G',33],['B',27]],anode:true,test:'fx strobe 1200 255 60 255'},
+  {k:'rgb',name:'RGB LED',hint:'KY-016 (5 mm LED). Pins on the board: "−" to GND, R, G, B to the GPIOs below',pins:[['R',32],['G',33],['B',27]],anode:true,test:'fx strobe 1200 255 60 255'},
+  {k:'rgb2',name:'2nd RGB LED',hint:'KY-009 (small square "3_Color" LED). "−" to GND, R, G, B below. Shows the same colours as the first',pins:[['R',19],['G',18],['B',5]],anode:true,test:'fx alarm 1500'},
   {k:'led2',name:'2-colour LED',hint:'KY-011 / KY-029. Red and green pins; "−" to GND',pins:[['Red',22],['Green',23]],test:'fx flicker 1200'},
-  {k:'flash',name:'7-colour flash LED',hint:'KY-034. Signal pin; "−" to GND. It cycles colours by itself',pins:[['S',19]],test:'flash 1'},
+  {k:'flash',name:'7-colour flash LED',hint:'KY-034. Signal pin; "−" to GND. It cycles colours by itself',pins:[['S',21]],test:'flash 1'},
   {k:'buzz',name:'Buzzer',hint:'Built in on GPIO25 (active or passive buzzer module: S to GPIO25, "−" to GND)',pins:[],fixed:true,test:'beep 1800 250'},
   {k:'hall',name:'Hall magnetic sensor',hint:'KY-035 / KY-024 analog out (AO). Power it from 3V3, not 5 V',pins:[['AO',34]],sensor:'hd'},
+  {k:'dht',name:'Temperature + humidity (DHT11)',hint:'KY-015, blue grille. "−" to GND, middle pin to 3V3, "S" to the GPIO below. Takes over from the thermistor',pins:[['S',26]],sensor:'tc'},
   {k:'temp',name:'Thermistor (temperature)',hint:'KY-013. Power from 3V3. Tick "reads backwards" if it gets colder when you warm it',pins:[['S',35]],inv:true,sensor:'tc'},
   {k:'sound',name:'Sound sensor',hint:'KY-037 / KY-038 analog out (AO). Power from 3V3',pins:[['AO',39]],sensor:'snd'},
-  {k:'vib',name:'Vibration / knock / tilt',hint:'KY-002 / KY-031 / KY-020 signal pin',pins:[['S',18]],sensor:'vib'},
-  {k:'btn',name:'Push button = TRAP',hint:'KY-004. Hold it to trap, same as the TRAP button on screen',pins:[['S',13]],sensor:'btn'},
-  {k:'touch',name:'Touch antenna',hint:'KY-036 digital out (DO). Sets off the REM pod in Real mode. Power from 3V3',pins:[['DO',14]],sensor:'tch'},
+  {k:'vib',name:'Vibration / knock / tilt',hint:'KY-002 / KY-031 / KY-020 signal pin (not GPIO34-39)',pins:[['S',14]],sensor:'vib'},
+  {k:'btn',name:'Push button = TRAP',hint:'KY-004. Hold it to trap, same as the TRAP button on screen (not GPIO34-39)',pins:[['S',15]],sensor:'btn'},
+  {k:'touch',name:'Touch antenna',hint:'KY-036 digital out (DO). Sets off the REM pod in Real mode. Power from 3V3',pins:[['DO',39]],sensor:'tch'},
   {k:'light',name:'Light sensor',hint:'KY-018 photoresistor. Logs sudden light changes in Real mode. Power from 3V3',pins:[['S',36]],sensor:'lux'},
-  {k:'ir',name:'IR tripwire',hint:'KY-032 obstacle sensor digital out. Aim it across a doorway. Power from 3V3',pins:[['OUT',26]],sensor:'ir'}];
+  {k:'ir',name:'IR hand sensor / tripwire',hint:'TCRT5000 line sensor (GND, OUT, VCC) or KY-032. VCC to 3V3. The line sensor only sees a few cm: reaching toward it sets off the REM pod in Real mode. Turn its blue knob to set the distance',pins:[['OUT',13]],sensor:'ir'}];
 function hwState(m){const c=RD.hwc;if(!c)return null;const v=c[m.k==='buzz'?'':m.k];if(m.fixed)return'GPIO25';if(v==null)return null;
-  const pins=Array.isArray(v)?(m.k==='rgb'?v.slice(0,3):m.k==='temp'?v.slice(0,1):v):[v];return pins.some(p=>p<0)?null:'GPIO'+pins.join(', ')}
+  const pins=Array.isArray(v)?(m.k==='rgb'||m.k==='rgb2'?v.slice(0,3):m.k==='temp'?v.slice(0,1):v):[v];return pins.some(p=>p<0)?null:'GPIO'+pins.join(', ')}
 window.renderHW=()=>{
   const el=$('#hwList');if(!el)return;const ok=canSend();
   $('#hwNote').textContent=ok?(RD.hwc?'Connected. Set the pins you wired, then Enable. Settings are saved on the board.':'Connected, but this firmware doesn\'t report kit modules yet. Re-flash it with the latest version.'):'Connect the radar (USB button) to set up kit modules.';

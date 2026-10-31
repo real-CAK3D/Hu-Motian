@@ -141,18 +141,20 @@ Set them up in **⚙ → Hardware** while the radar is connected; the board save
 
 | Module | Kit part | ESP32 pins |
 |---|---|---|
-| RGB LED | KY-016 / KY-009 | R GPIO32, G GPIO33, B GPIO27 |
+| RGB LED | KY-016 (5 mm LED, pins − R G B) | R GPIO32, G GPIO33, B GPIO27 |
+| 2nd RGB LED (mirrors the first) | KY-009 (SMD "3_Color", pins − R G B) | R GPIO19, G GPIO18, B GPIO5 |
+| Temperature + humidity | DHT11 / KY-015 (blue grille) | S to GPIO26, middle pin to 3V3 |
 | 2-colour LED | KY-011 / KY-029 | red GPIO22, green GPIO23 |
-| 7-colour flash LED | KY-034 | GPIO19 |
+| 7-colour flash LED | KY-034 | GPIO21 |
 | Buzzer | KY-006 / KY-012 | GPIO25 (built in) |
 | Hall magnetic sensor | KY-035 / KY-024 (AO) | GPIO34 |
 | Thermistor | KY-013 | GPIO35 |
 | Sound sensor | KY-037 / KY-038 (AO) | GPIO39 (VN) |
-| Vibration / knock / tilt | KY-002 / KY-031 / KY-020 | GPIO18 |
-| Push button (physical TRAP) | KY-004 | GPIO13 |
-| Touch antenna (REM pod) | KY-036 (DO) | GPIO14 |
+| Vibration / knock / tilt | KY-002 / KY-031 / KY-020 | GPIO14 |
+| Push button (physical TRAP) | KY-004 | GPIO15 |
+| Touch antenna (REM pod) | KY-036 (DO) | GPIO39 (VN) |
 | Light sensor | KY-018 | GPIO36 (VP) |
-| IR tripwire | KY-032 (OUT) | GPIO26 |
+| IR hand sensor / tripwire | TCRT5000 line sensor or KY-032 (OUT) | GPIO13 |
 
 What they do:
 - **The lights follow the app.** The RGB LED shows the K-II colour, the REM pod gets a colour chase and two-tone alarm, there's a flicker when the ghost is near, a white strobe as it rushes you, and a scare blast.
