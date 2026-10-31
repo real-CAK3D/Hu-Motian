@@ -78,7 +78,7 @@ table.g{border-collapse:collapse;font-size:12px}table.g td,table.g th{padding:2p
   <span class="pill" id="state"><span class="dot" id="stateDot"></span><span id="stateTxt">Connecting…</span></span>
   <span class="pill small"><span class="dot" id="connDot"></span><span id="connTxt">–</span></span>
   <span class="sp"></span>
-  <button id="ghostLink" title="Ghost Hunter: AR ghost-hunting mode" onclick="location.href='ghost.html'" hidden>👻 Ghost mode</button>
+  <button id="ghostLink" title="Ghost Hunter: AR ghost-hunting mode" onclick="location.href=api('ghost.html')" hidden>👻 Ghost mode</button>
   <button id="btnUsb" title="Read the radar straight from a USB cable" hidden>Connect USB</button>
   <button id="btnSound" title="Beep in this window when someone arrives">Sound off</button>
   <button id="btnNotify" title="Notification on arrival" hidden>Notifications off</button>
@@ -306,7 +306,7 @@ async function openSerial(port){
   try{await port.setSignals({dataTerminalReady:false,requestToSend:false})}catch(e){}
   const enc=new TextEncoder(),dec=new TextDecoderStream(),closed=port.readable.pipeTo(dec.writable).catch(()=>{}),reader=dec.readable.getReader(),feed=lineSplitter();
   USB.port=port;
-  USB.write=async s=>{const w=port.writable.getWriter();try{await w.write(enc.encode(s))}finally{w.releaseLock()}};
+  let q=Promise.resolve();USB.write=s=>(q=q.then(async()=>{const w=port.writable.getWriter();try{await w.write(enc.encode(s))}finally{w.releaseLock()}}));
   USB.close=async()=>{try{await reader.cancel()}catch(e){}await closed;try{await port.close()}catch(e){}};
   USB.on=true;
   (async()=>{try{for(;;){const{value,done}=await reader.read();if(done)break;feed(value)}}catch(e){}usbLost()})();

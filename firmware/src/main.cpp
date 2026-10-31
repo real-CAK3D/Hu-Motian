@@ -33,7 +33,7 @@ WiFiManager wm;
 Preferences prefs;
 
 bool sensorOk = false, present = false, mdnsUp = false;
-uint32_t buzzOffAt = 0, linkBaud = 0, lastHitMs = 0, presenceSince = 0, holdMs = 3000;
+uint32_t linkBaud = 0, lastHitMs = 0, presenceSince = 0, holdMs = 3000;
 String wiringNote = "searching";
 int idle16 = -1, idle17 = -1;
 
@@ -98,7 +98,7 @@ void appendArr(String &s, const uint8_t *a, int n) {
   s += ']';
 }
 
-String readingJson() {
+String readingJson(bool consume = true) {
   const ld2410::Report &r = radar.rep;
   bool fresh = sensorOk && millis() - radar.lastFrameMs < 1000;
   String s;
@@ -117,7 +117,7 @@ String readingJson() {
     s += ",\"sg\":"; appendArr(s, r.stillGates, ld2410::GATES);
     if (r.light >= 0) { s += ",\"lt\":"; s += r.light; }
   }
-  fx::appendReading(s);
+  fx::appendReading(s, consume);
   s += '}';
   return s;
 }
@@ -292,7 +292,7 @@ void setupWeb() {
   });
   web.on("/data", [] {
     web.sendHeader("Cache-Control", "no-store");
-    web.send(200, "application/json", "{\"r\":" + readingJson() + ",\"st\":" + statusJson() + "}");
+    web.send(200, "application/json", "{\"r\":" + readingJson(false) + ",\"st\":" + statusJson() + "}");
   });
   web.on("/cmd", [] {
     String r = runCommand(web.arg("c"));
@@ -311,6 +311,7 @@ void setupWeb() {
 
 void setup() {
   Serial.setRxBufferSize(512);
+  Serial.setTxBufferSize(1024);  // println would otherwise wait on the 128-byte FIFO
   Serial.begin(115200);
   pinMode(PIN_OUT, INPUT_PULLDOWN);
   pinMode(PIN_LED, OUTPUT);
@@ -363,6 +364,7 @@ void loop() {
   static uint32_t lastProbe = 0;
   if ((!sensorOk || millis() - radar.lastFrameMs > 3000) && millis() - lastProbe > 10000) {
     lastProbe = millis();
+    fx::quiet();  // probing blocks the loop for a few seconds
     bool was = sensorOk;
     sensorOk = probeLink(300);
     if (sensorOk && !was) configureSensor();
@@ -373,12 +375,10 @@ void loop() {
   bool now = hit || (lastHitMs && millis() - lastHitMs < holdMs);
   if (now && !present) {
     presenceSince = millis();
-    ledcWriteTone(0, 2400);
-    buzzOffAt = millis() + 120;
+    fx::beep(2400, 120);
   }
   present = now;
   digitalWrite(PIN_LED, present);
-  if (buzzOffAt && millis() > buzzOffAt) { ledcWriteTone(0, 0); buzzOffAt = 0; }
   fx::tick(present, hit ? max(radar.rep.moveEnergy, radar.rep.stillEnergy) : 0);
 
   static uint32_t lastR = 0, lastSt = 0;
