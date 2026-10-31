@@ -79,6 +79,16 @@ The camera devices draw a found-footage overlay: REC, timestamp, battery, temper
 - Orientation comes from the gyro, slowly corrected to true north by the compass. Magnetic glitches are ignored.
 - The staged apparition, its cold spots, drifting orbs and shadow figures have real positions in the room around you. They keep moving while you look away.
 - They're drawn in true perspective, standing on the floor, about 1.4 m below the phone.
+- Apparitions are full 3D bodies (the same CC0 characters as the dashboard), animated and rendered with three.js:
+  - Pale spirits are see-through and rim-lit, with hollow black eyes, and they fade out toward the feet.
+  - Shadow people are smoky black shapes.
+  - The Inhuman is stretched, with long arms. It crawls at you head first, and its head turns further than a human's can.
+  - The Woman in white and the Banshee wear a gown, with long wet hair hanging over the face.
+  - The Hat Man has his hat and red eyes.
+  - Most of them turn their heads to follow you. They cock their heads, and freeze and jump like stop-motion.
+  - The SLS camera draws its stick figure from the body's real bones.
+  - Without WebGL, or before a model has loaded, the app draws the old 2D figures instead.
+- The jump scare is a full-screen face. Its jaw stretches open while it shakes, splits into colour and drops frames.
 - With headphones, footsteps, knocks and whispers come from where they actually are.
 - If things slide against the real room as you turn, adjust **⚙ → Camera match**.
 
