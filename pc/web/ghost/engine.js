@@ -96,7 +96,7 @@ function onReading(r){
 const radarLive=()=>Date.now()-RD.last<1500;
 const radarTarget=()=>{if(!radarLive()||!RD.r||!RD.r.s)return null;const r=RD.r,mv=!!(r.s&1);return{mv,d:((mv?r.md:r.sd)||r.dd)/100,e:Math.max(mv?r.me:0,r.s&2?r.se:0)}};
 const kit=()=>radarLive()&&RD.r&&RD.r.hw||null;  // live kit-sensor values, if any are set up
-const USB={on:false,busy:false,dev:null,port:null,close:null,write:null,waiters:[]};
+const USB={on:false,busy:false,dev:null,port:null,close:null,write:null,waiters:[],sess:0};
 const isAndroid=/Android/i.test(navigator.userAgent),canWebUSB='usb'in navigator,canSerial='serial'in navigator,canUSB=canWebUSB||canSerial;
 const useWebUSB=()=>(isAndroid&&canWebUSB)||!canSerial;
 function onLine(l){
@@ -113,17 +113,17 @@ async function openWebUSB(dev){  // CP210x driver, same as the dashboard's
   const eps=itf.alternate.endpoints,epIn=eps.find(e=>e.direction==='in'&&e.type==='bulk').endpointNumber,epOut=eps.find(e=>e.direction==='out'&&e.type==='bulk').endpointNumber;
   const ctl=(request,value,data)=>dev.controlTransferOut({requestType:'vendor',recipient:'interface',request,value,index:n},data);
   await ctl(0x00,0x0001);await ctl(0x1E,0,new Uint32Array([115200]).buffer);await ctl(0x03,0x0800);await ctl(0x07,0x0300);  // enable, 115200 8N1, DTR/RTS off
-  const enc=new TextEncoder(),dec=new TextDecoder(),feed=lineSplitter();USB.dev=dev;USB.on=true;USB.write=s=>dev.transferOut(epOut,enc.encode(s));
+  const enc=new TextEncoder(),dec=new TextDecoder(),feed=lineSplitter();USB.dev=dev;USB.on=true;let q=Promise.resolve();USB.write=s=>(q=q.then(()=>dev.transferOut(epOut,enc.encode(s))).catch(()=>{}));
   USB.close=async()=>{try{await ctl(0x00,0)}catch(e){}try{await dev.close()}catch(e){}};
-  (async()=>{try{while(USB.on){const r=await dev.transferIn(epIn,512);if(r.data&&r.data.byteLength)feed(dec.decode(r.data,{stream:true}))}}catch(e){}usbLost()})();
+  const sess=++USB.sess;(async()=>{try{while(USB.on&&USB.sess===sess){const r=await dev.transferIn(epIn,512);if(r.data&&r.data.byteLength)feed(dec.decode(r.data,{stream:true}))}}catch(e){}if(USB.sess===sess)usbLost()})();
 }
 async function openSerial(port){
   port=port||await navigator.serial.requestPort({filters:[0x10C4,0x1A86,0x0403].map(v=>({usbVendorId:v}))});
   await port.open({baudRate:115200});try{await port.setSignals({dataTerminalReady:false,requestToSend:false})}catch(e){}
   const enc=new TextEncoder(),dec=new TextDecoderStream(),closed=port.readable.pipeTo(dec.writable).catch(()=>{}),reader=dec.readable.getReader(),feed=lineSplitter();
-  USB.port=port;USB.on=true;USB.write=async s=>{const w=port.writable.getWriter();try{await w.write(enc.encode(s))}finally{w.releaseLock()}};
+  USB.port=port;USB.on=true;let q=Promise.resolve();USB.write=s=>(q=q.then(async()=>{const w=port.writable.getWriter();try{await w.write(enc.encode(s))}finally{w.releaseLock()}}).catch(()=>{}));
   USB.close=async()=>{try{await reader.cancel()}catch(e){}await closed;try{await port.close()}catch(e){}};
-  (async()=>{try{for(;;){const{value,done}=await reader.read();if(done)break;feed(value)}}catch(e){}usbLost()})();
+  const sess=++USB.sess;(async()=>{try{for(;;){const{value,done}=await reader.read();if(done)break;feed(value)}}catch(e){}if(USB.sess===sess)usbLost()})();
 }
 async function usbStart(open){if(USB.on||USB.busy)return;USB.busy=true;try{await open();say('Radar connected.');cmd('status')}catch(e){if(e&&e.name!=='NotFoundError')say('USB: '+(e.message||e),'warn')}finally{USB.busy=false;if(window.usbUI)usbUI()}}
 async function usbAuto(){if(USB.on||!canUSB)return;try{

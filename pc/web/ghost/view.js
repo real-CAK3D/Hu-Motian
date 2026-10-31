@@ -190,11 +190,11 @@ function drawFace(scale,alpha,lens){
 // laser grid: a projector on a tripod where you stand, so the dots stay put on the "walls" as you turn
 const GRID=(()=>{const a=[];for(let az=0;az<360;az+=3)for(let el=-30;el<=40;el+=3){const c=Math.cos(el*D2R);a.push([Math.sin(az*D2R)*c,Math.cos(az*D2R)*c,Math.sin(el*D2R)])}return a})();
 function drawGrid(t,occluders){
-  const cosLim=Math.cos(55*D2R);cx.save();cx.fillStyle='#e6ffe6';cx.shadowColor='#2bff3a';cx.shadowBlur=8;
+  const cosLim=Math.cos(55*D2R);cx.save();cx.fillStyle='#e6ffe6';cx.shadowColor='#2bff3a';cx.shadowBlur=8;cx.beginPath();
   for(const d of GRID){if(dot(d,O.F)<cosLim)continue;const dist=4.2,q=proj([d[0]*dist,d[1]*dist,d[2]*dist]);if(!q||q.x<0||q.x>W||q.y<0||q.y>H)continue;
     let hidden=false,warp=0;for(const o of occluders){const dx=(q.x-o.x)/o.rx,dy=(q.y-o.y)/o.ry,r=dx*dx+dy*dy;if(r<1){hidden=Math.random()<o.k;warp=o.k*3}}
-    if(hidden)continue;cx.beginPath();cx.arc(q.x+(warp?rand(-warp,warp):0),q.y,2,0,7);cx.fill()}
-  cx.restore();
+    if(hidden)continue;const x=q.x+(warp?rand(-warp,warp):0);cx.moveTo(x+2,q.y);cx.arc(x,q.y,2,0,7)}
+  cx.fill();cx.restore();
 }
 function edgeArrow(p,col,label){
   const q=proj(p);if(q&&q.x>0&&q.x<W&&q.y>0&&q.y<H)return;
@@ -221,7 +221,7 @@ function drawScene(t,level,lens){
   }else{
     for(const o of WORLD.orbs)orbAt(o.p,o.r,(.35+.4*Math.max(0,Math.sin(t*1.7+o.r*90)))*clamp(Math.min(o.age,o.life-o.age),0,1));
     if(MODE==='hunt'&&G.state==='idle'&&hunt.dist!=null){const p=atBearing(hunt.bear,Math.min(hunt.dist,40),0),q=proj(p),lab=`${hunt.target==='lead'?'LEAD':hunt.target==='haunt'?'HAUNT':''} ${Math.round(hunt.dist)} m`;
-      if(q&&q.x>0&&q.x<W){orbAt(p,.25,.3+.25*Math.sin(t*2.4));cx.fillStyle='#bfffd9';cx.font='12px ui-monospace,monospace';cx.textAlign='center';cx.fillText(lab,q.x,q.y+22)}
+      if(q&&q.x>0&&q.x<W){orbAt(p,.25,.3+.25*Math.sin(t*2.4));cx.save();cx.fillStyle='#bfffd9';cx.font='12px ui-monospace,monospace';cx.textAlign='center';cx.fillText(lab,q.x,q.y+22);cx.restore()}
       else edgeArrow(p,'#bfffd9',lab)}
     for(const s of WORLD.shadows){const sp=shadowPos(s),f=figRect(sp);if(f&&f.x>0&&f.x<W){if(!s.seen){s.seen=true;logEv('Shadow figure crossed the room')}
       const J=poseJoints('run',t,{phase:t*10});if(lens==='sls')drawSkeleton(f,J,.7,'#7dff6a',true,'');else drawBody(f,J,{kind:'shadow'},.75,t,lens);occ.push({x:f.x,y:f.top+f.h*.5,rx:f.h*.16,ry:f.h*.5,k:.8})}}
@@ -254,7 +254,7 @@ function statusText(){
   p.push(`CONTAINED ${caps}`);return p.join(' · ');
 }
 function drawHUD(t,level,full){
-  const top=54,d=new Date(),m=10;cx.save();cx.font='13px ui-monospace,Menlo,monospace';cx.textBaseline='top';cx.shadowColor='#000';cx.shadowBlur=4;cx.fillStyle='#fff';
+  const top=54,d=new Date(),m=10;cx.save();cx.textAlign='left';cx.font='13px ui-monospace,Menlo,monospace';cx.textBaseline='top';cx.shadowColor='#000';cx.shadowBlur=4;cx.fillStyle='#fff';
   if(full){cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=2;const l=22;for(const[x,y,sx,sy]of[[m,top,1,1],[W-m,top,-1,1],[m,H-48,1,-1],[W-m,H-48,-1,-1]]){cx.beginPath();cx.moveTo(x,y+sy*l);cx.lineTo(x,y);cx.lineTo(x+sx*l,y);cx.stroke()}}
   if(REC.mr){if((t*2|0)%2===0){cx.fillStyle='#ff3b30';cx.beginPath();cx.arc(m+24,top+15,6,0,7);cx.fill()}cx.fillStyle='#fff';const s=(performance.now()-REC.t0)/1000|0;cx.fillText(`REC ${pad(s/3600|0)}:${pad(s/60%60|0)}:${pad(s%60)}`,m+36,top+8)}
   else cx.fillText('STBY',m+14,top+8);
@@ -294,7 +294,7 @@ function drawTape(){
     if(big){cx.fillStyle='#fff';cx.fillText({0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SW',270:'W',315:'NW'}[n],x,y-20)}}
   cx.fillStyle='#ffb627';cx.beginPath();cx.moveTo(W/2,y-10);cx.lineTo(W/2-4,y-16);cx.lineTo(W/2+4,y-16);cx.fill();cx.restore();
 }
-function crosshair(spot){cx.save();cx.strokeStyle='rgba(255,255,255,.6)';cx.lineWidth=1;const x=W/2,y=H*.5;cx.beginPath();cx.moveTo(x-14,y);cx.lineTo(x-4,y);cx.moveTo(x+4,y);cx.lineTo(x+14,y);cx.moveTo(x,y-14);cx.lineTo(x,y-4);cx.moveTo(x,y+4);cx.lineTo(x,y+14);cx.stroke();
+function crosshair(spot){cx.save();cx.textAlign='left';cx.strokeStyle='rgba(255,255,255,.6)';cx.lineWidth=1;const x=W/2,y=H*.5;cx.beginPath();cx.moveTo(x-14,y);cx.lineTo(x-4,y);cx.moveTo(x+4,y);cx.lineTo(x+14,y);cx.moveTo(x,y-14);cx.lineTo(x,y-4);cx.moveTo(x,y+4);cx.lineTo(x,y+14);cx.stroke();
   if(spot!==undefined){cx.font='bold 14px ui-monospace,monospace';cx.fillStyle='#fff';cx.shadowColor='#000';cx.shadowBlur=4;cx.fillText(spot==null?'--':fmtT(spot),x+18,y-8)}cx.restore()}
 function thermalScale(){const x=W-26,y0=H*.3,h=H*.36;cx.save();for(let i=0;i<h;i++){const j=Math.round((1-i/h)*255)*3;cx.fillStyle=`rgb(${IRON[j]},${IRON[j+1]},${IRON[j+2]})`;cx.fillRect(x,y0+i,10,1)}
   cx.font='10px ui-monospace,monospace';cx.fillStyle='#fff';cx.textAlign='right';cx.shadowColor='#000';cx.shadowBlur=3;cx.fillText(fmtT(thermRange[1]),x-3,y0+8);cx.fillText(fmtT(thermRange[0]),x-3,y0+h);cx.restore()}
@@ -311,7 +311,7 @@ function led(x,y,r,col,on,k=1){cx.save();const g=cx.createRadialGradient(x-r*.3,
 function shade(hex,k){const n=parseInt(hex.slice(1),16);return`rgb(${(n>>16&255)*k|0},${(n>>8&255)*k|0},${(n&255)*k|0})`}
 function lcd(x,y,w,h,bg,glow){cx.save();const g=cx.createLinearGradient(x,y,x,y+h);g.addColorStop(0,bg[0]);g.addColorStop(1,bg[1]);cx.fillStyle=g;cx.shadowColor=glow||'transparent';cx.shadowBlur=glow?18:0;rr(x,y,w,h,6);cx.fill();cx.restore();
   cx.save();cx.strokeStyle='rgba(0,0,0,.6)';cx.lineWidth=3;rr(x,y,w,h,6);cx.stroke();cx.restore()}
-const devBox=(wf=.9,hf=.5)=>{const w=Math.min(W-28,380)*wf,h=Math.min(H*hf,w*1.5);return{x:(W-w)/2,y:H-h-14,w,h}};
+const devBox=(wf=.9,hf=.5)=>{const room=W<560?W-112:W-28,w=Math.min(room,380*wf),h=Math.min(H*hf,w*1.5);return{x:W<560?Math.max(10,(room-w)/2+8):(W-w)/2,y:H-h-14,w,h}};
 const DS={k2n:0,melBeep:0,melLight:false,remN:0,remT:0,boxStepT:0,boxLed:0,ovWords:[],ovT:0,ovE:null,ovE0:0};
 
 function devK2(t,level){
@@ -359,7 +359,7 @@ function devBox_(t,level){
   const b=devBox(.75,.55),{x,y,w,h}=b;body(x,y,w,h,14,'#1e1e1e','#050505');
   for(let i=0;i<9;i++)for(let j=0;j<5;j++){cx.fillStyle='#000';cx.beginPath();cx.arc(x+w*.15+i*(w*.7/8),y+h*.62+j*12,3,0,7);cx.fill()}
   const lx=x+16,ly=y+16,lw=w-32,lh=h*.38;lcd(lx,ly,lw,lh,['#3a2306','#1f1303'],BOX.on?'rgba(255,170,40,.35)':null);
-  cx.textAlign='center';cx.fillStyle=BOX.on?'#ffb43a':'#5a3a10';cx.font=`bold ${Math.round(lh*.38)}px ui-monospace,monospace`;
+  cx.textAlign='center';cx.fillStyle=BOX.on?'#ffb43a':'#5a3a10';cx.font=`bold ${Math.round(Math.min(lh*.38,lw*.15))}px ui-monospace,monospace`;
   const w0=$('#boxWord').textContent;cx.fillText(w0&&BOX.on?'‹ '+w0.toUpperCase()+' ›':'FM '+BOX.freq.toFixed(1),x+w/2,ly+lh*.58);
   cx.font='11px ui-monospace,monospace';cx.fillText(BOX.on?`SWEEP ${$('#boxRate').value} ms  ▶`:'STOPPED',x+w/2,ly+lh*.88);
   led(x+w-28,y+h*.5,6,'#ff2020',BOX.on&&(t*1000/ +$('#boxRate').value|0)%2===0);
@@ -413,19 +413,21 @@ function boxStep(when,rate){
 }
 function boxUpdate(){
   if(!BOX.on||!AU.ctx)return;const C=AU.ctx,rate=+$('#boxRate').value;
+  if(BOX.next<C.currentTime)BOX.next=C.currentTime;
   while(BOX.next<C.currentTime+.12){boxStep(BOX.next,rate);BOX.next+=rate/1000;BOX.freq=BOX.freq>=107.9?87.5:+(BOX.freq+.2).toFixed(1)}
-  if(staged()&&CFG.voices&&performance.now()-BOX.lastWord>3500&&Math.random()<(.003+L*.035)){BOX.lastWord=performance.now();
+  if(staged()&&performance.now()-BOX.lastWord>3500&&Math.random()<(.003+L*.035)){BOX.lastWord=performance.now();
     const near=active()&&gDist()<4;speak(near?pick(['behind','closer','here','now','behind you','run']):pick(WORDS))}
 }
 function speak(w){
   $('#boxWord').textContent=w;setTimeout(()=>{if($('#boxWord').textContent===w)$('#boxWord').textContent=''},2500);logEv(`Spirit box: "${w.toUpperCase()}"`);stat('words');addEvidence('box');hwOut('fx flicker 700 255 160 40');
-  if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(w);u.rate=rand(.62,.95);u.pitch=rand(.05,.45);u.volume=clamp(CFG.vol*.9,0,1);speechSynthesis.speak(u)}
+  if(CFG.voices&&'speechSynthesis'in window){const u=new SpeechSynthesisUtterance(w);u.rate=rand(.62,.95);u.pitch=rand(.05,.45);u.volume=clamp(CFG.vol*.9,0,1);speechSynthesis.speak(u)}
 }
 
 // ================================================================ EVP recorder
 const EVP={mr:null,stream:null,an:null,buf:null,rev:null,plant:null,anoms:[],src:null,playT0:0,playRate:1,playRev:false,live:false,t0:0};
 async function evpRecord(){
-  if(EVP.mr){EVP.mr.stop();return}
+  if(EVP.mr){EVP.mr.stop();return}if(EVP.busy)return;EVP.busy=true;try{await evpStart()}finally{EVP.busy=false}}
+async function evpStart(){
   auInit();
   try{EVP.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}catch(e){$('#evpTxt').textContent='Microphone not available';return}
   EVP.an=AU.ctx.createAnalyser();EVP.an.fftSize=1024;AU.ctx.createMediaStreamSource(EVP.stream).connect(EVP.an);
@@ -486,7 +488,7 @@ const scope=document.createElement('canvas'),sx=scope.getContext('2d');let sweep
 function drawScope(t,dt,level){
   cx.fillStyle='#000';cx.fillRect(0,0,W,H);
   const R=Math.min(W,H*.8)/2-18,X=W/2,Y=H*.5,range=MODE==='real'?6:MODE==='hunt'&&G.state==='idle'?120:9;
-  if(scope.width!==Math.round(W)||scope.height!==Math.round(H)){scope.width=W;scope.height=H}
+  if(scope.width!==Math.round(W)||scope.height!==Math.round(H)){scope.width=Math.round(W);scope.height=Math.round(H)}
   sx.fillStyle='rgba(0,8,4,.12)';sx.fillRect(0,0,W,H);
   const prev=sweep;sweep=(sweep+dt*140)%360;if(prev>sweep&&AU.ctx)tone(1500,.04,.05);
   const plot=(p,col,size)=>{const rel=wrap(headingOf(p)-O.h),dist=len2(p),a=(rel-90)*D2R,rr=clamp(dist/range,0,1)*R;sx.fillStyle=col;sx.shadowColor=col;sx.shadowBlur=12;sx.beginPath();sx.arc(X+Math.cos(a)*rr,Y+Math.sin(a)*rr,size,0,7);sx.fill();sx.shadowBlur=0};
@@ -525,7 +527,8 @@ function hwStep(level){
 // ================================================================ evidence video
 const REC={mr:null,t0:0,chunks:[],mic:null};
 async function recToggle(){
-  if(REC.mr){REC.mr.stop();return}
+  if(REC.mr){REC.mr.stop();return}if(REC.busy)return;REC.busy=true;try{await recStart()}finally{REC.busy=false}}
+async function recStart(){
   if(!cv.captureStream||!window.MediaRecorder){say('Recording isn\'t supported in this browser.','warn');return}
   auInit();if(!AU.recDest){AU.recDest=AU.ctx.createMediaStreamDestination();AU.master.connect(AU.recDest)}
   if(!REC.mic){try{REC.mic=await navigator.mediaDevices.getUserMedia({audio:true});AU.ctx.createMediaStreamSource(REC.mic).connect(AU.recDest)}catch(e){}}  // room sound, recording only
@@ -533,7 +536,8 @@ async function recToggle(){
   const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m));
   REC.chunks=[];REC.mr=new MediaRecorder(new MediaStream(tracks),mime?{mimeType:mime,videoBitsPerSecond:4e6}:{});
   REC.mr.ondataavailable=e=>e.data.size&&REC.chunks.push(e.data);
-  REC.mr.onstop=()=>{const type=REC.mr.mimeType||'video/webm',blob=new Blob(REC.chunks,{type});REC.mr=null;$('#recBtn').classList.remove('on');$('#recBtn').textContent='● REC';
+  REC.mr.onstop=()=>{const type=REC.mr.mimeType||'video/webm',blob=new Blob(REC.chunks,{type});REC.mr=null;
+    for(const t of tracks)if(t.kind==='video')t.stop();if(REC.mic){for(const t of REC.mic.getTracks())t.stop();REC.mic=null}$('#recBtn').classList.remove('on');$('#recBtn').textContent='● REC';
     download(blob,`ghost-evidence-${stamp()}.${type.includes('mp4')?'mp4':'webm'}`);logEv('Evidence video saved')};
   REC.mr.start(1000);REC.t0=performance.now();$('#recBtn').classList.add('on');$('#recBtn').textContent='■ STOP';logEv('Evidence recording started');
 }
@@ -619,9 +623,11 @@ window.renderHW=()=>{
     for(const b of d.querySelectorAll('button'))b.disabled=!ok}
 };
 let wake=null;async function keepAwake(){try{if('wakeLock'in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}}catch(e){}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&started)keepAwake()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!started)return;keepAwake();if(AU.ctx&&AU.ctx.state!=='running')AU.ctx.resume().catch(()=>{});
+  const tr=cam.stream&&cam.stream.getVideoTracks()[0];if(tr&&tr.readyState==='ended'){cam.stream=null;cam.ok=false;startCam()}});
 $('#go').onclick=async()=>{
   $('#start').hidden=true;auInit();if(AU.ctx.state==='suspended')AU.ctx.resume();
+  try{if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}}catch(e){}  // iOS: speech must start from a tap
   if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){try{await DeviceOrientationEvent.requestPermission()}catch(e){}}  // iOS
   if(!started){started=true;await startCam();setMode(MODE);startGPS();usbAuto();stat('sessions');logEv(`Session started (${MODE})`)}
   keepAwake();uiSync();
@@ -642,7 +648,7 @@ $('#calmBtn').onclick=()=>{auInit();calm()};
 let JTAB='map',leafletP=null,lmap=null;
 $('#jBtn').onclick=()=>{$('#journal').hidden=false;renderJournal()};
 $('#jClose').onclick=()=>{$('#journal').hidden=true};
-for(const b of document.querySelectorAll('#jtabs button'))b.onclick=()=>{JTAB=b.dataset.j;renderJournal()};
+for(const b of document.querySelectorAll('#jtabs button[data-j]'))b.onclick=()=>{JTAB=b.dataset.j;renderJournal()};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmtDate=t=>t?new Date(t).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'–';
 const hostCol=a=>a<40?'#38ff9c':a<70?'#ffb627':'#ff3b30';
@@ -652,7 +658,7 @@ function ghostLine(g){const T=typeOf(g),id=g.identified;
   ${id&&g.story?`<div class="small">${esc(g.story)}</div>`:''}<div class="small">Evidence: ${g.evidence.map(k=>EVIDENCE[k]).join(', ')||'none'}${g.attacks?` · attacked you ${g.attacks}×`:''}${g.escapes?` · escaped ${g.escapes}×`:''}</div>
   ${g.state==='captured'?`<div class="small">Contained ${fmtDate(g.capturedAt)} <button data-rel="${g.id}">Release</button></div>`:g.home?`<div class="small">Haunts a ${Math.round(g.home.r*3.28)} ft area on the map</div>`:''}</div>`}
 function renderJournal(){
-  for(const b of document.querySelectorAll('#jtabs button'))b.classList.toggle('on',b.dataset.j===JTAB);
+  for(const b of document.querySelectorAll('#jtabs button[data-j]'))b.classList.toggle('on',b.dataset.j===JTAB);
   const el=$('#jBody');
   if(JTAB==='map'){el.innerHTML=`<div id="map"></div><div class="small" id="mapNote"></div><div class="legend small"><span style="color:#38ff9c">●</span> passive <span style="color:#ffb627">●</span> agitated <span style="color:#ff3b30">●</span> hostile <span style="color:#888">●</span> contained <span style="color:#ffd36b">◌</span> lead</div>`;drawMap()}
   if(JTAB==='codex'){const found=TYPES.filter(t=>ST.types[t.id]&&ST.types[t.id].seen).length;
@@ -679,23 +685,23 @@ function renderJournal(){
 function loadLeaflet(){
   if(window.L)return Promise.resolve(true);if(leafletP)return leafletP;
   leafletP=new Promise(res=>{const l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.append(l);
-    const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=()=>res(!!window.L);s.onerror=()=>{leafletP=null;res(false)};document.head.append(s);setTimeout(()=>res(!!window.L),8000)});
+    const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=()=>res(!!window.L);s.onerror=()=>{leafletP=null;res(false)};document.head.append(s);setTimeout(()=>{if(!window.L)leafletP=null;res(!!window.L)},8000)});
   return leafletP;
 }
 async function drawMap(){
   const haunts=DB.ghosts.filter(g=>g.home),leads=DB.leads.filter(l=>!l.done),note=$('#mapNote');
   if(!GPS.ok&&!haunts.length){note.textContent=GPS.err?'GPS: '+GPS.err:'Waiting for GPS… ghosts you find are saved where you found them.';return}
   note.textContent=`${haunts.length} haunt${haunts.length===1?'':'s'} · ${leads.length} open lead${leads.length===1?'':'s'}${GPS.ok?` · GPS ±${Math.round(GPS.acc)} m`:''}`;
-  const ok=await loadLeaflet(),box=$('#map');if(!box)return;
+  const ok=await loadLeaflet(),box=$('#map'),Lf=window.L;  // window.L: Leaflet (plain L is the meter level)if(!box)return;
   if(!ok)return drawMapFallback(box,haunts,leads);
   if(lmap){lmap.remove();lmap=null}
-  const c=GPS.ok?[GPS.lat,GPS.lon]:[haunts[0].home.lat,haunts[0].home.lon];lmap=L.map(box,{zoomControl:true,attributionControl:true}).setView(c,18);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap'}).addTo(lmap);
+  const c=GPS.ok?[GPS.lat,GPS.lon]:[haunts[0].home.lat,haunts[0].home.lon];lmap=Lf.map(box,{zoomControl:true,attributionControl:true}).setView(c,18);
+  Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap'}).addTo(lmap);
   const pts=[];
   for(const g of haunts){const col=g.state==='captured'?'#888':hostCol(g.anger),T=typeOf(g);pts.push([g.home.lat,g.home.lon]);
-    L.circle([g.home.lat,g.home.lon],{radius:g.home.r,color:col,weight:2,fillOpacity:.15}).addTo(lmap).bindPopup(`<b>${esc(g.identified?g.name:'Unknown entity')}</b><br>${g.identified?`${esc(T.name)} · lvl ${g.level} · ${hostility(g.anger)}`:'unidentified'}<br>${g.state==='captured'?'Contained':'At large'} · seen ${g.sightings}×`)}
-  for(const l of leads){pts.push([l.lat,l.lon]);L.circleMarker([l.lat,l.lon],{radius:9,color:'#ffd36b',dashArray:'4 4',weight:2,fillOpacity:.05}).addTo(lmap).bindPopup(`Lead from ${esc(l.fromName)}<br>${fmtDate(l.ts)}`)}
-  if(GPS.ok){L.circleMarker([GPS.lat,GPS.lon],{radius:7,color:'#4aa0ff',fillColor:'#4aa0ff',fillOpacity:.9}).addTo(lmap).bindPopup('You');pts.push([GPS.lat,GPS.lon])}
+    Lf.circle([g.home.lat,g.home.lon],{radius:g.home.r,color:col,weight:2,fillOpacity:.15}).addTo(lmap).bindPopup(`<b>${esc(g.identified?g.name:'Unknown entity')}</b><br>${g.identified?`${esc(T.name)} · lvl ${g.level} · ${hostility(g.anger)}`:'unidentified'}<br>${g.state==='captured'?'Contained':'At large'} · seen ${g.sightings}×`)}
+  for(const l of leads){pts.push([l.lat,l.lon]);Lf.circleMarker([l.lat,l.lon],{radius:9,color:'#ffd36b',dashArray:'4 4',weight:2,fillOpacity:.05}).addTo(lmap).bindPopup(`Lead from ${esc(l.fromName)}<br>${fmtDate(l.ts)}`)}
+  if(GPS.ok){Lf.circleMarker([GPS.lat,GPS.lon],{radius:7,color:'#4aa0ff',fillColor:'#4aa0ff',fillOpacity:.9}).addTo(lmap).bindPopup('You');pts.push([GPS.lat,GPS.lon])}
   if(pts.length>1)lmap.fitBounds(pts,{padding:[30,30],maxZoom:19});
 }
 function drawMapFallback(box,haunts,leads){  // no map tiles (offline): plot around you in metres

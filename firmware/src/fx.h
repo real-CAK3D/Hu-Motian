@@ -9,8 +9,8 @@
 //   hw hall <pin>                analog Hall magnetic sensor, KY-035 / KY-024 AO (ADC1 pin)
 //   hw temp <pin> [invert]       analog thermistor, KY-013 (ADC1 pin; invert=1 if it reads backwards)
 //   hw sound <pin>               sound sensor analog out, KY-037 / KY-038 AO (ADC1 pin)
-//   hw vib <pin>                 vibration / knock / tilt switch, KY-002 / KY-031 / KY-020 (digital)
-//   hw btn <pin>                 push button, KY-004 (to GND when pressed): a physical TRAP button
+//   hw vib <pin>                 vibration / knock / tilt switch, KY-002 / KY-031 / KY-020 (digital, not GPIO34-39)
+//   hw btn <pin>                 push button, KY-004 (to GND when pressed): a physical TRAP button (not GPIO34-39)
 //   hw touch <pin>               touch sensor digital out, KY-036: a REM-pod style antenna
 //   hw light <pin>               photoresistor, KY-018 (ADC1 pin)
 //   hw ir <pin>                  IR obstacle sensor, KY-032 (LOW when something's in front): a tripwire
@@ -165,7 +165,8 @@ static int handle(const String &verb, const String &rest, String &msg, Preferenc
       if (!okOut(num(1, -1))) { msg = "hw flash <pin>: must be a free output pin"; return 0; }
       c.flash = num(1, -1);
     } else if (what == "btn" || what == "touch" || what == "ir") {
-      if (!okIn(num(1, -1))) { msg = "hw " + what + " <pin>: not a usable input pin"; return 0; }
+      // btn and ir rely on the internal pull-up, which GPIO34-39 don't have
+      if (!(what == "touch" ? okIn(num(1, -1)) : okOut(num(1, -1)))) { msg = "hw " + what + " <pin>: not a usable input pin"; if (what != "touch") msg += " (needs a pin with a pull-up: not 34-39)"; return 0; }
       (what == "btn" ? c.btn : what == "touch" ? c.touch : c.ir) = num(1, -1);
     } else if (what == "hall" || what == "temp" || what == "sound" || what == "light") {
       int p = num(1, -1);
@@ -175,7 +176,8 @@ static int handle(const String &verb, const String &rest, String &msg, Preferenc
       else if (what == "light") c.light = p;
       else c.snd = p;
     } else if (what == "vib") {
-      if (!okIn(num(1, -1))) { msg = "hw vib <pin>: not a usable input pin"; return 0; }
+      // needs a pull-up, and GPIO36/39 glitch whenever the ADC powers up (ESP32 errata 3.11)
+      if (!okOut(num(1, -1))) { msg = "hw vib <pin>: needs a pin with a pull-up (not 34-39)"; return 0; }
       c.vib = num(1, -1);
     } else { msg = "unknown module"; return 0; }
     // the same pin can't do two jobs
@@ -317,9 +319,17 @@ static void tick(bool present, int energy) {
   else if (now >= appUntil) autoLights(present, energy);
 }
 
+// Stop sounds and effects (before the main loop blocks, e.g. while re-probing the radar).
+static void quiet() {
+  buzz(0);
+  beepOff = 0;
+  eff = E_NONE;
+  effBuzz = false;
+}
+
 static bool anySensor() { return cfg.hall >= 0 || cfg.temp >= 0 || cfg.snd >= 0 || cfg.vib >= 0 || cfg.btn >= 0 || cfg.touch >= 0 || cfg.light >= 0 || cfg.ir >= 0; }
 
-static void appendReading(String &s) {
+static void appendReading(String &s, bool consume = true) {
   if (!anySensor()) return;
   s += ",\"hw\":{";
   bool first = true;
@@ -327,11 +337,11 @@ static void appendReading(String &s) {
   if (cfg.hall >= 0) { key("hall"); s += hallRaw; key("hd"); s += (int)(hallRaw - (hallBase < 0 ? hallRaw : hallBase)); }
   if (cfg.temp >= 0) { key("tc"); if (std::isnan(tempC)) s += "null"; else s += String(tempC, 1); }
   if (cfg.snd >= 0) { key("snd"); s += sndP2P; }
-  if (cfg.vib >= 0) { uint32_t v = vibCount; key("vib"); s += v - vibSent; vibSent = v; }
+  if (cfg.vib >= 0) { uint32_t v = vibCount; key("vib"); s += v - vibSent; if (consume) vibSent = v; }
   if (cfg.btn >= 0) { key("btn"); s += digitalRead(cfg.btn) == LOW ? 1 : 0; }
-  if (cfg.touch >= 0) { key("tch"); s += touchLatch ? 1 : 0; touchLatch = false; }
+  if (cfg.touch >= 0) { key("tch"); s += touchLatch ? 1 : 0; if (consume) touchLatch = false; }
   if (cfg.light >= 0) { key("lux"); s += lightRaw; }
-  if (cfg.ir >= 0) { key("ir"); s += irLatch ? 1 : 0; irLatch = false; }
+  if (cfg.ir >= 0) { key("ir"); s += irLatch ? 1 : 0; if (consume) irLatch = false; }
   s += '}';
 }
 

@@ -14,6 +14,7 @@ Also beeps on arrival and logs every event.
 Tailscale (phone access): tailscale serve --bg --set-path /radar http://127.0.0.1:8765
 """
 import argparse
+import re
 import json
 import subprocess
 import threading
@@ -193,7 +194,7 @@ def make_handler(hub):
             if "/ghost/" in u.path:  # Ghost Hunter scripts
                 name = u.path.rsplit("/", 1)[-1]
                 f = WEB.parent / "ghost" / name
-                if name.endswith(".js") and "\\" not in name and not name.startswith(".") and f.is_file():
+                if re.fullmatch(r"[A-Za-z0-9_-]+\.js", name) and f.is_file():
                     return self._send(200, f.read_bytes(), "text/javascript; charset=utf-8")
                 return self._send(404, '{"error":"not found"}')
             if path == "ghost.html":

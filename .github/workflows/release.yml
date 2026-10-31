@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install platformio esptool
+      - run: pip install platformio 'esptool==4.*'
       - name: Build firmware
         run: pio run -d firmware
       - name: Package

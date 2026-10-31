@@ -96,7 +96,7 @@ const T_=()=>typeOf(G.spec);
 const visibleKind=()=>T_().look.kind!=='none';
 function summon(spec,bear,dist,resident){
   Object.assign(G,{state:'active',spec,p:atBearing(bear,dist),v:[0,0,0],lift:0,vis:0,age:0,beh:'still',behT:0,bs:{},pose:'stand',anger:spec.anger,aimT:0,hold:0,seen:false,warned:false,
-    dart:null,coldT:1,stepT:0,evT:rand(4,9),resident:!!resident,pointBear:null});
+    dart:null,coldT:1,stepT:0,evT:rand(4,9),resident:!!resident,pointBear:null,lookT:0,lookHist:[],at:GPS.ok?[GPS.lat,GPS.lon]:null});
   G.anchor=[G.p[0],G.p[1]];pickBehavior();
   say(resident?'Readings… something lives here.':MODE==='hunt'?'It\'s here. Look around…':'EMF fluctuation detected… sweep slowly.');
   logEv(`${resident?'Returned to the haunt of':'EMF spike'} ${resident&&spec.identified?spec.name:'an unknown entity'} at ${Math.round(((bear%360)+360)%360)}°`);
@@ -120,7 +120,7 @@ function setBeh(b){
   G.lift=b==='float'||b==='swoop'||T.look.kind==='wraith'?rand(.3,.7):0;
   if(b==='point')makeLead();
   if(b==='peek'){const side=Math.random()<.5?-1:1;G.peekSide=side;G.p=atBearing(O.h+side*rand(20,35),rand(3,4.5));G.anchor=[G.p[0],G.p[1]]}
-  if(b==='mimic'){const old=G.lookHist[0];const dir=old||O.F;G.p=[dir[0]*3.2,dir[1]*3.2,0];if(Math.random()<.4)G.p=[-O.F[0]*2.5,-O.F[1]*2.5,0];whoosh(.5,G.p)}
+  if(b==='mimic'){const old=G.lookHist[0],f=atBearing(O.h,1),dir=old&&Math.hypot(old[0],old[1])>.3?old:f,n=Math.hypot(dir[0],dir[1]);G.p=[dir[0]/n*3.2,dir[1]/n*3.2,0];if(Math.random()<.4)G.p=atBearing(O.h+180,2.5);whoosh(.5,G.p)}
   if(b==='swoop'){G.bs.phase='circle';G.bs.t=0}
   if(b==='pace'){const d=gDist()||1,perp=[-G.p[1]/d,G.p[0]/d];G.bs.a=[G.anchor[0]-perp[0]*2,G.anchor[1]-perp[1]*2];G.bs.b=[G.anchor[0]+perp[0]*2,G.anchor[1]+perp[1]*2];G.bs.to='b'}
   if(b==='chase'){say(pick(['IT\'S COMING!','RUN!','It\'s coming for you!']),'alert');growl(G.p);hwOut('fx strobe 900 255 40 20',true)}
@@ -136,8 +136,10 @@ function contact(){
 const nm=()=>G.spec&&G.spec.identified?G.spec.name:'Unknown entity';
 
 // ---- the behaviours
-function behaviorStep(dt,seen,d){
-  const T=T_(),sp=T.speed,b=G.beh,s=G.bs;G.behT-=dt;let done=G.behT<=0;
+function behaviorStep(dt,seen,d){G.behT-=dt;if(runBeh(G.beh,G.bs,dt,seen,d,G.behT<=0)&&G.state==='active')pickBehavior()}
+// runs one behaviour for a frame; returns true when it's finished
+function runBeh(b,s,dt,seen,d,done){
+  const T=T_(),sp=T.speed;
   switch(b){
     case'still':case'stare':G.v=[0,0,0];G.pose='stand';if(b==='stare'&&seen&&!T.ignores){G.anger=Math.min(100,G.anger+dt*(T.anger[1]/40));if(G.anger>85&&Math.random()<dt*.3)attackStart()}break;
     case'wander':case'float':if(!s.to||moveTo(s.to[0],s.to[1],sp*(b==='float'?.4:.55),dt)){const a=rand(0,6.28),r=rand(.5,2.5);s.to=[G.anchor[0]+Math.cos(a)*r,G.anchor[1]+Math.sin(a)*r]}G.pose=b==='float'?'float':'walk';break;
@@ -158,10 +160,11 @@ function behaviorStep(dt,seen,d){
     case'crawl':{const v=d>1?towardMe(sp*.6):[0,0,0];G.p[0]+=v[0]*dt;G.p[1]+=v[1]*dt;G.pose='crawl';if(d<1.1&&G.anger>60)attackStart();break}
     case'teleport':s.t=(s.t||0)+dt;G.pose='stand';if(s.t>rand(1.8,3.5)){s.t=0;G.p=atBearing(gBear()+rand(-70,70),clamp(d+rand(-1.5,1.5),2,7));G.vis*=.3;bang(G.p);if(Math.random()<.3)hwOut('fx flicker 500 255 255 255')}break;
     case'mimic':G.v=[0,0,0];G.pose='stand';break;
-    case'unpredictable':{if(!s.sub){s.sub=pick(['wander','stare','teleport','approach','circle','still','hide'])}const save=G.beh;G.beh=s.sub;behaviorStep(dt,seen,d);G.beh=save;break}
+    case'unpredictable':{s.subT=(s.subT||0)-dt;if(!s.sub||s.subT<=0){s.sub=pick(['wander','stare','teleport','approach','circle','still','hide']);s.subT=rand(1.5,3);s.subS={}}
+      if(runBeh(s.sub,s.subS,dt,seen,d,false))s.subT=0;break}
   }
-  if(G.beh==='still'||G.beh==='stare')G.face=1;
-  if(done&&G.state==='active')pickBehavior();
+  if(b==='still'||b==='stare')G.face=1;
+  return done;
 }
 // ---- events: things it does now and then
 function eventStep(dt,seen,d){
@@ -188,14 +191,14 @@ function makeLead(){
   if(!honest)bear=rand(0,360);
   G.pointBear=bear;
   if(GPS.ok&&!target&&!DB.leads.some(l=>!l.done&&l.from===G.spec.id)){const m=rand(50,150),[la,lo]=geoMove(GPS.lat,GPS.lon,bear,m);
-    DB.leads.push({id:'L'+Date.now().toString(36),lat:la,lon:lo,from:G.spec.id,fromName:G.spec.identified?G.spec.name:'unknown',ts:Date.now(),done:false,fake:!honest});stat('leads');saveDB()}
+    DB.leads=DB.leads.filter((l,i,a)=>!l.done||a.filter(x=>x.done).indexOf(l)>=a.filter(x=>x.done).length-40);DB.leads.push({id:'L'+Date.now().toString(36),lat:la,lon:lo,from:G.spec.id,fromName:G.spec.identified?G.spec.name:'unknown',ts:Date.now(),done:false,fake:!honest});stat('leads');saveDB()}
 }
 const compass=b=>['N','NE','E','SE','S','SW','W','NW'][Math.round((((b%360)+360)%360)/45)%8];
 
 // ---- evidence and identification
 function addEvidence(k){
   if(!active()||!G.spec||G.spec.evidence.includes(k))return;G.spec.evidence.push(k);saveDB();logEv(`Evidence: ${EVIDENCE[k]}`);
-  if(!G.spec.identified&&G.spec.evidence.length>=2&&G.seen!==null){G.spec.identified=true;typeStat(G.spec.type,'ided');
+  if(!G.spec.identified&&G.spec.evidence.length>=2&&G.seen){G.spec.identified=true;typeStat(G.spec.type,'ided');
     say(`Identified: ${G.spec.name}, ${T_().name}`,'');logEv(`IDENTIFIED: ${G.spec.name} (${T_().name}), level ${G.spec.level}, ${hostility(G.anger)}`)}
 }
 function onSeen(){
@@ -209,16 +212,16 @@ function onSeen(){
 function ghostStep(dt,trapDown){
   if(G.scareT>0)G.scareT=Math.max(0,G.scareT-dt);
   if(G.state==='idle'){G.wait-=dt;if(G.wait<=0&&MODE==='ghost'&&!insideHaunt())spawnNew(O.h+rand(-160,160),rand(6,8.5));return}
-  if(G.state==='gone'){G.cool-=dt;if(G.cool<=0){if(G.spec&&G.spec.state==='free'&&(G.resident||insideHauntOf(G.spec))){summon(G.spec,O.h+rand(-170,170),rand(5,8),true)}else{G.state='idle';G.spec=null;G.wait=rand(8,20);if(MODE==='ghost')say('Monitoring… quiet for now.')}}return}
+  if(G.state==='gone'){G.cool-=dt;if(G.cool<=0){if(G.spec&&G.spec.state==='free'&&insideHauntOf(G.spec)){summon(G.spec,O.h+rand(-170,170),rand(5,8),true)}else{G.state='idle';G.spec=null;G.wait=rand(8,20);if(MODE==='ghost')say('Monitoring… quiet for now.')}}return}
   if(G.state==='trapped'){G.trapT+=dt;if(G.trapT>1.4){G.state='idle';G.spec=null;G.wait=rand(10,25)}return}
   const T=T_(),d=gDist(),aimP=[G.p[0],G.p[1],G.lift-.4],seen=inViewFn(aimP),vis=visibleKind();
   G.age+=dt;
   // remember where the camera pointed (for the mimic)
-  if(!G.lookT||G.age-G.lookT>1){G.lookT=G.age;G.lookHist.push([O.F[0],O.F[1]]);if(G.lookHist.length>8)G.lookHist.shift()}
+  if(!G.lookT||G.age-G.lookT>1){G.lookT=G.age;G.lookHist.push(atBearing(O.h,1));if(G.lookHist.length>8)G.lookHist.shift()}
   if(G.state==='charge'){G.bs.c+=dt;const v=towardMe(2+G.bs.c*G.bs.c*14);G.p[0]+=v[0]*dt;G.p[1]+=v[1]*dt;G.v=v;G.vis=1;G.pose=T.look.kind==='animal'?'walk':T.look.kind==='demon'?'crawl':'run';
     G.stepT-=dt;if(G.stepT<=0){G.stepT=.15;footstep([G.p[0],G.p[1],-CAM_H],1)}if(gDist()<.4||G.bs.c>3)contact()}
   else{behaviorStep(dt,seen,d);eventStep(dt,seen,d)}
-  if(len2(G.p)<.9&&G.state==='active'){const k=.9/len2(G.p);G.p[0]*=k;G.p[1]*=k}
+  {const l=len2(G.p);if(!(l>1e-6))G.p=atBearing(O.h,.9);else if(l<.9&&G.state==='active'){const k=.9/l;G.p[0]*=k;G.p[1]*=k}}
   const rushing=G.beh==='chase'||G.beh==='swoop'&&G.bs.phase==='dive'||G.state==='charge';
   const tv=!vis?0:rushing?1:seen?clamp(1.35-gDist()/7.5,0,1)*(T.look.a?T.look.a/.6:1):G.beh==='stalk'?1:.0;G.vis+=(clamp(tv,0,1)-G.vis)*Math.min(1,dt*1.6);
   if(seen&&(vis?G.vis>.3:L>.75))onSeen();
@@ -267,12 +270,13 @@ function insideHauntOf(spec){return!!spec.home&&GPS.ok&&geoDist(GPS.lat,GPS.lon,
 let hauntT=0,lastFix=null;
 function hauntStep(dt){
   hauntT-=dt;if(hauntT>0)return;hauntT=2;
-  if(GPS.ok&&GPS.acc<25){if(lastFix){const m=geoDist(lastFix[0],lastFix[1],GPS.lat,GPS.lon);if(m>3&&m<60){stat('walked',m);lastFix=[GPS.lat,GPS.lon]}}else lastFix=[GPS.lat,GPS.lon]}
+  if(GPS.ok&&GPS.acc<25){if(lastFix){const m=geoDist(lastFix[0],lastFix[1],GPS.lat,GPS.lon);if(m>3){if(m<60)stat('walked',m);lastFix=[GPS.lat,GPS.lon]}}else lastFix=[GPS.lat,GPS.lon]}
   if(!GPS.ok||MODE==='real')return;
   const near=hauntsNear().filter(o=>o.d<=o.g.home.r+slack()).sort((a,b)=>a.d-b.d)[0];
   if(near&&(G.state==='idle'||(active()&&!G.seen&&!G.resident&&G.spec!==near.g))){  // you walked into its area
     summon(near.g,geoBear(GPS.lat,GPS.lon,near.g.home.lat,near.g.home.lon)+rand(-40,40),clamp(near.d,3,7),true)}
   else if(active()&&G.spec&&G.spec.home&&!insideHauntOf(G.spec))dismiss('Readings fading. You left its area.');
+  else if(active()&&G.spec&&!G.spec.home&&G.at&&geoDist(G.at[0],G.at[1],GPS.lat,GPS.lon)>Math.max(35,GPS.acc*1.5))dismiss('Readings fading. You walked away from it.');
   // arriving at a lead you were shown
   for(const l of DB.leads)if(!l.done&&geoDist(GPS.lat,GPS.lon,l.lat,l.lon)<15&&G.state==='idle'){l.done=true;stat('leadsFollowed');saveDB();
     if(l.fake){say('Nothing here… it lied to you.','warn');logEv('Followed a false lead')}
@@ -286,6 +290,7 @@ function huntStep(dt){
     .map(c=>({...c,d:geoDist(GPS.lat,GPS.lon,c.lat,c.lon)})).filter(c=>c.d>(c.r||15)).sort((a,b)=>a.d-b.d);
   if(cands.length&&cands[0].d<2000){const c=cands[0];hunt.target=c.kind;hunt.dist=c.d;hunt.bear=geoBear(GPS.lat,GPS.lon,c.lat,c.lon);return}
   // nothing on the map: a fresh trail that wanders, and sometimes runs
+  if(G.state!=='idle')return;
   if(hunt.respawn||hunt.lat==null){if(GPS.acc>40)return;const b=rand(0,360),m=rand(45,95);[hunt.lat,hunt.lon]=geoMove(GPS.lat,GPS.lon,b,m);hunt.respawn=false;hunt.fled=false;hunt.fleeT=0;hunt.dir=rand(0,360);
     say(`Faint readings ${Math.round(m)} m away. Follow the arrow.`);logEv(`Hunt: readings ${Math.round(m)} m away`)}
   hunt.target='trail';hunt.dist=geoDist(GPS.lat,GPS.lon,hunt.lat,hunt.lon);hunt.bear=geoBear(GPS.lat,GPS.lon,hunt.lat,hunt.lon);
