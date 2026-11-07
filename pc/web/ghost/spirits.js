@@ -204,8 +204,9 @@ function addEvidence(k){
 }
 function onSeen(){
   if(G.seen)return;G.seen=true;const s=G.spec;s.sightings++;s.lastSeen=Date.now();stat('sightings');
-  if(!s.firstSeen){s.firstSeen=Date.now();if(GPS.ok&&GPS.acc<80)s.home={lat:GPS.lat,lon:GPS.lon,r:Math.round(rand(9,15)),acc:Math.round(GPS.acc)};
-    DB.ghosts.push(s);stat('encounters');typeStat(s.type,'seen');logEv(`New entity encountered${s.home?' (saved to the map)':''}`)}
+  if(!s.firstSeen){s.firstSeen=Date.now();if(!s.home&&GPS.ok&&GPS.acc<80)s.home={lat:GPS.lat,lon:GPS.lon,r:Math.round(rand(9,15)),acc:Math.round(GPS.acc)};
+    if(!DB.ghosts.includes(s))DB.ghosts.push(s);stat('encounters');typeStat(s.type,'seen');
+    logEv(s.shared?`Met an entity first reported by ${s.finder}`:`New entity encountered${s.home?' (saved to the map)':''}`);if(typeof NET!=='undefined')NET.share(s)}
   saveDB();
 }
 
@@ -248,7 +249,8 @@ function ghostStep(dt,trapDown){
 }
 function capture(){
   const s=G.spec;G.state='trapped';G.trapT=0;G.hold=0;s.state='captured';s.capturedAt=Date.now();if(GPS.ok)s.capturedWhere={lat:GPS.lat,lon:GPS.lon};
-  if(!s.firstSeen){s.firstSeen=Date.now();DB.ghosts.push(s);stat('encounters');typeStat(s.type,'seen')}
+  if(!s.firstSeen){s.firstSeen=Date.now();if(!DB.ghosts.includes(s))DB.ghosts.push(s);stat('encounters');typeStat(s.type,'seen')}
+  if(typeof NET!=='undefined')NET.caught(s);  // on the shared map, it's gone for everyone
   if(!s.identified){s.identified=true;typeStat(s.type,'ided')}
   caps++;store.set('gh.caps',caps);stat('captures');typeStat(s.type,'caught');saveDB();
   zap();buzz([60,40,60,40,200]);hwOut('fx pulse 1500 0 140 255',true);say(`Contained: ${s.name} (${typeOf(s).name})`);logEv(`CONTAINED: ${s.name} (${typeOf(s).name}), level ${s.level}`);
@@ -276,7 +278,8 @@ function hauntStep(dt){
   if(!GPS.ok||MODE==='real')return;
   const near=hauntsNear().filter(o=>o.d<=o.g.home.r+slack()).sort((a,b)=>a.d-b.d)[0];
   if(near&&(G.state==='idle'||(active()&&!G.seen&&!G.resident&&G.spec!==near.g))){  // you walked into its area
-    summon(near.g,geoBear(GPS.lat,GPS.lon,near.g.home.lat,near.g.home.lon)+rand(-40,40),clamp(near.d,3,7),true)}
+    summon(near.g,geoBear(GPS.lat,GPS.lon,near.g.home.lat,near.g.home.lon)+rand(-40,40),clamp(near.d,3,7),true);
+    if(near.g.shared&&!near.g.firstSeen)say(`${near.g.finder} reported something here… look around.`,'warn')}
   else if(active()&&G.spec&&G.spec.home&&!insideHauntOf(G.spec))dismiss('Readings fading. You left its area.');
   else if(active()&&G.spec&&!G.spec.home&&G.at&&geoDist(G.at[0],G.at[1],GPS.lat,GPS.lon)>Math.max(35,GPS.acc*1.5))dismiss('Readings fading. You walked away from it.');
   // arriving at a lead you were shown
