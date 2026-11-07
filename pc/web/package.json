@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Only for the Vercel deployment: the shared-haunts API in api/. The app itself is plain static files.",
+  "dependencies": {
+    "@vercel/blob": "2.8.1"
+  }
+}

@@ -647,6 +647,8 @@ $('#oVol').oninput=e=>{CFG.vol=+e.target.value;store.set('gh.vol',CFG.vol)};
 $('#oRadar').onchange=e=>{CFG.radarTrig=e.target.checked;store.set('gh.radarTrig',CFG.radarTrig?'1':'0')};
 $('#oVoices').onchange=e=>{CFG.voices=e.target.checked;store.set('gh.voices',CFG.voices?'1':'0')};
 $('#oZoom').oninput=e=>{CFG.zoom=+e.target.value;store.set('gh.zoom',CFG.zoom)};
+$('#oShare').checked=NET.on;$('#oShare').onchange=e=>NET.setOn(e.target.checked);
+$('#oHunter').value=NET.hunter;$('#oHunter').onchange=e=>{NET.setHunter(e.target.value);e.target.value=NET.hunter};
 // hardware setup (kit modules on the ESP32)
 const HWMODS=[
   {k:'rgb',name:'RGB LED',hint:'KY-016 (5 mm LED). Pins on the board: "−" to GND, R, G, B to the GPIOs below',pins:[['R',32],['G',33],['B',27]],anode:true,test:'fx strobe 1200 255 60 255'},
@@ -715,7 +717,7 @@ function ghostLine(g){const T=typeOf(g),id=g.identified;
   return`<div class="gl"><div class="gh"><b>${esc(id?g.name:'Unknown entity')}</b><span style="color:${hostCol(g.anger)}">${id?hostility(g.anger)+' '+g.anger+'%':'??'}</span></div>
   <div class="small">${id?`${esc(T.name)} · level ${g.level} · ${RARITY[T.rarity]} · threat ${threat(g)}`:'type unknown'} · seen ${g.sightings}× · first ${fmtDate(g.firstSeen)}</div>
   ${id&&g.story?`<div class="small">${esc(g.story)}</div>`:''}<div class="small">Evidence: ${g.evidence.map(k=>EVIDENCE[k]).join(', ')||'none'}${g.attacks?` · attacked you ${g.attacks}×`:''}${g.escapes?` · escaped ${g.escapes}×`:''}</div>
-  ${g.state==='captured'?`<div class="small">Contained ${fmtDate(g.capturedAt)} <button data-rel="${g.id}">Release</button></div>`:g.home?`<div class="small">Haunts a ${Math.round(g.home.r*3.28)} ft area on the map</div>`:''}</div>`}
+  ${g.state==='captured'?`<div class="small">Contained ${fmtDate(g.capturedAt)} <button data-rel="${g.id}">Release</button></div>`:g.state==='taken'?`<div class="small">Caught by ${esc(g.takenBy)}</div>`:g.home?`<div class="small">Haunts a ${Math.round(g.home.r*3.28)} ft area on the map${g.shared?` · reported by ${esc(g.finder)}`:''}</div>`:''}</div>`}
 function renderJournal(){
   for(const b of document.querySelectorAll('#jtabs button[data-j]'))b.classList.toggle('on',b.dataset.j===JTAB);
   const el=$('#jBody');
@@ -760,7 +762,7 @@ async function drawMap(){
   Lf.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,maxNativeZoom:19,attribution:'© OpenStreetMap'}).addTo(lmap);
   const pts=[];
   for(const g of haunts){const col=g.state==='captured'?'#888':hostCol(g.anger),T=typeOf(g);pts.push([g.home.lat,g.home.lon]);
-    Lf.circle([g.home.lat,g.home.lon],{radius:g.home.r,color:col,weight:2,fillOpacity:.15}).addTo(lmap).bindPopup(`<b>${esc(g.identified?g.name:'Unknown entity')}</b><br>${g.identified?`${esc(T.name)} · lvl ${g.level} · ${hostility(g.anger)}`:'unidentified'}<br>${g.state==='captured'?'Contained':'At large'} · seen ${g.sightings}×`)}
+    Lf.circle([g.home.lat,g.home.lon],{radius:g.home.r,color:g.state==='taken'?'#888':col,weight:2,dashArray:g.shared&&!g.firstSeen?'5 5':null,fillOpacity:.15}).addTo(lmap).bindPopup(`<b>${esc(g.identified?g.name:'Unknown entity')}</b><br>${g.identified?`${esc(T.name)} · lvl ${g.level} · ${hostility(g.anger)}`:'unidentified'}<br>${g.state==='captured'?'Contained':g.state==='taken'?`Caught by ${esc(g.takenBy)}`:'At large'} · seen ${g.sightings}×${g.shared?`<br>Reported by ${esc(g.finder)}`:''}`)}
   for(const l of leads){pts.push([l.lat,l.lon]);Lf.circleMarker([l.lat,l.lon],{radius:9,color:'#ffd36b',dashArray:'4 4',weight:2,fillOpacity:.05}).addTo(lmap).bindPopup(`Lead from ${esc(l.fromName)}<br>${fmtDate(l.ts)}`)}
   BUST.mapMarks(Lf,lmap,pts);
   if(GPS.ok){Lf.circleMarker([GPS.lat,GPS.lon],{radius:7,color:'#4aa0ff',fillColor:'#4aa0ff',fillOpacity:.9}).addTo(lmap).bindPopup('You');pts.push([GPS.lat,GPS.lon])}

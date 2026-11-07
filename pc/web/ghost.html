@@ -39,7 +39,7 @@ button.on{border-color:var(--glow);color:var(--glow)}button:disabled{opacity:.4}
 .box h2{font-size:14px;color:var(--glow);margin:16px 0 4px;letter-spacing:.06em}
 .box p{color:var(--dim);margin:8px 0}.box ul{color:var(--dim);margin:6px 0 10px;padding-left:18px}.box li{margin:4px 0}.box li b{color:var(--ink)}
 .opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(56,255,156,.1)}
-.opt input[type=range]{accent-color:var(--glow);width:130px}.opt input[type=checkbox]{width:22px;height:22px;accent-color:var(--glow)}
+.opt input[type=range]{accent-color:var(--glow);width:130px}.opt input[type=text]{width:140px;font:inherit;font-size:13px;color:var(--ink);background:#0a120d;border:1px solid var(--line);border-radius:6px;padding:6px}.opt input[type=checkbox]{width:22px;height:22px;accent-color:var(--glow)}
 #go{width:100%;margin-top:10px;padding:13px;font-size:17px;font-weight:800;letter-spacing:.12em;background:var(--glow);color:#00140a;border:0;position:sticky;bottom:0}
 .small{font-size:11px;color:var(--dim)}.warnTxt{color:var(--amber)}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}.row label{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:4px}
@@ -106,6 +106,8 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
     <div class="opt"><label for="oVol">Volume</label><input type="range" id="oVol" min="0" max="1" step="0.05"></div>
     <div class="opt"><label for="oRadar">Real movement sets ghosts off<br><span class="small">Ghost mode + radar: someone walking up triggers the attack</span></label><input type="checkbox" id="oRadar"></div>
     <div class="opt"><label for="oVoices">Voices (spirit box, word box)</label><input type="checkbox" id="oVoices"></div>
+    <div class="opt"><label for="oShare">Share ghosts with other hunters<br><span class="small">Ghosts you find go on a shared map at the spot where you found them, and you'll meet ghosts other people found near you. Turn off to keep yours private.</span></label><input type="checkbox" id="oShare"></div>
+    <div class="opt"><label for="oHunter">Your hunter name<br><span class="small">Shown to others on ghosts you find and catch</span></label><input type="text" id="oHunter" maxlength="24"></div>
     <div class="opt"><label for="oZoom">Camera match<br><span class="small">if things slide against the room as you turn, nudge this</span></label><input type="range" id="oZoom" min="0.6" max="1.6" step="0.02"></div>
     <p class="small warnTxt">Jump scares flash the screen and play a loud scream. Turn them off for anyone sensitive to flashing light or sudden noise. The thermal view is an effect made from camera brightness; phones have no heat sensor.</p>
     <h2>HARDWARE (ESP32 KIT MODULES)</h2>
@@ -124,6 +126,7 @@ button.danger{color:#ff8a80;border-color:rgba(255,59,48,.5)}.legend{margin-top:6
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/utils/SkeletonUtils.js"></script>
 <script src="ghost/engine.js"></script>
 <script src="ghost/spirits.js"></script>
+<script src="ghost/net.js"></script>
 <script src="ghost/ghost3d.js"></script>
 <script src="ghost/bust.js"></script>
 <script src="ghost/ambient.js"></script>

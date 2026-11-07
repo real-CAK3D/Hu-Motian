@@ -150,6 +150,20 @@ Each ghost you meet:
   - **Review**: the session's EMF and temperature charted second by second, with every logged event marked. Drag across the chart to scrub through what happened when.
   - **HQ**: Bust mode's bank, rank, containment unit, callouts and pay slips.
 
+### Shared haunts (everyone sees the same ghosts)
+
+Ghosts are shared between everyone using the app.
+- When you find a ghost with GPS on, it goes on a shared map at that spot.
+- Anyone who walks into its 30–50 ft area meets the same ghost: same kind, name, level and body. They get a message saying who reported it.
+- On the Map, other hunters' ghosts you haven't met yet have dashed circles.
+- Catch a shared ghost and it's gone for everyone. The person who found it sees "Caught by <name>".
+- ⚙ → **Share ghosts with other hunters** turns it off both ways. **Your hunter name** is what others see.
+- Ghosts are checked within 500 m of you, about every 45 s or whenever you've walked 120 m. Anything found with no signal is sent later.
+
+**Privacy:** a shared ghost marks the spot where you found it. If you hunt at home, that's your home on everyone's map. Turn sharing off for private places.
+
+The shared map is a small Vercel function (`pc/web/api/haunts.js`) storing one file per ghost in Vercel Blob (store `hu-motian-haunts`). The GitHub Pages copy of the app uses the same one.
+
 ### Bust mode (be the exterminator)
 
 1. **Find it** with the ghost meter, or follow the green slime trail it leaves on the floor.
